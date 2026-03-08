@@ -59,8 +59,7 @@ public class UsersService {
 
 	public List<UserTO> getAllUsers() {
 
-
-        return (List<UserTO>) usersRepository.findAll().stream().map(user -> usersMapperService.mapUser2UserTO(user)).toList();
+        return usersRepository.findAll().stream().map(user -> usersMapperService.mapUser2UserTO(user)).toList();
 	}
 
 	public void addUser(UserTO userTO) {
