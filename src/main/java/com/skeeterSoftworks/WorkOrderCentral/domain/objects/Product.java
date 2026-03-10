@@ -19,11 +19,21 @@ public class Product {
     private long id;
 
     @Column
+    private String productGroup;
+
+    @Column
     private String name;
 
     @Column
     private String description;
 
+    @Column
+    private long stockQuantity;
 
+    @Column
+    private String machineType;
+
+    @Column
+    private String toolType;
 
 }
