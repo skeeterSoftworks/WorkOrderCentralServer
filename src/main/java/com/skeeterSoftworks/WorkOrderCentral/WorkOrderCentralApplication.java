@@ -6,7 +6,9 @@ import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 
 @EnableEncryptableProperties
 @SpringBootApplication
@@ -31,5 +33,4 @@ public class WorkOrderCentralApplication {
 		encryptor.setConfig(config);
 		return encryptor;
 	}
-
 }

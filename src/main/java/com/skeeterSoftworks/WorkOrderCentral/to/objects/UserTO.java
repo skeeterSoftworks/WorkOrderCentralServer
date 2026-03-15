@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 @NoArgsConstructor
 @ToString
-public class UserTO {
-
-	private String name;
-	private String surname;
-	private ERole role;
-	private String qrCode;
-	private long id;
-
-	private LocalDateTime createdDate;
-}
+	public class UserTO {
+	
+		private String name;
+		private String surname;
+		private ERole role;
+		private String qrCode;
+		private Long id;
+	
+		private LocalDateTime createdDate;
+	}
