@@ -13,12 +13,15 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = "tools")
+@ToString(exclude = { "tools", "products" })
 public class Machine {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToMany(mappedBy = "machines", fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
 
     @Column
     private String machineName;

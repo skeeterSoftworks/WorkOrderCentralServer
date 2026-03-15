@@ -7,11 +7,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "machine", "tool" })
+@ToString(exclude = { "machines", "tool" })
 public class Product {
 
     @Id
@@ -30,9 +33,13 @@ public class Product {
     @Column
     private Long stockQuantity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "machine_id")
-    private Machine machine;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "product_machine",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "machine_id")
+    )
+    private List<Machine> machines = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tool_id")
