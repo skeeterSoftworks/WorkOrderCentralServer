@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -52,5 +53,20 @@ public class PurchaseOrder {
 
     @Column
     private String comment;
+
+    @Column
+    private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime confirmedAt;
+
+    @Column
+    private LocalDateTime inProductionAt;
+
+    @Column
+    private LocalDateTime completedAt;
+
+    @Column
+    private LocalDateTime deliveredAt;
 
 }

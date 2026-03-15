@@ -42,6 +42,11 @@ public class PurchaseOrderMapperService {
         to.setDeliveryTerms(po.getDeliveryTerms());
         to.setShippingAddress(po.getShippingAddress());
         to.setComment(po.getComment());
+        to.setCreatedAt(po.getCreatedAt());
+        to.setConfirmedAt(po.getConfirmedAt());
+        to.setInProductionAt(po.getInProductionAt());
+        to.setCompletedAt(po.getCompletedAt());
+        to.setDeliveredAt(po.getDeliveredAt());
         return to;
     }
 
@@ -64,6 +69,11 @@ public class PurchaseOrderMapperService {
         po.setDeliveryTerms(to.getDeliveryTerms());
         po.setShippingAddress(to.getShippingAddress());
         po.setComment(to.getComment());
+        if (to.getCreatedAt() != null) po.setCreatedAt(to.getCreatedAt());
+        if (to.getConfirmedAt() != null) po.setConfirmedAt(to.getConfirmedAt());
+        if (to.getInProductionAt() != null) po.setInProductionAt(to.getInProductionAt());
+        if (to.getCompletedAt() != null) po.setCompletedAt(to.getCompletedAt());
+        if (to.getDeliveredAt() != null) po.setDeliveredAt(to.getDeliveredAt());
         return po;
     }
 

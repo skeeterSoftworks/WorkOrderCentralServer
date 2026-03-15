@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -24,5 +25,10 @@ public class PurchaseOrderTO {
     private String deliveryTerms;
     private String shippingAddress;
     private String comment;
+    private LocalDateTime createdAt;
+    private LocalDateTime confirmedAt;
+    private LocalDateTime inProductionAt;
+    private LocalDateTime completedAt;
+    private LocalDateTime deliveredAt;
 }
 

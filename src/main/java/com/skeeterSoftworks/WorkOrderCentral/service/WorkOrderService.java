@@ -12,10 +12,12 @@ import java.util.Optional;
 public class WorkOrderService {
 
     private final WorkOrderRepository workOrderRepository;
+    private final PurchaseOrderService purchaseOrderService;
 
     @Autowired
-    public WorkOrderService(WorkOrderRepository workOrderRepository) {
+    public WorkOrderService(WorkOrderRepository workOrderRepository, PurchaseOrderService purchaseOrderService) {
         this.workOrderRepository = workOrderRepository;
+        this.purchaseOrderService = purchaseOrderService;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
@@ -28,7 +30,11 @@ public class WorkOrderService {
 
     public WorkOrder addWorkOrder(WorkOrder workOrder) {
         workOrder.setId(null);
-        return workOrderRepository.save(workOrder);
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        if (saved.getPurchaseOrder() != null && saved.getPurchaseOrder().getId() != 0) {
+            purchaseOrderService.markConfirmed(saved.getPurchaseOrder().getId());
+        }
+        return saved;
     }
 
     public WorkOrder updateWorkOrder(WorkOrder workOrder) throws Exception {

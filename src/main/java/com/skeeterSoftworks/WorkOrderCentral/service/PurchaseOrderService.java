@@ -2,9 +2,12 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.PurchaseOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EPurchaseOrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,10 +15,12 @@ import java.util.Optional;
 public class PurchaseOrderService {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
+    private final WorkOrderRepository workOrderRepository;
 
     @Autowired
-    public PurchaseOrderService(PurchaseOrderRepository purchaseOrderRepository) {
+    public PurchaseOrderService(PurchaseOrderRepository purchaseOrderRepository, WorkOrderRepository workOrderRepository) {
         this.purchaseOrderRepository = purchaseOrderRepository;
+        this.workOrderRepository = workOrderRepository;
     }
 
     public List<PurchaseOrder> getAllPurchaseOrders() {
@@ -27,6 +32,9 @@ public class PurchaseOrderService {
     }
 
     public PurchaseOrder savePurchaseOrder(PurchaseOrder purchaseOrder) {
+        if (purchaseOrder.getId() == 0 && purchaseOrder.getCreatedAt() == null) {
+            purchaseOrder.setCreatedAt(LocalDateTime.now());
+        }
         return purchaseOrderRepository.save(purchaseOrder);
     }
 
@@ -47,7 +55,20 @@ public class PurchaseOrderService {
         if (existing.isEmpty()) {
             throw new Exception("PURCHASE_ORDER_NOT_FOUND");
         }
+        if (workOrderRepository.existsByPurchaseOrder_Id(id)) {
+            throw new Exception("PURCHASE_ORDER_HAS_WORK_ORDER");
+        }
         purchaseOrderRepository.deleteById(id);
+    }
+
+    public void markConfirmed(Long purchaseOrderId) {
+        purchaseOrderRepository.findById(purchaseOrderId).ifPresent(po -> {
+            if (po.getConfirmedAt() == null) {
+                po.setConfirmedAt(LocalDateTime.now());
+                po.setOrderStatus(EPurchaseOrderStatus.CONFIRMED);
+                purchaseOrderRepository.save(po);
+            }
+        });
     }
 }
 

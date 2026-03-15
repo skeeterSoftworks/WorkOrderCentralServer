@@ -8,4 +8,6 @@ import java.util.List;
 public interface WorkOrderRepository extends CrudRepository<WorkOrder, Long> {
 
     List<WorkOrder> findAll();
+
+    boolean existsByPurchaseOrder_Id(Long purchaseOrderId);
 }
