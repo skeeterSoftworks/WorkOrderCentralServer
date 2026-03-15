@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.domain.objects;
 
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +20,15 @@ public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
+    @Column
+    private String companyName;
+
+    @Column(length = 2000)
+    private String addressData;
+
+    @Column(length = 2000)
+    private String description;
 
 }

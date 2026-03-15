@@ -14,6 +14,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/purchaseorder")
+@CrossOrigin(origins = "*")
 public class PurchaseOrderFacade {
 
     private final PurchaseOrderService purchaseOrderService;

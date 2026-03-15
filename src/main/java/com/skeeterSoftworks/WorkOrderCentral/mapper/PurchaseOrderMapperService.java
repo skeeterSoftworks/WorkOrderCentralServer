@@ -55,6 +55,9 @@ public class PurchaseOrderMapperService {
         if (c == null) return null;
         CustomerTO to = new CustomerTO();
         to.setId(c.getId());
+        to.setCompanyName(c.getCompanyName());
+        to.setAddressData(c.getAddressData());
+        to.setDescription(c.getDescription());
         return to;
     }
 
@@ -62,6 +65,9 @@ public class PurchaseOrderMapperService {
         if (to == null) return null;
         Customer c = new Customer();
         if (to.getId() != null) c.setId(to.getId());
+        c.setCompanyName(to.getCompanyName());
+        c.setAddressData(to.getAddressData());
+        c.setDescription(to.getDescription());
         return c;
     }
 

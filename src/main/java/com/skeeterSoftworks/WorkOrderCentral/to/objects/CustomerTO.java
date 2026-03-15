@@ -11,6 +11,8 @@ import lombok.ToString;
 @ToString
 public class CustomerTO {
     private Long id;
-    // Add customer fields as needed later
+    private String companyName;
+    private String addressData;
+    private String description;
 }
 
