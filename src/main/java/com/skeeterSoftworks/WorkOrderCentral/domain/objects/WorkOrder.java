@@ -1,6 +1,5 @@
 package com.skeeterSoftworks.WorkOrderCentral.domain.objects;
 
-
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,28 +8,23 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@ToString(exclude = "purchaseOrder")
 public class WorkOrder {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @Column
-    private long purchasingOrderId;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
-    private Product product;
-
-    @Column
-    private long quantity;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchase_order_id", referencedColumnName = "id", unique = true)
+    private PurchaseOrder purchaseOrder;
 
     @Column
     private LocalDate dueDate;
@@ -41,13 +35,12 @@ public class WorkOrder {
     @Column
     private LocalDate endDate;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false, updatable = false)
     @JsonManagedReference
-    private List<Material> materials;
+    private List<Material> materials = new ArrayList<>();
 
     @Column
     private String comment;
-
 
 }

@@ -1,6 +1,8 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.*;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EPurchaseOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +16,16 @@ import java.util.stream.Collectors;
 public class PurchaseOrderMapperService {
 
     private final ProductMapperService productMapperService;
+    private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public PurchaseOrderMapperService(ProductMapperService productMapperService) {
+    public PurchaseOrderMapperService(ProductMapperService productMapperService,
+                                      CustomerRepository customerRepository,
+                                      ProductRepository productRepository) {
         this.productMapperService = productMapperService;
+        this.customerRepository = customerRepository;
+        this.productRepository = productRepository;
     }
 
     public PurchaseOrderTO mapToTO(PurchaseOrder po) {
@@ -71,8 +79,10 @@ public class PurchaseOrderMapperService {
 
     public Customer mapCustomerToEntity(CustomerTO to) {
         if (to == null) return null;
+        if (to.getId() != null) {
+            return customerRepository.findById(to.getId()).orElse(null);
+        }
         Customer c = new Customer();
-        if (to.getId() != null) c.setId(to.getId());
         c.setCompanyName(to.getCompanyName());
         c.setAddressData(to.getAddressData());
         c.setDescription(to.getDescription());
@@ -93,7 +103,9 @@ public class PurchaseOrderMapperService {
         if (to == null) return null;
         ProductOrder po = new ProductOrder();
         if (to.getId() != null) po.setId(to.getId());
-        po.setProduct(mapProductToEntity(to.getProduct()));
+        if (to.getProduct() != null && to.getProduct().getId() != null) {
+            productRepository.findById(to.getProduct().getId()).ifPresent(po::setProduct);
+        }
         po.setQuantity(to.getQuantity());
         po.setPricePerUnit(to.getPricePerUnit());
         return po;
