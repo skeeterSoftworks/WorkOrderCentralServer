@@ -28,7 +28,7 @@ public class Product {
     private String description;
 
     @Column
-    private long stockQuantity;
+    private Long stockQuantity;
 
     @Column
     private String machineType;

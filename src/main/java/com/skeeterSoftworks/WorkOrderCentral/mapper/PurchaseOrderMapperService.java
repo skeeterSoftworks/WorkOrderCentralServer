@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.*;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EPurchaseOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.*;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +36,12 @@ public class PurchaseOrderMapperService {
         if (to.getId() != null) po.setId(to.getId());
         po.setCustomer(mapCustomerToEntity(to.getCustomer()));
         po.setProductOrderList(mapProductOrderListToEntity(to.getProductOrderList()));
-        po.setOrderStatus(to.getOrderStatus());
+        // For new orders (no id), default status to CREATED
+        if (to.getId() == null) {
+            po.setOrderStatus(EPurchaseOrderStatus.CREATED);
+        } else {
+            po.setOrderStatus(to.getOrderStatus());
+        }
         po.setCurrency(to.getCurrency());
         po.setDeliveryDate(to.getDeliveryDate());
         po.setReference(to.getReference());
