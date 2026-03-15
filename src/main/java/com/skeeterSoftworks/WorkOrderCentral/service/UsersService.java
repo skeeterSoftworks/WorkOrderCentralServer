@@ -120,4 +120,17 @@ public class UsersService {
 		}
 	}
 
+	public void deleteUser(Long id) throws Exception {
+
+		Optional<ApplicationUser> userOpt = usersRepository.findById(id);
+
+		if (userOpt.isPresent()) {
+			usersRepository.deleteById(id);
+			log.info("Successfully deleted user with id {}", id);
+		} else {
+			log.error("User with the given ID not found {}", id);
+			throw new Exception("USER_NOT_FOUND");
+		}
+	}
+
 }

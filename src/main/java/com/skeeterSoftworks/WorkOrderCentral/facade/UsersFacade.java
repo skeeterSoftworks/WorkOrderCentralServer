@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@CrossOrigin(origins = "*")
 public class UsersFacade {
 
 	UsersService usersService;
@@ -85,6 +86,25 @@ public class UsersFacade {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return ResponseEntity.internalServerError().body(e.getMessage());
+		}
+	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+
+		log.debug("Facade call: deleteUser({})", id);
+
+		if (id == null || id < 1) {
+			log.error("Invalid user id: {}", id);
+			return ResponseEntity.badRequest().build();
+		}
+
+		try {
+			usersService.deleteUser(id);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			return ResponseEntity.internalServerError().build();
 		}
 	}
 }

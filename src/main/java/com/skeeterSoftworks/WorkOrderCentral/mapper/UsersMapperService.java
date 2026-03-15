@@ -25,6 +25,7 @@ public class UsersMapperService {
 		userTO.setRole((user.getRole()));
 		userTO.setQrCode(user.getQrCode());
 		userTO.setCreatedDate(user.getCreatedDate());
+		userTO.setId(user.getId());
 
 		return userTO;
 	}
