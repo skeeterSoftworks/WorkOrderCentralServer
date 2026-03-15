@@ -11,12 +11,12 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@ToString(exclude = { "machine", "tool" })
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column
     private String productGroup;
@@ -30,10 +30,12 @@ public class Product {
     @Column
     private Long stockQuantity;
 
-    @Column
-    private String machineType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "machine_id")
+    private Machine machine;
 
-    @Column
-    private String toolType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tool_id")
+    private Tool tool;
 
 }

@@ -13,7 +13,7 @@ public class ProductTO {
     private Long id;
     private String name;
     private String description;
-    private String machineType;
-    private String toolType;
+    private Long machineId;
+    private Long toolId;
 }
 

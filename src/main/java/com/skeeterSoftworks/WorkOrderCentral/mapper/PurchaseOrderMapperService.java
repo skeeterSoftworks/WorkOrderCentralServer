@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.mapper;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.*;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EPurchaseOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,6 +12,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class PurchaseOrderMapperService {
+
+    private final ProductMapperService productMapperService;
+
+    @Autowired
+    public PurchaseOrderMapperService(ProductMapperService productMapperService) {
+        this.productMapperService = productMapperService;
+    }
 
     public PurchaseOrderTO mapToTO(PurchaseOrder po) {
         if (po == null) return null;
@@ -92,21 +100,11 @@ public class PurchaseOrderMapperService {
     }
 
     public ProductTO mapProductToTO(Product p) {
-        if (p == null) return null;
-        ProductTO to = new ProductTO();
-        to.setId(p.getId());
-        to.setName(p.getName());
-        to.setDescription(p.getDescription());
-        return to;
+        return productMapperService.mapToTO(p);
     }
 
     public Product mapProductToEntity(ProductTO to) {
-        if (to == null) return null;
-        Product p = new Product();
-        if (to.getId() != null) p.setId(to.getId());
-        p.setName(to.getName());
-        p.setDescription(to.getDescription());
-        return p;
+        return productMapperService.mapToEntity(to);
     }
 
     public List<ProductOrderTO> mapProductOrderListToTO(List<ProductOrder> list) {
