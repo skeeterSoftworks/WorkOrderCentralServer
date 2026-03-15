@@ -55,7 +55,7 @@ public class PurchaseOrderMapperService {
 
         PurchaseOrder po = new PurchaseOrder();
         if (to.getId() != null) po.setId(to.getId());
-        po.setCustomer(mapCustomerToEntity(to.getCustomer()));
+        po.setCustomer(resolveCustomer(to));
         po.setProductOrderList(mapProductOrderListToEntity(to.getProductOrderList()));
         // For new orders (no id), default status to CREATED
         if (to.getId() == null) {
@@ -85,6 +85,19 @@ public class PurchaseOrderMapperService {
         to.setAddressData(c.getAddressData());
         to.setDescription(c.getDescription());
         return to;
+    }
+
+    private Customer resolveCustomer(PurchaseOrderTO to) {
+        Long id = null;
+        if (to.getCustomer() != null && to.getCustomer().getId() != null) {
+            id = to.getCustomer().getId();
+        } else if (to.getCustomerId() != null) {
+            id = to.getCustomerId();
+        }
+        if (id != null) {
+            return customerRepository.findById(id).orElse(null);
+        }
+        return mapCustomerToEntity(to.getCustomer());
     }
 
     public Customer mapCustomerToEntity(CustomerTO to) {

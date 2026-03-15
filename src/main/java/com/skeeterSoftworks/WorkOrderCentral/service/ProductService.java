@@ -27,12 +27,12 @@ public class ProductService {
     }
 
     public Product addProduct(Product product) {
-        product.setId(0L);
+        product.setId(null);
         return productRepository.save(product);
     }
 
     public Product updateProduct(Product product) throws Exception {
-        if (product.getId() <= 0 || !productRepository.existsById(product.getId())) {
+        if (product.getId() == null || product.getId() <= 0 || !productRepository.existsById(product.getId())) {
             throw new Exception("PRODUCT_NOT_FOUND");
         }
         return productRepository.save(product);

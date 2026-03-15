@@ -16,6 +16,7 @@ import java.util.List;
 @ToString
 public class PurchaseOrderTO {
     private Long id;
+    private Long customerId;
     private CustomerTO customer;
     private List<ProductOrderTO> productOrderList;
     private EPurchaseOrderStatus orderStatus;

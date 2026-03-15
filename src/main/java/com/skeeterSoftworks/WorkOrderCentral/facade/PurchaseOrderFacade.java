@@ -57,7 +57,8 @@ public class PurchaseOrderFacade {
         try {
             PurchaseOrder entity = purchaseOrderMapperService.mapToEntity(purchaseOrderTO);
             PurchaseOrder saved = purchaseOrderService.savePurchaseOrder(entity);
-            return ResponseEntity.ok(purchaseOrderMapperService.mapToTO(saved));
+            PurchaseOrder loaded = purchaseOrderService.getPurchaseOrderById(saved.getId()).orElse(saved);
+            return ResponseEntity.ok(purchaseOrderMapperService.mapToTO(loaded));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.internalServerError().body("ERROR_SAVING_PURCHASE_ORDER");
@@ -76,7 +77,8 @@ public class PurchaseOrderFacade {
         try {
             PurchaseOrder entity = purchaseOrderMapperService.mapToEntity(purchaseOrderTO);
             PurchaseOrder updated = purchaseOrderService.updatePurchaseOrder(entity);
-            return ResponseEntity.ok(purchaseOrderMapperService.mapToTO(updated));
+            PurchaseOrder loaded = purchaseOrderService.getPurchaseOrderById(updated.getId()).orElse(updated);
+            return ResponseEntity.ok(purchaseOrderMapperService.mapToTO(loaded));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.internalServerError().body(e.getMessage());
