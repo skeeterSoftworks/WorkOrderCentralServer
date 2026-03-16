@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "tools", "products" })
+@ToString(exclude = { "tools", "products", "bookings" })
 public class Machine {
 
     @Id
@@ -22,6 +22,9 @@ public class Machine {
 
     @ManyToMany(mappedBy = "machines", fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
+
+    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<MachineBooking> bookings = new ArrayList<>();
 
     @Column
     private String machineName;

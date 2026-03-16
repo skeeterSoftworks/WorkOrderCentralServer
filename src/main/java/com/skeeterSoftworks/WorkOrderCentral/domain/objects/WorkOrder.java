@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = "purchaseOrder")
+@ToString(exclude = { "purchaseOrder", "machineBookings" })
 public class WorkOrder {
 
     @Id
@@ -42,5 +42,8 @@ public class WorkOrder {
 
     @Column
     private String comment;
+
+    @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<MachineBooking> machineBookings = new ArrayList<>();
 
 }
