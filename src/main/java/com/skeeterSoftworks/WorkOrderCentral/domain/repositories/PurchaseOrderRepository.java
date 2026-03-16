@@ -4,6 +4,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.CrudRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PurchaseOrderRepository extends CrudRepository<PurchaseOrder, Long> {
@@ -11,5 +12,7 @@ public interface PurchaseOrderRepository extends CrudRepository<PurchaseOrder, L
     @Override
     @EntityGraph(attributePaths = { "customer", "productOrderList", "productOrderList.product" })
     List<PurchaseOrder> findAll();
+
+    boolean existsByCreatedAtBefore(LocalDateTime cutoff);
 }
 

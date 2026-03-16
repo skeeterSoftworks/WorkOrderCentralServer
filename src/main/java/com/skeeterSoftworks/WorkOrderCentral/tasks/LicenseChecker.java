@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.tasks;
 
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.PurchaseOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.LicenseDataDTO;
 import com.skeeterSoftworks.WorkOrderCentral.util.LicenseUtils;
 import jakarta.annotation.PostConstruct;
@@ -15,6 +16,7 @@ import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -26,6 +28,9 @@ public class LicenseChecker {
 	@Autowired
 	private ApplicationContext appContext;
 
+	@Autowired
+	private PurchaseOrderRepository purchaseOrderRepository;
+
 	@Value("${license.key:none}")
 	private String licenseKey;
 
@@ -36,7 +41,7 @@ public class LicenseChecker {
 			if ("none".equals(licenseKey)) {
 				log.warn("-------------------------------------------------------------");
 				log.warn("No license found, please apply for one from the developer.");
-				log.warn("Trial period will end 6 months after first session save to Database.");
+				log.warn("Trial period will end 6 months after first purchase order save to Database.");
 				log.warn("-------------------------------------------------------------");
 
 			} else {
@@ -90,9 +95,8 @@ public class LicenseChecker {
 		try {
 
 			if ("none".equals(licenseKey)) {
-				// log.warn("No license found, please apply for one from the developer.");
-				// log.warn("Trial period will end 6 months after first session save to
-				// Database.");
+				 log.warn("No license found, please apply for one from the developer.");
+				 log.warn("Trial period will end 6 months after first purchase order save to Database.");
 
 			} else {
 
@@ -114,16 +118,17 @@ public class LicenseChecker {
 					return;
 				}
 			}
-/*
-			List<Session> yearOldSessions = sessionRepository
-					.findBySessionStartBefore(LocalDateTime.now().minusMonths(6));
 
-			if (yearOldSessions != null && !yearOldSessions.isEmpty()) {
-				log.warn("Free trial allows recording sessions for up to 6 months");
-				log.warn(
-						"License is not active or has expired; please apply for a new license from the developer to continue using the Central server.");
+
+			// Trial mode: allow usage for 6 months after first purchase order is created.
+			LocalDateTime cutoff = LocalDateTime.now().minusMonths(6);
+			boolean hasOldPurchaseOrders = purchaseOrderRepository.existsByCreatedAtBefore(cutoff);
+
+			if (hasOldPurchaseOrders) {
+				log.warn("Free trial allows recording purchase orders for up to 6 months.");
+				log.warn("License is not active or has expired; please apply for a new license from the developer to continue using the Central server.");
 				SpringApplication.exit(appContext, () -> 0);
-			}*/
+			}
 
 		} catch (Exception e) {
 			log.error("Unable to check license!");
