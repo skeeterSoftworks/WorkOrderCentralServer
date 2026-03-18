@@ -1,0 +1,22 @@
+[
+  {
+    "sr": "Da li je radno mesto bezbedno za rad?",
+    "en": "Is the work environment safe for work?"
+  },
+  {
+    "sr": "Da li je plan reakcije i eskalacije dostupan i jasan?",
+    "en": "Is the reaction and escalation plan available and clear?"
+  },
+  {
+    "sr": "Da li je radno mesto uredno, bez prisustva neobeželenih komada?",
+    "en": "Is the work environment tidy, with no unmarked products?"
+  },
+  {
+    "sr": "Da li je kriterijum prihvatljivosti za vizualne defekte dostupan i dosledno se primenjuje?",
+    "en": "Is the acceptance criterion for visual defects available and in operation on a consistent basis?"
+  },
+  {
+    "sr": "Da li će se vizualna kontrola sprovoditi prema propisanom radnom uputstvu?",
+    "en": "Will the visual control be conducted based on proscribed work instructions?"
+  }
+]

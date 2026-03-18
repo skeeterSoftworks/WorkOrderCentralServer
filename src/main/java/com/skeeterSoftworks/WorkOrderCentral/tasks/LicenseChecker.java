@@ -26,9 +26,6 @@ public class LicenseChecker {
 
 
 	@Autowired
-	private ApplicationContext appContext;
-
-	@Autowired
 	private PurchaseOrderRepository purchaseOrderRepository;
 
 	@Value("${license.key:none}")
@@ -61,7 +58,7 @@ public class LicenseChecker {
 
 				if (!macAddresses.contains(licenseData.getMacAddress())) {
 					log.warn("License invalid!");
-					SpringApplication.exit(appContext, () -> 0);
+					System.exit(-1);
 				}
 
 				if (validUntil != null) {
@@ -71,7 +68,7 @@ public class LicenseChecker {
 
 					if (validUntil.isBefore(LocalDate.now())) {
 						log.warn("License expired, please apply for a new one from the developer!");
-						SpringApplication.exit(appContext, () -> 0);
+						System.exit(-1);
 					}
 
 				} else {
@@ -85,7 +82,7 @@ public class LicenseChecker {
 		} catch (Exception e) {
 			log.error("Unable to check license!");
 			log.error(e.getMessage(), e);
-			SpringApplication.exit(appContext, () -> 0);
+			System.exit(-1);
 		}
 	}
 
@@ -127,13 +124,13 @@ public class LicenseChecker {
 			if (hasOldPurchaseOrders) {
 				log.warn("Free trial allows recording purchase orders for up to 6 months.");
 				log.warn("License is not active or has expired; please apply for a new license from the developer to continue using the Central server.");
-				SpringApplication.exit(appContext, () -> 0);
+				System.exit(-1);
 			}
 
 		} catch (Exception e) {
 			log.error("Unable to check license!");
 			log.error(e.getMessage(), e);
-			SpringApplication.exit(appContext, () -> -1);
+			System.exit(-1);
 		}
 	}
 }
