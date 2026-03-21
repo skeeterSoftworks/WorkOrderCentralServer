@@ -42,7 +42,7 @@ public class UsersFacade {
 		log.debug("Facade call: addUser()");
 
 		if (!StringUtils.hasText(userTO.getName()) || !StringUtils.hasText(userTO.getSurname()) ||
-				userTO.getRole() == null) {
+				userTO.getRole() == null || !StringUtils.hasText(userTO.getQrCode())) {
 			log.error("Invalid input params!: {}", userTO);
 			return ResponseEntity.badRequest().build();
 		}
