@@ -24,7 +24,8 @@ public class PurchaseOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    /** Many purchase orders can belong to the same customer. PERSIST/MERGE so a new customer can be saved with the order (no cascade REMOVE). */
+    @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
     private Customer customer;
 
