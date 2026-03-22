@@ -45,5 +45,13 @@ public interface MachineBookingRepository extends CrudRepository<MachineBooking,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
     );
+
+    @Query("""
+            SELECT DISTINCT b.workOrder.id FROM MachineBooking b
+            WHERE b.machine.id = :machineId
+              AND b.workOrder IS NOT NULL
+              AND b.status <> com.skeeterSoftworks.WorkOrderCentral.to.enums.EMachineBookingStatus.CANCELLED
+            """)
+    List<Long> findWorkOrderIdsScheduledOnMachine(@Param("machineId") Long machineId);
 }
 

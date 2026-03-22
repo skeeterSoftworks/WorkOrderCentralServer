@@ -15,12 +15,11 @@ public class ConfigFilesLoaderService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final String FI_PRECONDITIONS_FILE = "./config/FiPreconditions.json";
+    private final String WORK_STATION_PRECONDITIONS_FILE = "./config/WorkStationPreconditions.json";
 
     public ArrayNode getWorkOrderPreconditions() throws IOException {
 
-
-         File file = new File(FI_PRECONDITIONS_FILE);
+         File file = new File(WORK_STATION_PRECONDITIONS_FILE);
          InputStream inputStream = new FileInputStream(file);
 
         JsonNode jsonNode = objectMapper.readTree(inputStream);

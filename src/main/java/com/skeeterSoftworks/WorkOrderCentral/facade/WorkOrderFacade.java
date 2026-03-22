@@ -26,6 +26,20 @@ public class WorkOrderFacade {
         this.workOrderMapperService = workOrderMapperService;
     }
 
+    @GetMapping("/for-machine/{machineId}")
+    public ResponseEntity<?> getForMachine(@PathVariable Long machineId) {
+        try {
+            if (machineId == null || machineId <= 0) {
+                return ResponseEntity.badRequest().body("INVALID_MACHINE_ID");
+            }
+            List<WorkOrder> list = workOrderService.getWorkOrdersForMachine(machineId);
+            return ResponseEntity.ok(list.stream().map(workOrderMapperService::mapToTO).toList());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_WORK_ORDERS_FOR_MACHINE");
+        }
+    }
+
     @GetMapping("/all")
     public ResponseEntity<?> getAll() {
         try {

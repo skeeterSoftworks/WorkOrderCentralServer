@@ -1,11 +1,13 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -16,20 +18,38 @@ public class WorkOrderService {
     private final WorkOrderRepository workOrderRepository;
     private final PurchaseOrderService purchaseOrderService;
     private final ProductOrderRepository productOrderRepository;
+    private final MachineBookingRepository machineBookingRepository;
 
     @Autowired
     public WorkOrderService(
             WorkOrderRepository workOrderRepository,
             PurchaseOrderService purchaseOrderService,
-            ProductOrderRepository productOrderRepository
+            ProductOrderRepository productOrderRepository,
+            MachineBookingRepository machineBookingRepository
     ) {
         this.workOrderRepository = workOrderRepository;
         this.purchaseOrderService = purchaseOrderService;
         this.productOrderRepository = productOrderRepository;
+        this.machineBookingRepository = machineBookingRepository;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
         return workOrderRepository.findAll();
+    }
+
+    /**
+     * Work orders that have at least one non-cancelled {@link com.skeeterSoftworks.WorkOrderCentral.domain.objects.MachineBooking}
+     * on the given machine.
+     */
+    public List<WorkOrder> getWorkOrdersForMachine(Long machineId) {
+        if (machineId == null || machineId <= 0) {
+            return Collections.emptyList();
+        }
+        List<Long> ids = machineBookingRepository.findWorkOrderIdsScheduledOnMachine(machineId);
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return workOrderRepository.findAllByIdIn(ids);
     }
 
     public Optional<WorkOrder> getWorkOrderById(Long id) {
