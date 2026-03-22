@@ -59,6 +59,12 @@ public class WorkOrderFacade {
             return ResponseEntity.ok(workOrderMapperService.mapToTO(saved));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            String msg = e.getMessage();
+            if ("INVALID_PRODUCT_ORDER".equals(msg)
+                    || "PRODUCT_ORDER_NOT_FOUND".equals(msg)
+                    || "WORK_ORDER_ALREADY_EXISTS_FOR_PRODUCT_ORDER".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
             return ResponseEntity.internalServerError().body("ERROR_SAVING_WORK_ORDER");
         }
     }
@@ -76,7 +82,13 @@ public class WorkOrderFacade {
             return ResponseEntity.ok(workOrderMapperService.mapToTO(updated));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(e.getMessage());
+            String msg = e.getMessage();
+            if ("INVALID_PRODUCT_ORDER".equals(msg)
+                    || "PRODUCT_ORDER_NOT_FOUND".equals(msg)
+                    || "WORK_ORDER_ALREADY_EXISTS_FOR_PRODUCT_ORDER".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            return ResponseEntity.internalServerError().body(msg != null ? msg : "ERROR_UPDATING_WORK_ORDER");
         }
     }
 

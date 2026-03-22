@@ -15,16 +15,17 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "purchaseOrder", "machineBookings" })
+@ToString(exclude = { "productOrder", "machineBookings" })
 public class WorkOrder {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** One work order per purchase-order line (product line item). */
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchase_order_id", referencedColumnName = "id", unique = true)
-    private PurchaseOrder purchaseOrder;
+    @JoinColumn(name = "product_order_id", referencedColumnName = "id", unique = true)
+    private ProductOrder productOrder;
 
     @Column
     private LocalDate dueDate;

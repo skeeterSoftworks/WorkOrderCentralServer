@@ -55,7 +55,7 @@ public class PurchaseOrderService {
         if (existing.isEmpty()) {
             throw new Exception("PURCHASE_ORDER_NOT_FOUND");
         }
-        if (workOrderRepository.existsByPurchaseOrder_Id(id)) {
+        if (workOrderRepository.existsByProductOrder_PurchaseOrder_Id(id)) {
             throw new Exception("PURCHASE_ORDER_HAS_WORK_ORDER");
         }
         purchaseOrderRepository.deleteById(id);

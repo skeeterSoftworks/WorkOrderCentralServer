@@ -13,7 +13,14 @@ import java.time.LocalDate;
 @ToString
 public class WorkOrderTO {
     private Long id;
+    /** Purchase order line this work order belongs to (required for create/update). */
+    private Long productOrderId;
+    /** Denormalized for UI: parent purchase order id. */
     private Long purchaseOrderId;
+    /** Denormalized for UI. */
+    private String productName;
+    /** Product catalogue / reference id (denormalized). */
+    private String productReference;
     private LocalDate dueDate;
     private LocalDate startDate;
     private LocalDate endDate;

@@ -1,8 +1,8 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
-import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.PurchaseOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,19 +10,29 @@ import org.springframework.stereotype.Service;
 @Service
 public class WorkOrderMapperService {
 
-    private final PurchaseOrderRepository purchaseOrderRepository;
+    private final ProductOrderRepository productOrderRepository;
 
     @Autowired
-    public WorkOrderMapperService(PurchaseOrderRepository purchaseOrderRepository) {
-        this.purchaseOrderRepository = purchaseOrderRepository;
+    public WorkOrderMapperService(ProductOrderRepository productOrderRepository) {
+        this.productOrderRepository = productOrderRepository;
     }
 
     public WorkOrderTO mapToTO(WorkOrder workOrder) {
-        if (workOrder == null) return null;
+        if (workOrder == null) {
+            return null;
+        }
         WorkOrderTO to = new WorkOrderTO();
         to.setId(workOrder.getId());
-        if (workOrder.getPurchaseOrder() != null) {
-            to.setPurchaseOrderId(workOrder.getPurchaseOrder().getId());
+        ProductOrder line = workOrder.getProductOrder();
+        if (line != null) {
+            to.setProductOrderId(line.getId());
+            if (line.getPurchaseOrder() != null) {
+                to.setPurchaseOrderId(line.getPurchaseOrder().getId());
+            }
+            if (line.getProduct() != null) {
+                to.setProductName(line.getProduct().getName());
+                to.setProductReference(line.getProduct().getReference());
+            }
         }
         to.setDueDate(workOrder.getDueDate());
         to.setStartDate(workOrder.getStartDate());
@@ -32,13 +42,15 @@ public class WorkOrderMapperService {
     }
 
     public WorkOrder mapToEntity(WorkOrderTO to) {
-        if (to == null) return null;
+        if (to == null) {
+            return null;
+        }
         WorkOrder workOrder = new WorkOrder();
         if (to.getId() != null) {
             workOrder.setId(to.getId());
         }
-        if (to.getPurchaseOrderId() != null) {
-            purchaseOrderRepository.findById(to.getPurchaseOrderId()).ifPresent(workOrder::setPurchaseOrder);
+        if (to.getProductOrderId() != null) {
+            productOrderRepository.findById(to.getProductOrderId()).ifPresent(workOrder::setProductOrder);
         }
         workOrder.setDueDate(to.getDueDate());
         workOrder.setStartDate(to.getStartDate());
