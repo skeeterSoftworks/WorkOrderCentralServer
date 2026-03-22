@@ -40,6 +40,20 @@ public class MachineBookingFacade {
         }
     }
 
+    @GetMapping("/work-order/{workOrderId}")
+    public ResponseEntity<?> getForWorkOrder(@PathVariable Long workOrderId) {
+        try {
+            List<MachineBooking> list = bookingService.getBookingsForWorkOrder(workOrderId);
+            return ResponseEntity.ok(list.stream().map(mapperService::mapToTO).toList());
+        } catch (Exception e) {
+            if ("WORK_ORDER_NOT_FOUND".equals(e.getMessage())) {
+                return ResponseEntity.notFound().build();
+            }
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
     @GetMapping("/machine/{machineId}")
     public ResponseEntity<?> getForMachine(
             @PathVariable Long machineId,

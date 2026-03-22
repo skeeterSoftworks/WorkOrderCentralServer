@@ -17,6 +17,8 @@ public class MachineBookingTO {
 
     private Long id;
     private Long machineId;
+    /** Denormalized for clients (e.g. work order details). */
+    private String machineName;
     private Long workOrderId;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;

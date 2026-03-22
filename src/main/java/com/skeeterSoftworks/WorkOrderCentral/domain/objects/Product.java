@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.domain.objects;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -38,6 +39,7 @@ public class Product {
     private Long stockQuantity;
 
     @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
     @JoinTable(
             name = "product_machine",
             joinColumns = @JoinColumn(name = "product_id"),

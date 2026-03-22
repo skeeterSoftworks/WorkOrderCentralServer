@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +40,14 @@ public class MachineBookingService {
 
     public Optional<MachineBooking> getById(Long id) {
         return bookingRepository.findById(id);
+    }
+
+    public List<MachineBooking> getBookingsForWorkOrder(Long workOrderId) throws Exception {
+        WorkOrder workOrder = workOrderRepository.findById(workOrderId)
+                .orElseThrow(() -> new Exception("WORK_ORDER_NOT_FOUND"));
+        return bookingRepository.findByWorkOrder(workOrder).stream()
+                .sorted(Comparator.comparing(MachineBooking::getStartDateTime, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
     }
 
     public List<MachineBooking> getBookingsForMachine(Long machineId, LocalDateTime from, LocalDateTime to) throws Exception {

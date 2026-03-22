@@ -26,6 +26,9 @@ public class MachineBookingMapperService {
         MachineBookingTO to = new MachineBookingTO();
         to.setId(booking.getId());
         to.setMachineId(booking.getMachine() != null ? booking.getMachine().getId() : null);
+        if (booking.getMachine() != null && booking.getMachine().getMachineName() != null) {
+            to.setMachineName(booking.getMachine().getMachineName());
+        }
         to.setWorkOrderId(booking.getWorkOrder() != null ? booking.getWorkOrder().getId() : null);
         to.setStartDateTime(booking.getStartDateTime());
         to.setEndDateTime(booking.getEndDateTime());

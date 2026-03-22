@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.domain.repositories;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MachineBooking;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +17,7 @@ public interface MachineBookingRepository extends CrudRepository<MachineBooking,
 
     List<MachineBooking> findByMachine(Machine machine);
 
+    @EntityGraph(attributePaths = {"machine", "workOrder"})
     List<MachineBooking> findByWorkOrder(WorkOrder workOrder);
 
     @Query("""
