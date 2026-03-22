@@ -32,6 +32,7 @@ public class ProductMapperService {
         to.setId(product.getId());
         to.setName(product.getName());
         to.setDescription(product.getDescription());
+        to.setReference(product.getReference());
         if (product.getMachines() != null && !product.getMachines().isEmpty()) {
             to.setMachineIds(product.getMachines().stream().map(Machine::getId).collect(Collectors.toList()));
         } else {
@@ -49,6 +50,12 @@ public class ProductMapperService {
         }
         product.setName(to.getName());
         product.setDescription(to.getDescription());
+        // On update, omitting reference in JSON leaves it unchanged; explicit null/empty clears or sets.
+        if (to.getId() == null) {
+            product.setReference(to.getReference());
+        } else if (to.getReference() != null) {
+            product.setReference(to.getReference());
+        }
         if (to.getMachineIds() != null && !to.getMachineIds().isEmpty()) {
             List<Machine> machineList = new ArrayList<>();
             for (Long id : to.getMachineIds()) {

@@ -15,6 +15,8 @@ public class ProductTO {
     private Long id;
     private String name;
     private String description;
+    /** Catalogue / reference ID for the product. */
+    private String reference;
     private List<Long> machineIds;
     private Long toolId;
 }

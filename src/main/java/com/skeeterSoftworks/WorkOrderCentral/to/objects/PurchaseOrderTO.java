@@ -22,7 +22,6 @@ public class PurchaseOrderTO {
     private EPurchaseOrderStatus orderStatus;
     private String currency;
     private LocalDate deliveryDate;
-    private String reference;
     private String deliveryTerms;
     private String shippingAddress;
     private String comment;

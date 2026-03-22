@@ -38,7 +38,6 @@ public class PurchaseOrderMapperService {
         to.setOrderStatus(po.getOrderStatus());
         to.setCurrency(po.getCurrency());
         to.setDeliveryDate(po.getDeliveryDate());
-        to.setReference(po.getReference());
         to.setDeliveryTerms(po.getDeliveryTerms());
         to.setShippingAddress(po.getShippingAddress());
         to.setComment(po.getComment());
@@ -65,7 +64,6 @@ public class PurchaseOrderMapperService {
         }
         po.setCurrency(to.getCurrency());
         po.setDeliveryDate(to.getDeliveryDate());
-        po.setReference(to.getReference());
         po.setDeliveryTerms(to.getDeliveryTerms());
         po.setShippingAddress(to.getShippingAddress());
         po.setComment(to.getComment());

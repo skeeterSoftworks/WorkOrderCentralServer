@@ -1,0 +1,12 @@
+-- Optional manual migration when not using Hibernate ddl-auto update:
+-- 1) Add catalogue/reference on product
+-- 2) (Optional) Copy old PO reference onto products used on that order — adjust to your data rules
+-- 3) Drop purchase_order.reference
+
+-- PostgreSQL examples (review before running):
+-- ALTER TABLE product ADD COLUMN IF NOT EXISTS reference VARCHAR(255);
+-- UPDATE product p SET reference = po.reference
+--   FROM product_order pol
+--   JOIN purchase_order po ON pol.order_id = po.id
+--   WHERE pol.product_id = p.id AND p.reference IS NULL AND po.reference IS NOT NULL;
+-- ALTER TABLE purchase_order DROP COLUMN IF EXISTS reference;

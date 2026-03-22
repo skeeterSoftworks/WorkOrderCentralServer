@@ -30,6 +30,10 @@ public class Product {
     @Column
     private String description;
 
+    /** Catalogue / reference ID for this product (not tied to a specific purchase order). */
+    @Column
+    private String reference;
+
     @Column
     private Long stockQuantity;
 

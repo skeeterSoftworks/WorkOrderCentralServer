@@ -44,9 +44,6 @@ public class PurchaseOrder {
     private LocalDate deliveryDate;
 
     @Column
-    private String reference;
-
-    @Column
     private String deliveryTerms;
 
     @Column
