@@ -11,11 +11,15 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Do not delete WorkOrder; WO is the execution of the ProductOrder.
+ *
+ */
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "productOrder", "machineBookings" })
+@ToString(exclude = { "productOrder", "machineBookings", "workSessions" })
 public class WorkOrder {
 
     @Id
@@ -47,4 +51,6 @@ public class WorkOrder {
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MachineBooking> machineBookings = new ArrayList<>();
 
+    @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<WorkSession> workSessions = new ArrayList<>();
 }

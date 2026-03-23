@@ -1,6 +1,5 @@
 package com.skeeterSoftworks.WorkOrderCentral.domain.objects;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,56 +13,62 @@ import java.util.List;
 @Entity
 public class WorkSession {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
 
-	@Embedded
-	private Operator operator;
+    /** Session belongs to one work order. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_order_id")
+    private WorkOrder workOrder;
 
-	@Column
-	private LocalDateTime sessionStart;
+    @Embedded
+    private Operator operator;
 
-	@Column
-	private LocalDateTime sessionEnd;
+    @Column
+    private LocalDateTime sessionStart;
 
-	@Embedded
-	private StationInfo stationInfo;
+    @Column
+    private LocalDateTime sessionEnd;
 
-	@Column
-	private long productCount;
+    @Embedded
+    private StationInfo stationInfo;
 
-	@Column
-	private long rusCount;
+    @Column
+    private long productCount;
 
-	@Column
-	private String productReferenceID;
+    @Column
+    private String productReferenceID;
 
+    @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<FaultyProduct> faultyProducts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ControlProduct> controlProducts = new ArrayList<>();
 
-	public WorkSession(long id, Operator operator, LocalDateTime sessionStart, LocalDateTime sessionEnd) {
-		super();
-		this.id = id;
-		this.operator = operator;
-		this.sessionStart = sessionStart;
-		this.sessionEnd = sessionEnd;
-	}
+    public WorkSession(long id, Operator operator, LocalDateTime sessionStart, LocalDateTime sessionEnd) {
+        super();
+        this.id = id;
+        this.operator = operator;
+        this.sessionStart = sessionStart;
+        this.sessionEnd = sessionEnd;
+    }
 
-	public WorkSession(long id, LocalDateTime sessionStart, LocalDateTime sessionEnd, String operatorQrCode,
+    public WorkSession(long id, LocalDateTime sessionStart, LocalDateTime sessionEnd, String operatorQrCode,
                        String stationId, long productCount) {
-		super();
-		this.id = id;
-		this.sessionStart = sessionStart;
-		this.sessionEnd = sessionEnd;
-		this.productCount = productCount;
-		if (this.operator == null){
-			this.operator = new Operator();
-		}
-		this.operator.setOperatorQrCode(operatorQrCode);
+        super();
+        this.id = id;
+        this.sessionStart = sessionStart;
+        this.sessionEnd = sessionEnd;
+        this.productCount = productCount;
+        if (this.operator == null) {
+            this.operator = new Operator();
+        }
+        this.operator.setOperatorQrCode(operatorQrCode);
 
-		if (this.stationInfo == null){
-			this.stationInfo = new StationInfo();
-		}
-		this.stationInfo.setStationID(stationId);
-	}
+        if (this.stationInfo == null) {
+            this.stationInfo = new StationInfo();
+        }
+        this.stationInfo.setStationID(stationId);
+    }
 }

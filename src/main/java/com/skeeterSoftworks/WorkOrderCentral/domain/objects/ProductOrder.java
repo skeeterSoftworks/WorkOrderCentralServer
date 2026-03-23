@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * ProductOrder is a line item on a purchase order, representing a specific product and quantity.
+ */
 @Entity
 @Data
 @AllArgsConstructor
