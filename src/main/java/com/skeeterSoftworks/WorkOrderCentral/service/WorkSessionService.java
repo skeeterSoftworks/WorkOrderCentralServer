@@ -17,11 +17,17 @@ public class WorkSessionService {
 
     private final WorkSessionRepository workSessionRepository;
     private final WorkOrderRepository workOrderRepository;
+    private final MachineBookingService machineBookingService;
 
     @Autowired
-    public WorkSessionService(WorkSessionRepository workSessionRepository, WorkOrderRepository workOrderRepository) {
+    public WorkSessionService(
+            WorkSessionRepository workSessionRepository,
+            WorkOrderRepository workOrderRepository,
+            MachineBookingService machineBookingService
+    ) {
         this.workSessionRepository = workSessionRepository;
         this.workOrderRepository = workOrderRepository;
+        this.machineBookingService = machineBookingService;
     }
 
     @Transactional(readOnly = true)
@@ -188,6 +194,7 @@ public class WorkSessionService {
         }
         workOrder.setState(EWorkOrderState.COMPLETE);
         workOrderRepository.save(workOrder);
+        machineBookingService.completeNonCancelledBookingsForWorkOrder(workOrder);
 
         WorkSession toClose = workSessionRepository.findById(sessionId).orElse(session);
         if (toClose.getSessionEnd() == null) {

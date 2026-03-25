@@ -6,6 +6,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMachineBookingStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMachineBookingType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,23 @@ public class MachineBookingService {
         return bookingRepository.findOverlappingForMachine(machine, from, to);
     }
 
+    /**
+     * Sets {@link EMachineBookingStatus#COMPLETED} on every booking for the work order except
+     * {@link EMachineBookingStatus#CANCELLED}. Used when the work order itself becomes complete.
+     */
+    public void completeNonCancelledBookingsForWorkOrder(WorkOrder workOrder) {
+        if (workOrder == null || workOrder.getId() == null) {
+            return;
+        }
+        WorkOrder managed = workOrderRepository.findById(workOrder.getId()).orElse(workOrder);
+        for (MachineBooking b : bookingRepository.findByWorkOrder(managed)) {
+            if (b.getStatus() != EMachineBookingStatus.CANCELLED) {
+                b.setStatus(EMachineBookingStatus.COMPLETED);
+                bookingRepository.save(b);
+            }
+        }
+    }
+
     public MachineBooking createBooking(Long machineId, Long workOrderId, LocalDateTime start, LocalDateTime end,
                                         EMachineBookingType type, String comment) throws Exception {
         if (machineId == null) {
@@ -83,7 +101,8 @@ public class MachineBookingService {
         booking.setStartDateTime(start);
         booking.setEndDateTime(end);
         booking.setType(type != null ? type : EMachineBookingType.PRODUCTION);
-        booking.setStatus(EMachineBookingStatus.PLANNED);
+        boolean woComplete = workOrder != null && workOrder.getState() == EWorkOrderState.COMPLETE;
+        booking.setStatus(woComplete ? EMachineBookingStatus.COMPLETED : EMachineBookingStatus.PLANNED);
         booking.setComment(comment);
         booking.setCreatedAt(LocalDateTime.now());
         return bookingRepository.save(booking);
@@ -113,6 +132,13 @@ public class MachineBookingService {
             throw new Exception("MACHINE_ALREADY_BOOKED");
         }
         booking.setMachine(managedMachine);
+        if (booking.getWorkOrder() != null && booking.getWorkOrder().getId() != null) {
+            workOrderRepository.findById(booking.getWorkOrder().getId()).ifPresent(wo -> {
+                if (wo.getState() == EWorkOrderState.COMPLETE && booking.getStatus() != EMachineBookingStatus.CANCELLED) {
+                    booking.setStatus(EMachineBookingStatus.COMPLETED);
+                }
+            });
+        }
         return bookingRepository.save(booking);
     }
 
