@@ -26,6 +26,7 @@ public class WorkOrderMapperService {
         ProductOrder line = workOrder.getProductOrder();
         if (line != null) {
             to.setProductOrderId(line.getId());
+            to.setRequiredQuantity(line.getQuantity());
             if (line.getPurchaseOrder() != null) {
                 to.setPurchaseOrderId(line.getPurchaseOrder().getId());
             }
@@ -38,6 +39,7 @@ public class WorkOrderMapperService {
         to.setStartDate(workOrder.getStartDate());
         to.setEndDate(workOrder.getEndDate());
         to.setComment(workOrder.getComment());
+        to.setProducedGoodQuantity(workOrder.getProducedGoodQuantity());
         return to;
     }
 

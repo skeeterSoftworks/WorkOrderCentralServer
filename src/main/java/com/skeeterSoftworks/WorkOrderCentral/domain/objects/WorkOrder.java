@@ -48,6 +48,12 @@ public class WorkOrder {
     @Column
     private String comment;
 
+    /**
+     * Aggregated count of good products produced across all work sessions for this work order.
+     */
+    @Column
+    private long producedGoodQuantity;
+
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MachineBooking> machineBookings = new ArrayList<>();
 

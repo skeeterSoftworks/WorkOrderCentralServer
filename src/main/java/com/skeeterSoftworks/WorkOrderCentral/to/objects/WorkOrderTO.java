@@ -25,4 +25,6 @@ public class WorkOrderTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String comment;
+    private Integer requiredQuantity;
+    private Long producedGoodQuantity;
 }
