@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
+
 import java.time.LocalDate;
 
 @Data
@@ -27,4 +29,5 @@ public class WorkOrderTO {
     private String comment;
     private Integer requiredQuantity;
     private Long producedGoodQuantity;
+    private EWorkOrderState state;
 }

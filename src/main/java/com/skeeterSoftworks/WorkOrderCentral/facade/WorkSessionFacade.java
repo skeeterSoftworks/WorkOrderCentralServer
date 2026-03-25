@@ -2,6 +2,7 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSession;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.WorkSessionMapperService;
+import com.skeeterSoftworks.WorkOrderCentral.service.WorkSessionIncrementResult;
 import com.skeeterSoftworks.WorkOrderCentral.service.WorkSessionService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.*;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,8 @@ public class WorkSessionFacade {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();
-            if ("INVALID_WORK_ORDER_ID".equals(msg) || "WORK_ORDER_NOT_FOUND".equals(msg)) {
+            if ("INVALID_WORK_ORDER_ID".equals(msg) || "WORK_ORDER_NOT_FOUND".equals(msg)
+                    || "WORK_ORDER_COMPLETE".equals(msg)) {
                 return ResponseEntity.badRequest().body(msg);
             }
             return ResponseEntity.internalServerError().body("ERROR_OPENING_WORK_SESSION");
@@ -57,8 +59,10 @@ public class WorkSessionFacade {
     @PostMapping("/{id}/product-count-delta")
     public ResponseEntity<?> productCountDelta(@PathVariable Long id, @RequestBody ProductCountDeltaRequestTO body) {
         try {
-            WorkSession saved = workSessionService.incrementProductCount(id, body);
-            return ResponseEntity.ok(workSessionMapperService.mapToTO(saved));
+            WorkSessionIncrementResult result = workSessionService.incrementProductCount(id, body);
+            return ResponseEntity.ok(workSessionMapperService.mapToTO(
+                    result.session(),
+                    result.workOrderCompletedByTarget()));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();

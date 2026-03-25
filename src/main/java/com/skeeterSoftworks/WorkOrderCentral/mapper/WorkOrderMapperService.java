@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.mapper;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class WorkOrderMapperService {
         to.setEndDate(workOrder.getEndDate());
         to.setComment(workOrder.getComment());
         to.setProducedGoodQuantity(workOrder.getProducedGoodQuantity());
+        to.setState(workOrder.getState() != null ? workOrder.getState() : EWorkOrderState.INCOMPLETE);
         return to;
     }
 
@@ -58,6 +60,9 @@ public class WorkOrderMapperService {
         workOrder.setStartDate(to.getStartDate());
         workOrder.setEndDate(to.getEndDate());
         workOrder.setComment(to.getComment());
+        if (to.getState() != null) {
+            workOrder.setState(to.getState());
+        }
         return workOrder;
     }
 }

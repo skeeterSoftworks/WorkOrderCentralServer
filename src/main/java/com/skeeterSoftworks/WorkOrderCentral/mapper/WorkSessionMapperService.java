@@ -28,6 +28,13 @@ public class WorkSessionMapperService {
         if (session.getStationInfo() != null) {
             to.setStationId(session.getStationInfo().getStationID());
         }
+        to.setWorkOrderCompletedByTarget(false);
+        return to;
+    }
+
+    public WorkSessionTO mapToTO(WorkSession session, boolean workOrderCompletedByTarget) {
+        WorkSessionTO to = mapToTO(session);
+        to.setWorkOrderCompletedByTarget(workOrderCompletedByTarget);
         return to;
     }
 }

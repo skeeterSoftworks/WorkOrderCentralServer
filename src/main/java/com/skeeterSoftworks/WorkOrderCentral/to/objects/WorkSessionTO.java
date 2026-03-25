@@ -21,4 +21,6 @@ public class WorkSessionTO {
     private String operatorName;
     private String operatorSurname;
     private String stationId;
+    /** True when this response follows reaching the work order production target (session auto-closed). */
+    private boolean workOrderCompletedByTarget;
 }

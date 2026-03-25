@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +55,10 @@ public class WorkOrder {
      */
     @Column
     private long producedGoodQuantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private EWorkOrderState state = EWorkOrderState.INCOMPLETE;
 
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MachineBooking> machineBookings = new ArrayList<>();
