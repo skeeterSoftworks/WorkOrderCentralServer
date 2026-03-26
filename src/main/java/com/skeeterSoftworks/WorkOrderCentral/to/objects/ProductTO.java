@@ -19,5 +19,6 @@ public class ProductTO {
     private String reference;
     private List<Long> machineIds;
     private Long toolId;
+    private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
 }
 

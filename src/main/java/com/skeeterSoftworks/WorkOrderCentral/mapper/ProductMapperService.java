@@ -1,10 +1,12 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ToolRepository;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,15 @@ public class ProductMapperService {
             to.setMachineIds(Collections.emptyList());
         }
         if (product.getTool() != null) to.setToolId(product.getTool().getId());
+
+        if (product.getMeasuringFeaturePrototypes() != null) {
+            to.setMeasuringFeaturePrototypes(
+                    product.getMeasuringFeaturePrototypes()
+                            .stream()
+                            .map(this::mapPrototypeToTO)
+                            .toList()
+            );
+        }
         return to;
     }
 
@@ -68,7 +79,52 @@ public class ProductMapperService {
         if (to.getToolId() != null) {
             toolRepository.findById(to.getToolId()).ifPresent(product::setTool);
         }
+
+        if (to.getMeasuringFeaturePrototypes() != null) {
+            List<MeasuringFeaturePrototype> prototypes = to.getMeasuringFeaturePrototypes()
+                    .stream()
+                    .map(this::mapPrototypeTOToEntity)
+                    .peek(p -> p.setProduct(product))
+                    .toList();
+            product.setMeasuringFeaturePrototypes(prototypes);
+        }
         return product;
+    }
+
+    private MeasuringFeaturePrototypeTO mapPrototypeToTO(MeasuringFeaturePrototype p) {
+        if (p == null) return null;
+        return new MeasuringFeaturePrototypeTO(
+                p.getId(),
+                p.getCatalogueId(),
+                p.getDescription(),
+                p.isAbsoluteMeasure(),
+                p.getRefValue(),
+                p.getMinTolerance(),
+                p.getMaxTolerance(),
+                p.getClassType(),
+                p.getFrequency(),
+                p.getCheckType(),
+                p.getToolType(),
+                p.getMeasuringTool()
+        );
+    }
+
+    private MeasuringFeaturePrototype mapPrototypeTOToEntity(MeasuringFeaturePrototypeTO to) {
+        if (to == null) return null;
+        MeasuringFeaturePrototype entity = new MeasuringFeaturePrototype();
+        entity.setId(to.getId());
+        entity.setCatalogueId(to.getCatalogueId());
+        entity.setDescription(to.getDescription());
+        entity.setAbsoluteMeasure(to.getAbsoluteMeasure() != null ? to.getAbsoluteMeasure() : false);
+        entity.setRefValue(to.getRefValue());
+        entity.setMinTolerance(to.getMinTolerance());
+        entity.setMaxTolerance(to.getMaxTolerance());
+        entity.setClassType(to.getClassType());
+        entity.setFrequency(to.getFrequency());
+        entity.setCheckType(to.getCheckType());
+        entity.setToolType(to.getToolType());
+        entity.setMeasuringTool(to.getMeasuringTool());
+        return entity;
     }
 }
 

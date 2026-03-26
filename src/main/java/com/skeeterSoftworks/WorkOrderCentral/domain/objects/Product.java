@@ -51,4 +51,13 @@ public class Product {
     @JoinColumn(name = "tool_id")
     private Tool tool;
 
+    @OneToMany(
+            mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    @BatchSize(size = 32)
+    private List<MeasuringFeaturePrototype> measuringFeaturePrototypes = new ArrayList<>();
+
 }
