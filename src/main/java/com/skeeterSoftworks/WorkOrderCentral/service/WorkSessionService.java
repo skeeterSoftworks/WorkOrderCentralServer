@@ -32,7 +32,9 @@ public class WorkSessionService {
 
     @Transactional(readOnly = true)
     public WorkSession getById(long id) throws Exception {
-        return workSessionRepository.findById(id).orElseThrow(() -> new Exception("WORK_SESSION_NOT_FOUND"));
+        WorkSession session = workSessionRepository.findById(id).orElseThrow(() -> new Exception("WORK_SESSION_NOT_FOUND"));
+        preloadMeasuringFeaturePrototypes(session);
+        return session;
     }
 
     @Transactional
@@ -60,6 +62,7 @@ public class WorkSessionService {
         station.setStationID(req.getStationId() != null ? req.getStationId() : "");
         session.setStationInfo(station);
 
+        preloadMeasuringFeaturePrototypes(workOrder);
         return workSessionRepository.save(session);
     }
 
@@ -80,6 +83,7 @@ public class WorkSessionService {
             throw new Exception("WORK_SESSION_ALREADY_ENDED");
         }
         session.setSessionEnd(LocalDateTime.now());
+        preloadMeasuringFeaturePrototypes(session);
         return workSessionRepository.save(session);
     }
 
@@ -99,6 +103,7 @@ public class WorkSessionService {
         workSessionRepository.save(session);
         boolean completedByTarget = syncWorkOrderProducedQuantityAndCompleteIfReached(session.getId());
         WorkSession latest = workSessionRepository.findById(sessionId).orElseThrow();
+        preloadMeasuringFeaturePrototypes(latest);
         return new WorkSessionIncrementResult(latest, completedByTarget);
     }
 
@@ -108,16 +113,25 @@ public class WorkSessionService {
         if (req.getMeasuringFeatures() == null || req.getMeasuringFeatures().isEmpty()) {
             throw new Exception("MEASURING_FEATURES_REQUIRED");
         }
-        for (MeasuringFeatureInputTO in : req.getMeasuringFeatures()) {
-            if (in.getFeatureName() == null || in.getFeatureName().isBlank()) {
-                throw new Exception("FEATURE_NAME_REQUIRED");
-            }
-        }
 
         WorkSession session = getById(sessionId);
         if (session.getSessionEnd() != null) {
             throw new Exception("WORK_SESSION_ALREADY_ENDED");
         }
+
+        ProductOrder po = session.getWorkOrder() != null ? session.getWorkOrder().getProductOrder() : null;
+        Product product = po != null ? po.getProduct() : null;
+        if (product == null || product.getMeasuringFeaturePrototypes() == null) {
+            throw new Exception("MEASURING_FEATURE_PROTOTYPES_REQUIRED");
+        }
+        var prototypesByCatalogueId = product.getMeasuringFeaturePrototypes()
+                .stream()
+                .filter(p -> p.getCatalogueId() != null && !p.getCatalogueId().isBlank())
+                .collect(java.util.stream.Collectors.toMap(
+                        MeasuringFeaturePrototype::getCatalogueId,
+                        p -> p,
+                        (a, b) -> a
+                ));
 
         ControlProduct cp = new ControlProduct();
         cp.setWorkSession(session);
@@ -126,16 +140,48 @@ public class WorkSessionService {
         for (MeasuringFeatureInputTO in : req.getMeasuringFeatures()) {
             MeasuringFeature mf = new MeasuringFeature();
             mf.setControlProduct(cp);
-            mf.setFeatureName(in.getFeatureName().trim());
-            mf.setWidth(in.getWidth());
-            mf.setHeight(in.getHeight());
-            mf.setDepth(in.getDepth());
-            mf.setDiameter(in.getDiameter());
+
+            if (in.getCatalogueId() == null || in.getCatalogueId().isBlank()) {
+                throw new Exception("CATALOGUE_ID_REQUIRED");
+            }
+            MeasuringFeaturePrototype proto = prototypesByCatalogueId.get(in.getCatalogueId().trim());
+            if (proto == null) {
+                throw new Exception("MEASURING_FEATURE_PROTOTYPE_NOT_FOUND");
+            }
+
+            mf.setCatalogueId(proto.getCatalogueId());
+            mf.setDescription(proto.getDescription());
+            mf.setRefValue(proto.getRefValue());
+            mf.setMinTolerance(proto.getMinTolerance());
+            mf.setMaxTolerance(proto.getMaxTolerance());
+            mf.setClassType(proto.getClassType());
+            mf.setFrequency(proto.getFrequency());
+            mf.setCheckType(proto.getCheckType());
+            mf.setToolType(proto.getToolType());
+            mf.setMeasuringTool(proto.getMeasuringTool());
+
+            mf.setAssessedValue(in.getAssessedValue());
+            mf.setAssessedValueGood(in.isAssessedValueGood());
+
             cp.getMeasuringFeatures().add(mf);
         }
 
         session.getControlProducts().add(cp);
+        preloadMeasuringFeaturePrototypes(session);
         return workSessionRepository.save(session);
+    }
+
+    private void preloadMeasuringFeaturePrototypes(WorkSession session) {
+        if (session == null || session.getWorkOrder() == null) return;
+        preloadMeasuringFeaturePrototypes(session.getWorkOrder());
+    }
+
+    private void preloadMeasuringFeaturePrototypes(WorkOrder workOrder) {
+        if (workOrder == null || workOrder.getProductOrder() == null) return;
+        Product product = workOrder.getProductOrder().getProduct();
+        if (product == null || product.getMeasuringFeaturePrototypes() == null) return;
+        // Force initialization of lazy collection.
+        product.getMeasuringFeaturePrototypes().size();
     }
 
     @Transactional

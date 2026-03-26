@@ -9,9 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MeasuringFeatureInputTO {
 
-    private String featureName;
-    private Long width;
-    private Long height;
-    private Long depth;
-    private Long diameter;
+    /** Links the submitted assessment to a specific measuring feature prototype (by catalogue id). */
+    private String catalogueId;
+
+    /** Digits-only for MEASURED features. Stored into {@code MeasuringFeature.assessedValue}. */
+    private String assessedValue;
+
+    /** Used for ATTRIBUTIVE features. Stored into {@code MeasuringFeature.assessedValueGood}. */
+    private boolean assessedValueGood;
 }

@@ -28,6 +28,33 @@ public class WorkSessionMapperService {
         if (session.getStationInfo() != null) {
             to.setStationId(session.getStationInfo().getStationID());
         }
+        if (session.getWorkOrder() != null
+                && session.getWorkOrder().getProductOrder() != null
+                && session.getWorkOrder().getProductOrder().getProduct() != null) {
+            // This list is initialized inside WorkSessionService before mapping to avoid LazyInitializationException.
+            to.setMeasuringFeaturePrototypes(
+                    session.getWorkOrder()
+                            .getProductOrder()
+                            .getProduct()
+                            .getMeasuringFeaturePrototypes()
+                            .stream()
+                            .map(p -> new com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO(
+                                    p.getId(),
+                                    p.getCatalogueId(),
+                                    p.getDescription(),
+                                    p.isAbsoluteMeasure(),
+                                    p.getRefValue(),
+                                    p.getMinTolerance(),
+                                    p.getMaxTolerance(),
+                                    p.getClassType(),
+                                    p.getFrequency(),
+                                    p.getCheckType(),
+                                    p.getToolType(),
+                                    p.getMeasuringTool()
+                            ))
+                            .toList()
+            );
+        }
         to.setWorkOrderCompletedByTarget(false);
         return to;
     }

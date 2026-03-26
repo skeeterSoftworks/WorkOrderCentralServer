@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -23,4 +24,7 @@ public class WorkSessionTO {
     private String stationId;
     /** True when this response follows reaching the work order production target (session auto-closed). */
     private boolean workOrderCompletedByTarget;
+
+    /** Measuring feature prototypes for this work order's product (for production control). */
+    private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
 }
