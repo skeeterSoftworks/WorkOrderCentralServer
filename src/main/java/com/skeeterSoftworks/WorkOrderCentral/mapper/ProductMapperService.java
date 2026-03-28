@@ -146,6 +146,18 @@ public class ProductMapperService {
         return entity;
     }
 
+    /** Ordered list for API responses (e.g. work-order quality steps). */
+    public List<QualityInfoStepTO> toQualityInfoStepTOList(List<QualityInfoStep> steps) {
+        if (steps == null || steps.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return steps.stream()
+                .map(this::mapQualityStepToTO)
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparing(QualityInfoStepTO::getStepNumber, Comparator.nullsLast(Integer::compareTo)))
+                .toList();
+    }
+
     private QualityInfoStepTO mapQualityStepToTO(QualityInfoStep s) {
         if (s == null) return null;
         String b64 = null;

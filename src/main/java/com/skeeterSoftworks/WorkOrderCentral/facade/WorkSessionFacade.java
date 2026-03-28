@@ -34,7 +34,9 @@ public class WorkSessionFacade {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();
             if ("INVALID_WORK_ORDER_ID".equals(msg) || "WORK_ORDER_NOT_FOUND".equals(msg)
-                    || "WORK_ORDER_COMPLETE".equals(msg)) {
+                    || "WORK_ORDER_COMPLETE".equals(msg)
+                    || "QUALITY_INFO_STEPS_REQUIRED".equals(msg)
+                    || "PRODUCT_NOT_FOUND_FOR_WORK_ORDER".equals(msg)) {
                 return ResponseEntity.badRequest().body(msg);
             }
             return ResponseEntity.internalServerError().body("ERROR_OPENING_WORK_SESSION");

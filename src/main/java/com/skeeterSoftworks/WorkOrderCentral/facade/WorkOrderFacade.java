@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.WorkOrderMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.service.WorkOrderService;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,27 @@ public class WorkOrderFacade {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.internalServerError().body("ERROR_FETCHING_WORK_ORDER");
+        }
+    }
+
+    @GetMapping("/{id}/quality-info-steps")
+    public ResponseEntity<?> getQualityInfoSteps(@PathVariable Long id) {
+        try {
+            if (id == null || id <= 0) {
+                return ResponseEntity.badRequest().body("INVALID_ID");
+            }
+            List<QualityInfoStepTO> steps = workOrderService.getQualityInfoStepsForWorkOrder(id);
+            return ResponseEntity.ok(steps);
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            if ("WORK_ORDER_NOT_FOUND".equals(msg)) {
+                return ResponseEntity.notFound().build();
+            }
+            if ("INVALID_WORK_ORDER_ID".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_QUALITY_INFO_STEPS");
         }
     }
 

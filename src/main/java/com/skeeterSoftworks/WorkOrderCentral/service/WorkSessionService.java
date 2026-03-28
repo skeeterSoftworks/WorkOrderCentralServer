@@ -47,6 +47,18 @@ public class WorkSessionService {
 
         throwIfWorkOrderNotOpenForProduction(workOrder);
 
+        ProductOrder po = workOrder.getProductOrder();
+        Product product = po != null ? po.getProduct() : null;
+        if (product == null) {
+            throw new Exception("PRODUCT_NOT_FOUND_FOR_WORK_ORDER");
+        }
+        if (product.getQualityInfoSteps() != null) {
+            product.getQualityInfoSteps().size();
+        }
+        if (product.getQualityInfoSteps() == null || product.getQualityInfoSteps().isEmpty()) {
+            throw new Exception("QUALITY_INFO_STEPS_REQUIRED");
+        }
+
         WorkSession session = new WorkSession();
         session.setWorkOrder(workOrder);
         session.setSessionStart(LocalDateTime.now());
