@@ -1,10 +1,15 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
+import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,14 +17,23 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductMapperService productMapperService;
 
     @Autowired
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, ProductMapperService productMapperService) {
         this.productRepository = productRepository;
+        this.productMapperService = productMapperService;
     }
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    public List<Product> getProductsForMachine(Long machineId) {
+        if (machineId == null || machineId <= 0) {
+            return List.of();
+        }
+        return productRepository.findByMachines_Id(machineId);
     }
 
     public Optional<Product> getProductById(Long id) {
@@ -43,6 +57,48 @@ public class ProductService {
             throw new Exception("PRODUCT_NOT_FOUND");
         }
         productRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Product replaceQualityInfoStepsForProductOnMachine(
+            Long productId,
+            Long machineId,
+            List<QualityInfoStepTO> stepTos
+    ) throws Exception {
+        if (productId == null || productId <= 0) {
+            throw new Exception("INVALID_PRODUCT_ID");
+        }
+        if (machineId == null || machineId <= 0) {
+            throw new Exception("INVALID_MACHINE_ID");
+        }
+        if (stepTos == null) {
+            throw new Exception("QUALITY_INFO_STEPS_BODY_REQUIRED");
+        }
+        Product product = productRepository.findById(productId).orElseThrow(() -> new Exception("PRODUCT_NOT_FOUND"));
+        if (product.getMachines() != null) {
+            product.getMachines().size();
+        }
+        boolean onMachine = product.getMachines() != null
+                && product.getMachines().stream().anyMatch(m -> machineId.equals(m.getId()));
+        if (!onMachine) {
+            throw new Exception("PRODUCT_NOT_ON_MACHINE");
+        }
+        if (product.getQualityInfoSteps() != null) {
+            product.getQualityInfoSteps().clear();
+        } else {
+            product.setQualityInfoSteps(new ArrayList<>());
+        }
+        int n = 1;
+        for (QualityInfoStepTO to : stepTos) {
+            if (to == null) {
+                continue;
+            }
+            QualityInfoStep entity = productMapperService.mapQualityStepTOToEntity(to);
+            entity.setStepNumber(n++);
+            entity.setProduct(product);
+            product.getQualityInfoSteps().add(entity);
+        }
+        return productRepository.save(product);
     }
 }
 

@@ -167,7 +167,7 @@ public class ProductMapperService {
         return new QualityInfoStepTO(s.getId(), s.getStepNumber(), s.getStepDescription(), b64);
     }
 
-    private QualityInfoStep mapQualityStepTOToEntity(QualityInfoStepTO to) {
+    public QualityInfoStep mapQualityStepTOToEntity(QualityInfoStepTO to) {
         if (to == null) return null;
         QualityInfoStep entity = new QualityInfoStep();
         entity.setId(to.getId());
