@@ -40,6 +40,10 @@ public class WorkSession {
     @Column
     private String productReferenceID;
 
+    /** Count of setup / tool-change events recorded for this session (not derived from a child table). */
+    @Column
+    private Long setupProductCount;
+
     @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FaultyProduct> faultyProducts = new ArrayList<>();
 

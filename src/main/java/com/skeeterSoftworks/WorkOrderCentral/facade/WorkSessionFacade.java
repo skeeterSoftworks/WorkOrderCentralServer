@@ -107,6 +107,21 @@ public class WorkSessionFacade {
         }
     }
 
+    @PostMapping("/{id}/setup-products")
+    public ResponseEntity<?> addSetupProduct(@PathVariable Long id) {
+        try {
+            WorkSession saved = workSessionService.addSetupProduct(id);
+            return ResponseEntity.ok(workSessionMapperService.mapToTO(saved));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            String msg = e.getMessage();
+            if ("WORK_SESSION_NOT_FOUND".equals(msg) || "WORK_SESSION_ALREADY_ENDED".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            return ResponseEntity.internalServerError().body("ERROR_ADDING_SETUP_PRODUCT");
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         try {

@@ -17,6 +17,12 @@ public class WorkSessionTO {
     private LocalDateTime sessionStart;
     private LocalDateTime sessionEnd;
     private long productCount;
+    /** Number of control products recorded in this session. */
+    private long controlProductCount;
+    /** Number of faulty products recorded in this session. */
+    private long faultyProductCount;
+    /** Number of setup (e.g. tool change) events recorded in this session. */
+    private long setupProductCount;
     private String productReferenceID;
     private String operatorQrCode;
     private String operatorName;

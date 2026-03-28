@@ -21,6 +21,18 @@ public class WorkSessionMapperService {
         to.setSessionStart(session.getSessionStart());
         to.setSessionEnd(session.getSessionEnd());
         to.setProductCount(session.getProductCount());
+        long controlCount = 0L;
+        if (session.getControlProducts() != null) {
+            controlCount = session.getControlProducts().size();
+        }
+        long faultyCount = 0L;
+        if (session.getFaultyProducts() != null) {
+            faultyCount = session.getFaultyProducts().size();
+        }
+        to.setControlProductCount(controlCount);
+        to.setFaultyProductCount(faultyCount);
+        long setupCount = session.getSetupProductCount() == null ? 0L : session.getSetupProductCount();
+        to.setSetupProductCount(setupCount);
         to.setProductReferenceID(session.getProductReferenceID());
         if (session.getOperator() != null) {
             to.setOperatorQrCode(session.getOperator().getOperatorQrCode());

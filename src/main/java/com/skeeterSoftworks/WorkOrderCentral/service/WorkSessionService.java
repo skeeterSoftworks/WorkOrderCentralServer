@@ -211,6 +211,19 @@ public class WorkSessionService {
         fp.setCreatedAt(LocalDateTime.now());
 
         session.getFaultyProducts().add(fp);
+        preloadMeasuringFeaturePrototypes(session);
+        return workSessionRepository.save(session);
+    }
+
+    @Transactional
+    public WorkSession addSetupProduct(long sessionId) throws Exception {
+        WorkSession session = getById(sessionId);
+        if (session.getSessionEnd() != null) {
+            throw new Exception("WORK_SESSION_ALREADY_ENDED");
+        }
+        long cur = session.getSetupProductCount() == null ? 0L : session.getSetupProductCount();
+        session.setSetupProductCount(cur + 1);
+        preloadMeasuringFeaturePrototypes(session);
         return workSessionRepository.save(session);
     }
 
