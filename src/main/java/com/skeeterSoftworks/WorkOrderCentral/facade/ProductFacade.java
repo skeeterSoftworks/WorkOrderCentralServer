@@ -123,6 +123,10 @@ public class ProductFacade {
 
         try {
             Product entity = productMapperService.mapToEntity(productTO);
+            if (productTO.getTechnicalDrawingBase64() == null) {
+                productService.getProductById(productTO.getId())
+                        .ifPresent(p -> entity.setTechnicalDrawing(p.getTechnicalDrawing()));
+            }
             Product updated = productService.updateProduct(entity);
             return ResponseEntity.ok(productMapperService.mapToTO(updated));
         } catch (Exception e) {

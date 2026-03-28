@@ -27,4 +27,7 @@ public class WorkSessionTO {
 
     /** Measuring feature prototypes for this work order's product (for production control). */
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
+
+    /** Raw Base64 of the product technical drawing (when present). */
+    private String technicalDrawingBase64;
 }

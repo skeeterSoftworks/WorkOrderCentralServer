@@ -19,7 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,6 +93,15 @@ class ManualSampleDataGenerationTest {
             savedTools.add(toolRepository.save(t));
         }
 
+        byte[] sampleTechnicalDrawing;
+        try {
+            sampleTechnicalDrawing = new ClassPathResource("sample-technical-drawing.jpg")
+                    .getInputStream()
+                    .readAllBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException("classpath:sample-technical-drawing.jpg", e);
+        }
+
         for (int i = 0; i < SAMPLE_COUNT; i++) {
             Product p = new Product();
             p.setName(faker.commerce().productName());
@@ -97,6 +109,7 @@ class ManualSampleDataGenerationTest {
             p.setDescription(faker.lorem().paragraph(1));
             p.setProductGroup(faker.commerce().department());
             p.setStockQuantity((long) faker.number().numberBetween(0, 10_000));
+            p.setTechnicalDrawing(sampleTechnicalDrawing);
             p.setTool(savedTools.get(i));
             p.getMachines().add(savedMachines.get(i));
             productRepository.save(p);

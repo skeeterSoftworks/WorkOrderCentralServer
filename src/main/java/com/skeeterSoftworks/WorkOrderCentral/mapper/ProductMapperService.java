@@ -62,6 +62,9 @@ public class ProductMapperService {
                             .toList()
             );
         }
+        if (product.getTechnicalDrawing() != null && product.getTechnicalDrawing().length > 0) {
+            to.setTechnicalDrawingBase64(Base64.getEncoder().encodeToString(product.getTechnicalDrawing()));
+        }
         return to;
     }
 
@@ -106,6 +109,11 @@ public class ProductMapperService {
                     .peek(s -> s.setProduct(product))
                     .toList();
             product.setQualityInfoSteps(steps);
+        }
+        if (to.getId() == null) {
+            product.setTechnicalDrawing(decodeBase64Image(to.getTechnicalDrawingBase64()));
+        } else if (to.getTechnicalDrawingBase64() != null) {
+            product.setTechnicalDrawing(decodeBase64Image(to.getTechnicalDrawingBase64()));
         }
         return product;
     }

@@ -21,5 +21,7 @@ public class ProductTO {
     private Long toolId;
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
     private List<QualityInfoStepTO> qualityInfoSteps;
+    /** Optional technical drawing image (raw Base64 or data URL). */
+    private String technicalDrawingBase64;
 }
 

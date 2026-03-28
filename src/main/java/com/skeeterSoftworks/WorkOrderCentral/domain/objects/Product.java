@@ -4,6 +4,8 @@ package com.skeeterSoftworks.WorkOrderCentral.domain.objects;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -15,7 +17,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "machines", "tool", "measuringFeaturePrototypes", "qualityInfoSteps" })
+@ToString(exclude = { "machines", "tool", "measuringFeaturePrototypes", "qualityInfoSteps", "technicalDrawing" })
 public class Product {
 
     @Id
@@ -37,6 +39,10 @@ public class Product {
 
     @Column
     private Long stockQuantity;
+
+    @JdbcTypeCode(SqlTypes.VARBINARY)
+    @Column
+    private byte[] technicalDrawing;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @BatchSize(size = 32)

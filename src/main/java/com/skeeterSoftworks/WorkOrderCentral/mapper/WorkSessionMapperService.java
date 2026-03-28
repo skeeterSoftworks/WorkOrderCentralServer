@@ -4,6 +4,8 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSession;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkSessionTO;
 import org.springframework.stereotype.Service;
 
+import java.util.Base64;
+
 @Service
 public class WorkSessionMapperService {
 
@@ -31,12 +33,10 @@ public class WorkSessionMapperService {
         if (session.getWorkOrder() != null
                 && session.getWorkOrder().getProductOrder() != null
                 && session.getWorkOrder().getProductOrder().getProduct() != null) {
+            var product = session.getWorkOrder().getProductOrder().getProduct();
             // This list is initialized inside WorkSessionService before mapping to avoid LazyInitializationException.
             to.setMeasuringFeaturePrototypes(
-                    session.getWorkOrder()
-                            .getProductOrder()
-                            .getProduct()
-                            .getMeasuringFeaturePrototypes()
+                    product.getMeasuringFeaturePrototypes()
                             .stream()
                             .map(p -> new com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO(
                                     p.getId(),
@@ -54,6 +54,9 @@ public class WorkSessionMapperService {
                             ))
                             .toList()
             );
+            if (product.getTechnicalDrawing() != null && product.getTechnicalDrawing().length > 0) {
+                to.setTechnicalDrawingBase64(Base64.getEncoder().encodeToString(product.getTechnicalDrawing()));
+            }
         }
         to.setWorkOrderCompletedByTarget(false);
         return to;
