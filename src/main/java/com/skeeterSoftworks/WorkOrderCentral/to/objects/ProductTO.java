@@ -20,5 +20,6 @@ public class ProductTO {
     private List<Long> machineIds;
     private Long toolId;
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
+    private List<QualityInfoStepTO> qualityInfoSteps;
 }
 

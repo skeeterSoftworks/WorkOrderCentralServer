@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "machines", "tool" })
+@ToString(exclude = { "machines", "tool", "measuringFeaturePrototypes", "qualityInfoSteps" })
 public class Product {
 
     @Id
@@ -59,5 +59,13 @@ public class Product {
     )
     @BatchSize(size = 32)
     private List<MeasuringFeaturePrototype> measuringFeaturePrototypes = new ArrayList<>();
+
+    @OneToMany(
+            mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<QualityInfoStep> qualityInfoSteps = new ArrayList<>();
 
 }

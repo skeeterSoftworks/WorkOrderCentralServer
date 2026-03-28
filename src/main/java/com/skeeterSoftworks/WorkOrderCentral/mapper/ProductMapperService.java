@@ -3,16 +3,20 @@ package com.skeeterSoftworks.WorkOrderCentral.mapper;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ToolRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +51,14 @@ public class ProductMapperService {
                     product.getMeasuringFeaturePrototypes()
                             .stream()
                             .map(this::mapPrototypeToTO)
+                            .toList()
+            );
+        }
+        if (product.getQualityInfoSteps() != null) {
+            to.setQualityInfoSteps(
+                    product.getQualityInfoSteps().stream()
+                            .map(this::mapQualityStepToTO)
+                            .sorted(Comparator.comparing(QualityInfoStepTO::getStepNumber, Comparator.nullsLast(Integer::compareTo)))
                             .toList()
             );
         }
@@ -88,6 +100,13 @@ public class ProductMapperService {
                     .toList();
             product.setMeasuringFeaturePrototypes(prototypes);
         }
+        if (to.getQualityInfoSteps() != null) {
+            List<QualityInfoStep> steps = to.getQualityInfoSteps().stream()
+                    .map(this::mapQualityStepTOToEntity)
+                    .peek(s -> s.setProduct(product))
+                    .toList();
+            product.setQualityInfoSteps(steps);
+        }
         return product;
     }
 
@@ -125,6 +144,37 @@ public class ProductMapperService {
         entity.setToolType(to.getToolType());
         entity.setMeasuringTool(to.getMeasuringTool());
         return entity;
+    }
+
+    private QualityInfoStepTO mapQualityStepToTO(QualityInfoStep s) {
+        if (s == null) return null;
+        String b64 = null;
+        if (s.getImageData() != null && s.getImageData().length > 0) {
+            b64 = Base64.getEncoder().encodeToString(s.getImageData());
+        }
+        return new QualityInfoStepTO(s.getId(), s.getStepNumber(), s.getStepDescription(), b64);
+    }
+
+    private QualityInfoStep mapQualityStepTOToEntity(QualityInfoStepTO to) {
+        if (to == null) return null;
+        QualityInfoStep entity = new QualityInfoStep();
+        entity.setId(to.getId());
+        entity.setStepNumber(to.getStepNumber());
+        entity.setStepDescription(to.getStepDescription());
+        entity.setImageData(decodeBase64Image(to.getImageDataBase64()));
+        return entity;
+    }
+
+    private static byte[] decodeBase64Image(String b64) {
+        if (b64 == null || b64.isBlank()) {
+            return null;
+        }
+        String s = b64.trim();
+        int comma = s.indexOf(',');
+        if (s.startsWith("data:") && comma > 0) {
+            s = s.substring(comma + 1);
+        }
+        return Base64.getDecoder().decode(s);
     }
 }
 
