@@ -20,21 +20,27 @@ public class SetupDataPrototype {
 	@Column
 	private String toolID;
 
+	/** Nominal (ideal) diameter for setup measurement. */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal diameterRefValue;
 
+	/** Maximum allowed measured diameter (inclusive). */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal diameterMaxPosTolerance;
 
+	/** Minimum allowed measured diameter (inclusive). */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal diameterMaxNegTolerance;
 
+	/** Nominal (ideal) height for setup measurement. */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal heightRefValue;
 
+	/** Maximum allowed measured height (inclusive). */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal heightMaxPosTolerance;
 
+	/** Minimum allowed measured height (inclusive). */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal heightMaxNegTolerance;
 

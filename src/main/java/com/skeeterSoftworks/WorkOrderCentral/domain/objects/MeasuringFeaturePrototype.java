@@ -32,12 +32,15 @@ public class MeasuringFeaturePrototype {
 	@Column(columnDefinition = "boolean default false")
 	private boolean absoluteMeasure;
 
+	/** Nominal (ideal) measured value for MEASURED features. */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal refValue;
 
+	/** Minimum acceptable measured value (inclusive). */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal minTolerance;
 
+	/** Maximum acceptable measured value (inclusive). */
 	@Column(columnDefinition="Decimal(10,5)")
 	private BigDecimal maxTolerance;
 

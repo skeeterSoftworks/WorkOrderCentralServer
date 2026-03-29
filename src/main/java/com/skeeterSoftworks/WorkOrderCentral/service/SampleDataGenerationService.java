@@ -139,8 +139,8 @@ public class SampleDataGenerationService {
         outerDiameter.setDescription("Outside diameter — production control (measured)");
         outerDiameter.setAbsoluteMeasure(false);
         outerDiameter.setRefValue(new BigDecimal("45.00000"));
-        outerDiameter.setMinTolerance(new BigDecimal("0.05000"));
-        outerDiameter.setMaxTolerance(new BigDecimal("0.05000"));
+        outerDiameter.setMinTolerance(new BigDecimal("44.95000"));
+        outerDiameter.setMaxTolerance(new BigDecimal("45.05000"));
         outerDiameter.setClassType(EMeasuringFeatureClassType.CIC);
         outerDiameter.setFrequency("each part");
         outerDiameter.setCheckType(EMeasureCheckType.MEASURED);
@@ -154,8 +154,8 @@ public class SampleDataGenerationService {
         length.setDescription("Overall length (measured)");
         length.setAbsoluteMeasure(true);
         length.setRefValue(new BigDecimal("120.00000"));
-        length.setMinTolerance(new BigDecimal("0.10000"));
-        length.setMaxTolerance(new BigDecimal("0.10000"));
+        length.setMinTolerance(new BigDecimal("119.90000"));
+        length.setMaxTolerance(new BigDecimal("120.10000"));
         length.setClassType(EMeasuringFeatureClassType.NORM);
         length.setFrequency("1 / 10");
         length.setCheckType(EMeasureCheckType.MEASURED);
@@ -185,11 +185,11 @@ public class SampleDataGenerationService {
         sd.setOperationID("DEMO-OP-" + n);
         sd.setToolID(assignedTool.getId() != null ? "TOOL-" + assignedTool.getId() : "DEMO-TOOL-" + n);
         sd.setDiameterRefValue(new BigDecimal("44.50000"));
-        sd.setDiameterMaxPosTolerance(new BigDecimal("0.08000"));
-        sd.setDiameterMaxNegTolerance(new BigDecimal("0.08000"));
+        sd.setDiameterMaxNegTolerance(new BigDecimal("44.42000"));
+        sd.setDiameterMaxPosTolerance(new BigDecimal("44.58000"));
         sd.setHeightRefValue(new BigDecimal("12.00000"));
-        sd.setHeightMaxPosTolerance(new BigDecimal("0.04000"));
-        sd.setHeightMaxNegTolerance(new BigDecimal("0.04000"));
+        sd.setHeightMaxNegTolerance(new BigDecimal("11.96000"));
+        sd.setHeightMaxPosTolerance(new BigDecimal("12.04000"));
         sd.setAttributiveHeightMeasurement(false);
         sd.setAttributiveDiameterMeasurement(false);
         return sd;

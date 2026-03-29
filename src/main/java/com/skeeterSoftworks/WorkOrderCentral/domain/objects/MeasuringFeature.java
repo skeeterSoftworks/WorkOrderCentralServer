@@ -29,12 +29,15 @@ public class MeasuringFeature {
     @Column
     private String description;
 
+    /** Snapshot of prototype nominal (ideal) value. */
     @Column(columnDefinition="Decimal(10,5)")
     private BigDecimal refValue;
 
+    /** Snapshot of minimum acceptable measured value (inclusive). */
     @Column(columnDefinition="Decimal(10,5)")
     private BigDecimal minTolerance;
 
+    /** Snapshot of maximum acceptable measured value (inclusive). */
     @Column(columnDefinition="Decimal(10,5)")
     private BigDecimal maxTolerance;
 
