@@ -40,9 +40,12 @@ public class WorkSession {
     @Column
     private String productReferenceID;
 
-    /** Count of setup / tool-change events recorded for this session (not derived from a child table). */
+    /** Count of setup / tool-change events recorded for this session (kept in sync with {@link #setupProducts}). */
     @Column
     private Long setupProductCount;
+
+    @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<SetupProduct> setupProducts = new ArrayList<>();
 
     @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FaultyProduct> faultyProducts = new ArrayList<>();

@@ -34,6 +34,7 @@ public class WorkSessionService {
     public WorkSession getById(long id) throws Exception {
         WorkSession session = workSessionRepository.findById(id).orElseThrow(() -> new Exception("WORK_SESSION_NOT_FOUND"));
         preloadMeasuringFeaturePrototypes(session);
+        preloadSetupProducts(session);
         return session;
     }
 
@@ -116,6 +117,7 @@ public class WorkSessionService {
         boolean completedByTarget = syncWorkOrderProducedQuantityAndCompleteIfReached(session.getId());
         WorkSession latest = workSessionRepository.findById(sessionId).orElseThrow();
         preloadMeasuringFeaturePrototypes(latest);
+        preloadSetupProducts(latest);
         return new WorkSessionIncrementResult(latest, completedByTarget);
     }
 
@@ -196,6 +198,13 @@ public class WorkSessionService {
         product.getMeasuringFeaturePrototypes().size();
     }
 
+    private void preloadSetupProducts(WorkSession session) {
+        if (session == null || session.getSetupProducts() == null) {
+            return;
+        }
+        session.getSetupProducts().size();
+    }
+
     @Transactional
     public WorkSession addFaultyProduct(long sessionId, FaultyProductCreateRequestTO req) throws Exception {
         WorkSession session = getById(sessionId);
@@ -216,15 +225,58 @@ public class WorkSessionService {
     }
 
     @Transactional
-    public WorkSession addSetupProduct(long sessionId) throws Exception {
+    public WorkSession addSetupProduct(long sessionId, WorkSessionSetupProductCreateTO payload) throws Exception {
         WorkSession session = getById(sessionId);
         if (session.getSessionEnd() != null) {
             throw new Exception("WORK_SESSION_ALREADY_ENDED");
         }
         long cur = session.getSetupProductCount() == null ? 0L : session.getSetupProductCount();
         session.setSetupProductCount(cur + 1);
+
+        ProductOrder po = session.getWorkOrder() != null ? session.getWorkOrder().getProductOrder() : null;
+        Product product = po != null ? po.getProduct() : null;
+        SetupDataPrototype protoSnap = null;
+        if (product != null && product.getSetupDataPrototype() != null) {
+            protoSnap = copySetupDataPrototype(product.getSetupDataPrototype());
+        }
+
+        SetupProduct row = new SetupProduct();
+        row.setWorkSession(session);
+        row.setRecordedAt(LocalDateTime.now());
+        row.setPrototypeSnapshot(protoSnap);
+        if (payload != null) {
+            row.setMeasuredHeight(blankToNull(payload.getMeasuredHeight()));
+            row.setMeasuredHeightOk(payload.getMeasuredHeightOk());
+            row.setMeasuredDiameter(blankToNull(payload.getMeasuredDiameter()));
+            row.setMeasuredDiameterOk(payload.getMeasuredDiameterOk());
+        }
+        session.getSetupProducts().add(row);
+
         preloadMeasuringFeaturePrototypes(session);
+        preloadSetupProducts(session);
         return workSessionRepository.save(session);
+    }
+
+    private static SetupDataPrototype copySetupDataPrototype(SetupDataPrototype src) {
+        if (src == null) {
+            return null;
+        }
+        SetupDataPrototype c = new SetupDataPrototype();
+        c.setOperationID(src.getOperationID());
+        c.setToolID(src.getToolID());
+        c.setDiameterRefValue(src.getDiameterRefValue());
+        c.setDiameterMaxPosTolerance(src.getDiameterMaxPosTolerance());
+        c.setDiameterMaxNegTolerance(src.getDiameterMaxNegTolerance());
+        c.setHeightRefValue(src.getHeightRefValue());
+        c.setHeightMaxPosTolerance(src.getHeightMaxPosTolerance());
+        c.setHeightMaxNegTolerance(src.getHeightMaxNegTolerance());
+        c.setAttributiveHeightMeasurement(src.isAttributiveHeightMeasurement());
+        c.setAttributiveDiameterMeasurement(src.isAttributiveDiameterMeasurement());
+        return c;
+    }
+
+    private static String blankToNull(String s) {
+        return s != null && s.isBlank() ? null : s;
     }
 
     /**

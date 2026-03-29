@@ -124,7 +124,7 @@ public class ProductMapperService {
         return product;
     }
 
-    private SetupDataPrototypeTO mapSetupPrototypeToTO(SetupDataPrototype s) {
+    public SetupDataPrototypeTO mapSetupPrototypeToTO(SetupDataPrototype s) {
         if (s == null) return null;
         return new SetupDataPrototypeTO(
                 s.getOperationID(),

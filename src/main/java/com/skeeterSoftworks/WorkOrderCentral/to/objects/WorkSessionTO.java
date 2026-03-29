@@ -23,6 +23,8 @@ public class WorkSessionTO {
     private long faultyProductCount;
     /** Number of setup (e.g. tool change) events recorded in this session. */
     private long setupProductCount;
+    /** Recorded setup events with prototype snapshot and measured values. */
+    private List<SetupProductTO> setupProducts;
     private String productReferenceID;
     private String operatorQrCode;
     private String operatorName;

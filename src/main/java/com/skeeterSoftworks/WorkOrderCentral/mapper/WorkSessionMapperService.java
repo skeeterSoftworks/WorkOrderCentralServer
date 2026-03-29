@@ -1,13 +1,25 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupProduct;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSession;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkSessionTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 public class WorkSessionMapperService {
+
+    private final ProductMapperService productMapperService;
+
+    @Autowired
+    public WorkSessionMapperService(ProductMapperService productMapperService) {
+        this.productMapperService = productMapperService;
+    }
 
     public WorkSessionTO mapToTO(WorkSession session) {
         if (session == null) {
@@ -33,6 +45,15 @@ public class WorkSessionMapperService {
         to.setFaultyProductCount(faultyCount);
         long setupCount = session.getSetupProductCount() == null ? 0L : session.getSetupProductCount();
         to.setSetupProductCount(setupCount);
+        if (session.getSetupProducts() != null && !session.getSetupProducts().isEmpty()) {
+            to.setSetupProducts(session.getSetupProducts().stream()
+                    .sorted(Comparator.comparing(SetupProduct::getRecordedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(sp -> sp.getId() != null ? sp.getId() : 0L))
+                    .map(this::mapSetupProduct)
+                    .toList());
+        } else {
+            to.setSetupProducts(List.of());
+        }
         to.setProductReferenceID(session.getProductReferenceID());
         if (session.getOperator() != null) {
             to.setOperatorQrCode(session.getOperator().getOperatorQrCode());
@@ -72,6 +93,18 @@ public class WorkSessionMapperService {
         }
         to.setWorkOrderCompletedByTarget(false);
         return to;
+    }
+
+    private SetupProductTO mapSetupProduct(SetupProduct sp) {
+        return new SetupProductTO(
+                sp.getId(),
+                sp.getRecordedAt(),
+                productMapperService.mapSetupPrototypeToTO(sp.getPrototypeSnapshot()),
+                sp.getMeasuredHeight(),
+                sp.getMeasuredHeightOk(),
+                sp.getMeasuredDiameter(),
+                sp.getMeasuredDiameterOk()
+        );
     }
 
     public WorkSessionTO mapToTO(WorkSession session, boolean workOrderCompletedByTarget) {

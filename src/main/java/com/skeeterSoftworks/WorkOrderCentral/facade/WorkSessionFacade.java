@@ -108,9 +108,11 @@ public class WorkSessionFacade {
     }
 
     @PostMapping("/{id}/setup-products")
-    public ResponseEntity<?> addSetupProduct(@PathVariable Long id) {
+    public ResponseEntity<?> addSetupProduct(
+            @PathVariable Long id,
+            @RequestBody(required = false) WorkSessionSetupProductCreateTO body) {
         try {
-            WorkSession saved = workSessionService.addSetupProduct(id);
+            WorkSession saved = workSessionService.addSetupProduct(id, body);
             return ResponseEntity.ok(workSessionMapperService.mapToTO(saved));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
