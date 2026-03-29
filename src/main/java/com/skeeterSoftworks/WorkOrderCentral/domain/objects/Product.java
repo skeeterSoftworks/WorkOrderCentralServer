@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "machines", "tool", "measuringFeaturePrototypes", "qualityInfoSteps", "technicalDrawing" })
+@ToString(exclude = { "machines", "tool", "measuringFeaturePrototypes", "setupDataPrototype", "qualityInfoSteps", "technicalDrawing" })
 public class Product {
 
     @Id
@@ -65,6 +65,9 @@ public class Product {
     )
     @BatchSize(size = 32)
     private List<MeasuringFeaturePrototype> measuringFeaturePrototypes = new ArrayList<>();
+
+    @Embedded
+    private SetupDataPrototype setupDataPrototype;
 
     @OneToMany(
             mappedBy = "product",

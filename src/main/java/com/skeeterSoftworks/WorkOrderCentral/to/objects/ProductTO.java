@@ -19,6 +19,7 @@ public class ProductTO {
     private String reference;
     private List<Long> machineIds;
     private Long toolId;
+    private SetupDataPrototypeTO setupDataPrototype;
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
     private List<QualityInfoStepTO> qualityInfoSteps;
     /** Optional technical drawing image (raw Base64 or data URL). */

@@ -4,12 +4,14 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ToolRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupDataPrototypeTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +47,8 @@ public class ProductMapperService {
             to.setMachineIds(Collections.emptyList());
         }
         if (product.getTool() != null) to.setToolId(product.getTool().getId());
+
+        to.setSetupDataPrototype(mapSetupPrototypeToTO(product.getSetupDataPrototype()));
 
         if (product.getMeasuringFeaturePrototypes() != null) {
             to.setMeasuringFeaturePrototypes(
@@ -95,6 +99,8 @@ public class ProductMapperService {
             toolRepository.findById(to.getToolId()).ifPresent(product::setTool);
         }
 
+        product.setSetupDataPrototype(mapSetupPrototypeTOToEntity(to.getSetupDataPrototype()));
+
         if (to.getMeasuringFeaturePrototypes() != null) {
             List<MeasuringFeaturePrototype> prototypes = to.getMeasuringFeaturePrototypes()
                     .stream()
@@ -116,6 +122,54 @@ public class ProductMapperService {
             product.setTechnicalDrawing(decodeBase64Image(to.getTechnicalDrawingBase64()));
         }
         return product;
+    }
+
+    private SetupDataPrototypeTO mapSetupPrototypeToTO(SetupDataPrototype s) {
+        if (s == null) return null;
+        return new SetupDataPrototypeTO(
+                s.getOperationID(),
+                s.getToolID(),
+                s.getDiameterRefValue(),
+                s.getDiameterMaxPosTolerance(),
+                s.getDiameterMaxNegTolerance(),
+                s.getHeightRefValue(),
+                s.getHeightMaxPosTolerance(),
+                s.getHeightMaxNegTolerance(),
+                s.isAttributiveHeightMeasurement(),
+                s.isAttributiveDiameterMeasurement()
+        );
+    }
+
+    private SetupDataPrototype mapSetupPrototypeTOToEntity(SetupDataPrototypeTO to) {
+        if (to == null || isSetupDataPrototypeEffectivelyEmpty(to)) {
+            return null;
+        }
+        SetupDataPrototype s = new SetupDataPrototype();
+        s.setOperationID(to.getOperationID());
+        s.setToolID(to.getToolID());
+        s.setDiameterRefValue(to.getDiameterRefValue());
+        s.setDiameterMaxPosTolerance(to.getDiameterMaxPosTolerance());
+        s.setDiameterMaxNegTolerance(to.getDiameterMaxNegTolerance());
+        s.setHeightRefValue(to.getHeightRefValue());
+        s.setHeightMaxPosTolerance(to.getHeightMaxPosTolerance());
+        s.setHeightMaxNegTolerance(to.getHeightMaxNegTolerance());
+        s.setAttributiveHeightMeasurement(Boolean.TRUE.equals(to.getAttributiveHeightMeasurement()));
+        s.setAttributiveDiameterMeasurement(Boolean.TRUE.equals(to.getAttributiveDiameterMeasurement()));
+        return s;
+    }
+
+    private boolean isSetupDataPrototypeEffectivelyEmpty(SetupDataPrototypeTO to) {
+        boolean noIds = (to.getOperationID() == null || to.getOperationID().isBlank())
+                && (to.getToolID() == null || to.getToolID().isBlank());
+        boolean noMeasures = to.getDiameterRefValue() == null
+                && to.getDiameterMaxPosTolerance() == null
+                && to.getDiameterMaxNegTolerance() == null
+                && to.getHeightRefValue() == null
+                && to.getHeightMaxPosTolerance() == null
+                && to.getHeightMaxNegTolerance() == null;
+        boolean noFlags = !Boolean.TRUE.equals(to.getAttributiveHeightMeasurement())
+                && !Boolean.TRUE.equals(to.getAttributiveDiameterMeasurement());
+        return noIds && noMeasures && noFlags;
     }
 
     private MeasuringFeaturePrototypeTO mapPrototypeToTO(MeasuringFeaturePrototype p) {
