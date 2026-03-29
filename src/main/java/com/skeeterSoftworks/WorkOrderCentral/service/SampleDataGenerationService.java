@@ -3,13 +3,17 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ApplicationUser;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ToolRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.UserRepository;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMeasureCheckType;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMeasuringFeatureClassType;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.ERole;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SampleDataGenerationResultTO;
 import net.datafaker.Faker;
@@ -19,13 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Inserts the same demo batch as {@code ManualSampleDataGenerationTest} (10 rows per entity).
+ * Inserts the same demo batch as {@code ManualSampleDataGenerationTest} (10 rows per entity type).
+ * Each product gets 3 demo {@link MeasuringFeaturePrototype}s and an embedded {@link SetupDataPrototype}.
  * Not idempotent: each call adds more rows.
  */
 @Service
@@ -92,6 +98,8 @@ public class SampleDataGenerationService {
             p.setTechnicalDrawing(sampleTechnicalDrawing);
             p.setTool(savedTools.get(i));
             p.getMachines().add(savedMachines.get(i));
+            addDemoMeasuringFeatures(p, i);
+            p.setSetupDataPrototype(buildDemoSetupDataPrototype(i, savedTools.get(i)));
             productRepository.save(p);
         }
 
@@ -119,6 +127,72 @@ public class SampleDataGenerationService {
                 SAMPLE_COUNT,
                 SAMPLE_COUNT,
                 SAMPLE_COUNT);
+    }
+
+    private static void addDemoMeasuringFeatures(Product product, int productIndex) {
+        int n = productIndex + 1;
+        String prefix = "DEMO-" + n + "-";
+
+        MeasuringFeaturePrototype outerDiameter = new MeasuringFeaturePrototype();
+        outerDiameter.setProduct(product);
+        outerDiameter.setCatalogueId(prefix + "OD");
+        outerDiameter.setDescription("Outside diameter — production control (measured)");
+        outerDiameter.setAbsoluteMeasure(false);
+        outerDiameter.setRefValue(new BigDecimal("45.00000"));
+        outerDiameter.setMinTolerance(new BigDecimal("0.05000"));
+        outerDiameter.setMaxTolerance(new BigDecimal("0.05000"));
+        outerDiameter.setClassType(EMeasuringFeatureClassType.CIC);
+        outerDiameter.setFrequency("each part");
+        outerDiameter.setCheckType(EMeasureCheckType.MEASURED);
+        outerDiameter.setToolType("Micrometer");
+        outerDiameter.setMeasuringTool("External micrometer 25-50 mm");
+        product.getMeasuringFeaturePrototypes().add(outerDiameter);
+
+        MeasuringFeaturePrototype length = new MeasuringFeaturePrototype();
+        length.setProduct(product);
+        length.setCatalogueId(prefix + "LEN");
+        length.setDescription("Overall length (measured)");
+        length.setAbsoluteMeasure(true);
+        length.setRefValue(new BigDecimal("120.00000"));
+        length.setMinTolerance(new BigDecimal("0.10000"));
+        length.setMaxTolerance(new BigDecimal("0.10000"));
+        length.setClassType(EMeasuringFeatureClassType.NORM);
+        length.setFrequency("1 / 10");
+        length.setCheckType(EMeasureCheckType.MEASURED);
+        length.setToolType("Height gauge");
+        length.setMeasuringTool("Digital height gauge");
+        product.getMeasuringFeaturePrototypes().add(length);
+
+        MeasuringFeaturePrototype surface = new MeasuringFeaturePrototype();
+        surface.setProduct(product);
+        surface.setCatalogueId(prefix + "VIS");
+        surface.setDescription("Surface / burr check (attributive OK–NOK)");
+        surface.setAbsoluteMeasure(false);
+        surface.setRefValue(null);
+        surface.setMinTolerance(null);
+        surface.setMaxTolerance(null);
+        surface.setClassType(EMeasuringFeatureClassType.CC);
+        surface.setFrequency("spot check");
+        surface.setCheckType(EMeasureCheckType.ATTRIBUTIVE);
+        surface.setToolType("Visual");
+        surface.setMeasuringTool("—");
+        product.getMeasuringFeaturePrototypes().add(surface);
+    }
+
+    private static SetupDataPrototype buildDemoSetupDataPrototype(int productIndex, Tool assignedTool) {
+        int n = productIndex + 1;
+        SetupDataPrototype sd = new SetupDataPrototype();
+        sd.setOperationID("DEMO-OP-" + n);
+        sd.setToolID(assignedTool.getId() != null ? "TOOL-" + assignedTool.getId() : "DEMO-TOOL-" + n);
+        sd.setDiameterRefValue(new BigDecimal("44.50000"));
+        sd.setDiameterMaxPosTolerance(new BigDecimal("0.08000"));
+        sd.setDiameterMaxNegTolerance(new BigDecimal("0.08000"));
+        sd.setHeightRefValue(new BigDecimal("12.00000"));
+        sd.setHeightMaxPosTolerance(new BigDecimal("0.04000"));
+        sd.setHeightMaxNegTolerance(new BigDecimal("0.04000"));
+        sd.setAttributiveHeightMeasurement(false);
+        sd.setAttributiveDiameterMeasurement(false);
+        return sd;
     }
 
     private static byte[] loadSampleTechnicalDrawing() {

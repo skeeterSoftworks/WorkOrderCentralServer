@@ -34,7 +34,7 @@ class ManualSampleDataGenerationTest {
 
     @Test
     @DisplayName("Generate sample users, machines, tools, products, customers (manual / disabled by default)")
-    @Disabled("Remove @Disabled or deactivate DisabledCondition to insert sample data into the database.")
+  //  @Disabled("Remove @Disabled or deactivate DisabledCondition to insert sample data into the database.")
     void generateSampleData() {
         SampleDataGenerationResultTO result = sampleDataGenerationService.generateDemoBatch();
         log.info(
