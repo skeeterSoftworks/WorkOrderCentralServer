@@ -5,6 +5,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderReposi
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkSessionRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.*;
+import com.skeeterSoftworks.WorkOrderCentral.util.DecimalUserInput;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -174,7 +175,11 @@ public class WorkSessionService {
             mf.setToolType(proto.getToolType());
             mf.setMeasuringTool(proto.getMeasuringTool());
 
-            mf.setAssessedValue(in.getAssessedValue());
+            String av = in.getAssessedValue();
+            if (av != null && !av.isBlank()) {
+                av = DecimalUserInput.normalizeToDotDecimal(av.trim());
+            }
+            mf.setAssessedValue(av);
             mf.setAssessedValueGood(in.isAssessedValueGood());
 
             cp.getMeasuringFeatures().add(mf);
@@ -245,9 +250,9 @@ public class WorkSessionService {
         row.setRecordedAt(LocalDateTime.now());
         row.setPrototypeSnapshot(protoSnap);
         if (payload != null) {
-            row.setMeasuredHeight(blankToNull(payload.getMeasuredHeight()));
+            row.setMeasuredHeight(normalizeMeasuredDecimal(payload.getMeasuredHeight()));
             row.setMeasuredHeightOk(payload.getMeasuredHeightOk());
-            row.setMeasuredDiameter(blankToNull(payload.getMeasuredDiameter()));
+            row.setMeasuredDiameter(normalizeMeasuredDecimal(payload.getMeasuredDiameter()));
             row.setMeasuredDiameterOk(payload.getMeasuredDiameterOk());
         }
         session.getSetupProducts().add(row);
@@ -275,8 +280,12 @@ public class WorkSessionService {
         return c;
     }
 
-    private static String blankToNull(String s) {
-        return s != null && s.isBlank() ? null : s;
+    private static String normalizeMeasuredDecimal(String s) {
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        String n = DecimalUserInput.normalizeToDotDecimal(s.trim());
+        return n.isBlank() ? null : n;
     }
 
     /**
