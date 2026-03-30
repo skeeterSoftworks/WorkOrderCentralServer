@@ -85,6 +85,15 @@ public class SampleDataGenerationService {
 
         byte[] sampleTechnicalDrawing = loadSampleTechnicalDrawing();
 
+        List<Customer> savedCustomers = new ArrayList<>();
+        for (int i = 1; i <= SAMPLE_COUNT; i++) {
+            Customer c = new Customer();
+            c.setCompanyName(faker.company().name() + " " + faker.company().suffix());
+            c.setAddressData(faker.address().fullAddress());
+            c.setDescription(faker.company().catchPhrase() + " — " + faker.lorem().sentence(4));
+            savedCustomers.add(customerRepository.save(c));
+        }
+
         for (int i = 0; i < SAMPLE_COUNT; i++) {
             Product p = new Product();
             p.setName(faker.commerce().productName());
@@ -95,17 +104,10 @@ public class SampleDataGenerationService {
             p.setTechnicalDrawing(sampleTechnicalDrawing);
             p.setTool(savedTools.get(i));
             p.getMachines().add(savedMachines.get(i));
+            p.getCustomers().add(savedCustomers.get(i));
             addDemoMeasuringFeatures(p, i);
             p.setSetupDataPrototype(buildDemoSetupDataPrototype(i, savedTools.get(i)));
             productRepository.save(p);
-        }
-
-        for (int i = 1; i <= SAMPLE_COUNT; i++) {
-            Customer c = new Customer();
-            c.setCompanyName(faker.company().name() + " " + faker.company().suffix());
-            c.setAddressData(faker.address().fullAddress());
-            c.setDescription(faker.company().catchPhrase() + " — " + faker.lorem().sentence(4));
-            customerRepository.save(c);
         }
 
         for (int i = 1; i <= SAMPLE_COUNT; i++) {

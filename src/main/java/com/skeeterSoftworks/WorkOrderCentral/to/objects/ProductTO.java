@@ -18,6 +18,7 @@ public class ProductTO {
     /** Catalogue / reference ID for the product. */
     private String reference;
     private List<Long> machineIds;
+    private List<Long> customerIds;
     private Long toolId;
     private SetupDataPrototypeTO setupDataPrototype;
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;

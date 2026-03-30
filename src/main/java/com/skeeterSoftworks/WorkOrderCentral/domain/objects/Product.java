@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "machines", "tool", "measuringFeaturePrototypes", "setupDataPrototype", "qualityInfoSteps", "technicalDrawing" })
+@ToString(exclude = { "machines", "customers", "tool", "measuringFeaturePrototypes", "setupDataPrototype", "qualityInfoSteps", "technicalDrawing" })
 public class Product {
 
     @Id
@@ -52,6 +52,15 @@ public class Product {
             inverseJoinColumns = @JoinColumn(name = "machine_id")
     )
     private List<Machine> machines = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
+    @JoinTable(
+            name = "product_customer",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "customer_id")
+    )
+    private List<Customer> customers = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tool_id")

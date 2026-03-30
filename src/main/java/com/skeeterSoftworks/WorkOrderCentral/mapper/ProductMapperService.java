@@ -1,11 +1,13 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ToolRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
@@ -26,11 +28,16 @@ import java.util.stream.Collectors;
 public class ProductMapperService {
 
     private final MachineRepository machineRepository;
+    private final CustomerRepository customerRepository;
     private final ToolRepository toolRepository;
 
     @Autowired
-    public ProductMapperService(MachineRepository machineRepository, ToolRepository toolRepository) {
+    public ProductMapperService(
+            MachineRepository machineRepository,
+            CustomerRepository customerRepository,
+            ToolRepository toolRepository) {
         this.machineRepository = machineRepository;
+        this.customerRepository = customerRepository;
         this.toolRepository = toolRepository;
     }
 
@@ -45,6 +52,11 @@ public class ProductMapperService {
             to.setMachineIds(product.getMachines().stream().map(Machine::getId).collect(Collectors.toList()));
         } else {
             to.setMachineIds(Collections.emptyList());
+        }
+        if (product.getCustomers() != null && !product.getCustomers().isEmpty()) {
+            to.setCustomerIds(product.getCustomers().stream().map(Customer::getId).collect(Collectors.toList()));
+        } else {
+            to.setCustomerIds(Collections.emptyList());
         }
         if (product.getTool() != null) to.setToolId(product.getTool().getId());
 
@@ -94,6 +106,15 @@ public class ProductMapperService {
             product.setMachines(machineList);
         } else {
             product.setMachines(new ArrayList<>());
+        }
+        if (to.getCustomerIds() != null && !to.getCustomerIds().isEmpty()) {
+            List<Customer> customerList = new ArrayList<>();
+            for (Long id : to.getCustomerIds()) {
+                customerRepository.findById(id).ifPresent(customerList::add);
+            }
+            product.setCustomers(customerList);
+        } else {
+            product.setCustomers(new ArrayList<>());
         }
         if (to.getToolId() != null) {
             toolRepository.findById(to.getToolId()).ifPresent(product::setTool);
