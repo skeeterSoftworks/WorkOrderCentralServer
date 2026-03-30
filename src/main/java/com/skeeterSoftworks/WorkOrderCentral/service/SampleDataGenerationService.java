@@ -66,14 +66,11 @@ public class SampleDataGenerationService {
         for (int i = 1; i <= SAMPLE_COUNT; i++) {
             Machine m = new Machine();
             m.setMachineName(faker.company().name() + " " + faker.commerce().material() + " #" + i);
-            m.setCycleTime(30L + faker.number().numberBetween(1, 120));
-            m.setBarLocation(faker.address().cityName() + " — " + faker.address().streetName());
-            m.setPiecesPerBar(5L + faker.number().numberBetween(1, 50));
-            m.setBarsPerSeries(1L + faker.number().numberBetween(1, 10));
-            m.setBarsCount(10L + faker.number().numberBetween(1, 40));
-            m.setWeightPerBar(faker.number().randomDouble(2, 5, 80));
-            m.setSumBarWeight(faker.number().randomDouble(2, 50, 500));
-            m.setSeriesID("SER-" + faker.regexify("[A-Z]{2}\\d{4}") + "-" + i);
+            m.setManufacturer(faker.company().name());
+            m.setManufactureYear(faker.number().numberBetween(1995, 2025));
+            m.setInternalNumber("INT-" + faker.regexify("[A-Z0-9]{6}") + "-" + i);
+            m.setSerialNumber("SN-" + faker.regexify("[A-Z0-9]{8}") + "-" + i);
+            m.setLocation(faker.address().cityName() + ", " + faker.address().streetAddress());
             savedMachines.add(machineRepository.save(m));
         }
 
@@ -137,7 +134,6 @@ public class SampleDataGenerationService {
         outerDiameter.setProduct(product);
         outerDiameter.setCatalogueId(prefix + "OD");
         outerDiameter.setDescription("Outside diameter — production control (measured)");
-        outerDiameter.setAbsoluteMeasure(false);
         outerDiameter.setRefValue(new BigDecimal("45.00000"));
         outerDiameter.setMinTolerance(new BigDecimal("44.95000"));
         outerDiameter.setMaxTolerance(new BigDecimal("45.05000"));
@@ -152,7 +148,6 @@ public class SampleDataGenerationService {
         length.setProduct(product);
         length.setCatalogueId(prefix + "LEN");
         length.setDescription("Overall length (measured)");
-        length.setAbsoluteMeasure(true);
         length.setRefValue(new BigDecimal("120.00000"));
         length.setMinTolerance(new BigDecimal("119.90000"));
         length.setMaxTolerance(new BigDecimal("120.10000"));
@@ -167,7 +162,6 @@ public class SampleDataGenerationService {
         surface.setProduct(product);
         surface.setCatalogueId(prefix + "VIS");
         surface.setDescription("Surface / burr check (attributive OK–NOK)");
-        surface.setAbsoluteMeasure(false);
         surface.setRefValue(null);
         surface.setMinTolerance(null);
         surface.setMaxTolerance(null);

@@ -178,7 +178,6 @@ public class ProductMapperService {
                 p.getId(),
                 p.getCatalogueId(),
                 p.getDescription(),
-                p.isAbsoluteMeasure(),
                 p.getRefValue(),
                 p.getMinTolerance(),
                 p.getMaxTolerance(),
@@ -196,7 +195,6 @@ public class ProductMapperService {
         entity.setId(to.getId());
         entity.setCatalogueId(to.getCatalogueId());
         entity.setDescription(to.getDescription());
-        entity.setAbsoluteMeasure(to.getAbsoluteMeasure() != null ? to.getAbsoluteMeasure() : false);
         entity.setRefValue(to.getRefValue());
         entity.setMinTolerance(to.getMinTolerance());
         entity.setMaxTolerance(to.getMaxTolerance());

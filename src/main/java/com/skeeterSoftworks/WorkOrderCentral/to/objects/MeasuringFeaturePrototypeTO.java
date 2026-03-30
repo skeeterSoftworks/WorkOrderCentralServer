@@ -15,7 +15,6 @@ public class MeasuringFeaturePrototypeTO {
     private Long id;
     private String catalogueId;
     private String description;
-    private Boolean absoluteMeasure;
     private BigDecimal refValue;
     private BigDecimal minTolerance;
     private BigDecimal maxTolerance;

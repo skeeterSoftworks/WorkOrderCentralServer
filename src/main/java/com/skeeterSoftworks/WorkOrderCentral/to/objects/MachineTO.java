@@ -5,9 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,13 +12,9 @@ import java.util.List;
 public class MachineTO {
     private Long id;
     private String machineName;
-    private Long cycleTime;
-    private String barLocation;
-    private Long piecesPerBar;
-    private Long barsPerSeries;
-    private Long barsCount;
-    private Double weightPerBar;
-    private Double sumBarWeight;
-    private String seriesID;
-    private List<ToolTO> tools = new ArrayList<>();
+    private String manufacturer;
+    private Integer manufactureYear;
+    private String internalNumber;
+    private String serialNumber;
+    private String location;
 }

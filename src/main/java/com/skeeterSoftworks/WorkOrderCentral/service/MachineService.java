@@ -28,7 +28,6 @@ public class MachineService {
 
     public Machine addMachine(Machine machine) {
         machine.setId(null);
-        machine.getTools().forEach(t -> t.setId(null));
         return machineRepository.save(machine);
     }
 

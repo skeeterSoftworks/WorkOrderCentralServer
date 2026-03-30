@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "tools", "products", "bookings" })
+@ToString(exclude = { "products", "bookings" })
 public class Machine {
 
     @Id
@@ -30,30 +30,18 @@ public class Machine {
     private String machineName;
 
     @Column
-    private Long cycleTime;
+    private String manufacturer;
 
     @Column
-    private String barLocation;
+    private Integer manufactureYear;
 
     @Column
-    private Long piecesPerBar;
+    private String internalNumber;
 
     @Column
-    private Long barsPerSeries;
+    private String serialNumber;
 
     @Column
-    private Long barsCount;
-
-    @Column
-    private Double weightPerBar;
-
-    @Column
-    private Double sumBarWeight;
-
-    @Column
-    private String seriesID;
-
-    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Tool> tools = new ArrayList<>();
+    private String location;
 
 }

@@ -75,7 +75,6 @@ public class WorkSessionMapperService {
                                     p.getId(),
                                     p.getCatalogueId(),
                                     p.getDescription(),
-                                    p.isAbsoluteMeasure(),
                                     p.getRefValue(),
                                     p.getMinTolerance(),
                                     p.getMaxTolerance(),
