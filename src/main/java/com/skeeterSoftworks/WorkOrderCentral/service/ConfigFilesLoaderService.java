@@ -47,23 +47,34 @@ public class ConfigFilesLoaderService {
             if (parsed.getDeliveryTerms() == null) {
                 parsed.setDeliveryTerms(new ArrayList<>());
             }
+            if (parsed.getRejectCauses() == null) {
+                parsed.setRejectCauses(new ArrayList<>());
+            }
             return parsed;
         }
     }
 
-    public void writeSelectOptions(SelectOptionsTO to) throws IOException {
-        if (to.getMeasuringTools() == null) {
-            to.setMeasuringTools(new ArrayList<>());
+    /**
+     * Merges non-null list fields from {@code incoming} into the current file (or defaults),
+     * so partial updates (e.g. from older clients) do not wipe other option lists.
+     */
+    public void writeSelectOptions(SelectOptionsTO incoming) throws IOException {
+        SelectOptionsTO existing = readSelectOptions();
+        if (incoming.getMeasuringTools() != null) {
+            existing.setMeasuringTools(new ArrayList<>(incoming.getMeasuringTools()));
         }
-        if (to.getDeliveryTerms() == null) {
-            to.setDeliveryTerms(new ArrayList<>());
+        if (incoming.getDeliveryTerms() != null) {
+            existing.setDeliveryTerms(new ArrayList<>(incoming.getDeliveryTerms()));
+        }
+        if (incoming.getRejectCauses() != null) {
+            existing.setRejectCauses(new ArrayList<>(incoming.getRejectCauses()));
         }
         File file = new File(SELECT_OPTIONS_FILE);
         File parent = file.getParentFile();
         if (parent != null && !parent.exists() && !parent.mkdirs()) {
             throw new IOException("Could not create directory: " + parent);
         }
-        objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, to);
+        objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, existing);
     }
 
     private static SelectOptionsTO defaultSelectOptions() {

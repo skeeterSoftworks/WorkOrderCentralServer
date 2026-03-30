@@ -14,4 +14,5 @@ public class SelectOptionsTO {
 
     private List<String> measuringTools = new ArrayList<>();
     private List<String> deliveryTerms = new ArrayList<>();
+    private List<String> rejectCauses = new ArrayList<>();
 }

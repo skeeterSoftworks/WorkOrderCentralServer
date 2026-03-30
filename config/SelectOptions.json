@@ -1,4 +1,7 @@
 {
   "measuringTools" : [ "Pomično merilo", "Specijalni uređaj", "CMM", "Rugozimetar", "Dubinomer", "Profiltester", "Visinomer", "Kontrolni čep", "Mikroskop" ],
-  "deliveryTerms" : [ "EXW", "FOB", "CIF", "DDP" ]
-}
+  "deliveryTerms" : [ "EXW", "FOB", "CIF", "DDP" ],
+  "rejectCauses" : ["Loše stezanje dela", "Loše stezanje alata", "Lom alata", "Greška korekcije alata",
+    "Postavljen pogrešan alat", "Setup/Reglaža", "Greška popravke", "Greške koje su nastale kao posledica realizacije drugih operacija",
+    "Lom steznih šapa", "Greška steznog pribora", "Oksidacija dela", "Udar, otisak špona", "Oštećenje komada, tragovi obrade",
+    "Loš kontrolni pribor"]}
