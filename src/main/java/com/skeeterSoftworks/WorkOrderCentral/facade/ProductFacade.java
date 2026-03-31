@@ -2,7 +2,9 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
+import com.skeeterSoftworks.WorkOrderCentral.service.ProductDeleteBlockedException;
 import com.skeeterSoftworks.WorkOrderCentral.service.ProductService;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ApiErrorTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductQualityInfoUpdateTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -140,8 +143,17 @@ public class ProductFacade {
         try {
             productService.deleteProduct(id);
             return ResponseEntity.ok().build();
+        } catch (ProductDeleteBlockedException e) {
+            log.warn("Product {} delete blocked: {} product_order row(s)", id, e.getProductOrderLineCount());
+            return ResponseEntity.status(409).body(new ApiErrorTO(
+                    "errorProductDeleteLinkedOrderLines",
+                    Map.of("count", e.getProductOrderLineCount())
+            ));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            if ("PRODUCT_NOT_FOUND".equals(e.getMessage())) {
+                return ResponseEntity.status(404).body("PRODUCT_NOT_FOUND");
+            }
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }

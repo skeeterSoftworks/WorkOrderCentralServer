@@ -2,6 +2,7 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
@@ -17,11 +18,17 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductOrderRepository productOrderRepository;
     private final ProductMapperService productMapperService;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, ProductMapperService productMapperService) {
+    public ProductService(
+            ProductRepository productRepository,
+            ProductOrderRepository productOrderRepository,
+            ProductMapperService productMapperService
+    ) {
         this.productRepository = productRepository;
+        this.productOrderRepository = productOrderRepository;
         this.productMapperService = productMapperService;
     }
 
@@ -55,6 +62,11 @@ public class ProductService {
     public void deleteProduct(Long id) throws Exception {
         if (!productRepository.existsById(id)) {
             throw new Exception("PRODUCT_NOT_FOUND");
+        }
+        long orderLines = productOrderRepository.countByProduct_Id(id);
+        if (orderLines > 0) {
+            int count = orderLines > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) orderLines;
+            throw new ProductDeleteBlockedException(count);
         }
         productRepository.deleteById(id);
     }

@@ -2,7 +2,9 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.MachineMapperService;
+import com.skeeterSoftworks.WorkOrderCentral.service.MachineDeleteBlockedException;
 import com.skeeterSoftworks.WorkOrderCentral.service.MachineService;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ApiErrorTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MachineTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -85,8 +88,17 @@ public class MachineFacade {
         try {
             machineService.deleteMachine(id);
             return ResponseEntity.ok().build();
+        } catch (MachineDeleteBlockedException e) {
+            log.warn("Machine {} delete blocked: {} linked product(s)", id, e.getLinkedProductCount());
+            return ResponseEntity.status(409).body(new ApiErrorTO(
+                    "errorMachineDeleteLinkedProducts",
+                    Map.of("count", e.getLinkedProductCount())
+            ));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            if ("MACHINE_NOT_FOUND".equals(e.getMessage())) {
+                return ResponseEntity.status(404).body("MACHINE_NOT_FOUND");
+            }
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }

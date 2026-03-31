@@ -9,6 +9,8 @@ import java.util.Optional;
 
 public interface ProductOrderRepository extends CrudRepository<ProductOrder, Long> {
 
+    long countByProduct_Id(Long productId);
+
     @Query("SELECT pol.purchaseOrder.id FROM ProductOrder pol WHERE pol.id = :productOrderLineId")
     Optional<Long> findPurchaseOrderIdByProductOrderLineId(@Param("productOrderLineId") Long productOrderLineId);
 }
