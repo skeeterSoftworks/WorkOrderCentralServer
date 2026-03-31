@@ -289,10 +289,10 @@ public class WorkSessionService {
 
     /**
      * Recomputes {@link WorkOrder#getProducedGoodQuantity()} from all sessions. If it reaches or exceeds the
-     * product-order line quantity, marks the work order {@link EWorkOrderState#COMPLETE} and ends the given session.
+     * product-order line quantity, marks the work order {@link EWorkOrderState#COMPLETE}.
      *
      * @param sessionId id of the session that was just updated (reloaded after persistence)
-     * @return {@code true} if the work order was completed and the session was auto-closed
+     * @return {@code true} if the work order was completed by this update
      */
     private boolean syncWorkOrderProducedQuantityAndCompleteIfReached(long sessionId) {
         WorkSession session = workSessionRepository.findById(sessionId).orElse(null);
@@ -327,11 +327,6 @@ public class WorkSessionService {
         workOrderRepository.save(workOrder);
         machineBookingService.completeNonCancelledBookingsForWorkOrder(workOrder);
 
-        WorkSession toClose = workSessionRepository.findById(sessionId).orElse(session);
-        if (toClose.getSessionEnd() == null) {
-            toClose.setSessionEnd(LocalDateTime.now());
-            workSessionRepository.save(toClose);
-        }
         return true;
     }
 }
