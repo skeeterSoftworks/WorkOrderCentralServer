@@ -172,7 +172,6 @@ public class WorkSessionService {
             mf.setClassType(proto.getClassType());
             mf.setFrequency(proto.getFrequency());
             mf.setCheckType(proto.getCheckType());
-            mf.setToolType(proto.getToolType());
             mf.setMeasuringTool(proto.getMeasuringTool());
 
             String av = in.getAssessedValue();

@@ -142,7 +142,6 @@ public class SampleDataGenerationService {
         outerDiameter.setClassType(EMeasuringFeatureClassType.CIC);
         outerDiameter.setFrequency("each part");
         outerDiameter.setCheckType(EMeasureCheckType.MEASURED);
-        outerDiameter.setToolType("Micrometer");
         outerDiameter.setMeasuringTool("External micrometer 25-50 mm");
         product.getMeasuringFeaturePrototypes().add(outerDiameter);
 
@@ -156,7 +155,6 @@ public class SampleDataGenerationService {
         length.setClassType(EMeasuringFeatureClassType.NORM);
         length.setFrequency("1 / 10");
         length.setCheckType(EMeasureCheckType.MEASURED);
-        length.setToolType("Height gauge");
         length.setMeasuringTool("Digital height gauge");
         product.getMeasuringFeaturePrototypes().add(length);
 
@@ -170,7 +168,6 @@ public class SampleDataGenerationService {
         surface.setClassType(EMeasuringFeatureClassType.CC);
         surface.setFrequency("spot check");
         surface.setCheckType(EMeasureCheckType.ATTRIBUTIVE);
-        surface.setToolType("Visual");
         surface.setMeasuringTool("—");
         product.getMeasuringFeaturePrototypes().add(surface);
     }

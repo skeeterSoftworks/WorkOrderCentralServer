@@ -205,7 +205,6 @@ public class ProductMapperService {
                 p.getClassType(),
                 p.getFrequency(),
                 p.getCheckType(),
-                p.getToolType(),
                 p.getMeasuringTool()
         );
     }
@@ -222,7 +221,6 @@ public class ProductMapperService {
         entity.setClassType(to.getClassType());
         entity.setFrequency(to.getFrequency());
         entity.setCheckType(to.getCheckType());
-        entity.setToolType(to.getToolType());
         entity.setMeasuringTool(to.getMeasuringTool());
         return entity;
     }

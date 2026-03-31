@@ -53,9 +53,6 @@ public class MeasuringFeature {
     private EMeasureCheckType checkType;
 
     @Column
-    private String toolType;
-
-    @Column
     private String measuringTool;
 
     @Column

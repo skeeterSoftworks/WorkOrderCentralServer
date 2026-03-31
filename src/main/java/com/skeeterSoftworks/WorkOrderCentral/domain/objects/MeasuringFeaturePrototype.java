@@ -54,9 +54,6 @@ public class MeasuringFeaturePrototype {
 	private EMeasureCheckType checkType;
 
 	@Column
-	private String toolType;
-
-	@Column
 	private String measuringTool;
 
 	@ManyToOne(fetch = FetchType.LAZY)

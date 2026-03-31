@@ -81,7 +81,6 @@ public class WorkSessionMapperService {
                                     p.getClassType(),
                                     p.getFrequency(),
                                     p.getCheckType(),
-                                    p.getToolType(),
                                     p.getMeasuringTool()
                             ))
                             .toList()

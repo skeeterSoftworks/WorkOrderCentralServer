@@ -21,7 +21,6 @@ public class MeasuringFeaturePrototypeTO {
     private EMeasuringFeatureClassType classType;
     private String frequency;
     private EMeasureCheckType checkType;
-    private String toolType;
     private String measuringTool;
 }
 
