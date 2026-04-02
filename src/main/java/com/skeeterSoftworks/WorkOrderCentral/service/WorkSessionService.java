@@ -123,7 +123,7 @@ public class WorkSessionService {
     }
 
     @Transactional
-    public WorkSession addControlProduct(long sessionId, ControlProductCreateRequestTO req) throws Exception {
+    public WorkSessionIncrementResult addControlProduct(long sessionId, ControlProductCreateRequestTO req) throws Exception {
         Objects.requireNonNull(req, "request");
         if (req.getMeasuringFeatures() == null || req.getMeasuringFeatures().isEmpty()) {
             throw new Exception("MEASURING_FEATURES_REQUIRED");
@@ -185,8 +185,14 @@ public class WorkSessionService {
         }
 
         session.getControlProducts().add(cp);
+        session.setProductCount(session.getProductCount() + 1L);
         preloadMeasuringFeaturePrototypes(session);
-        return workSessionRepository.save(session);
+        workSessionRepository.save(session);
+        boolean completedByTarget = syncWorkOrderProducedQuantityAndCompleteIfReached(session.getId());
+        WorkSession latest = workSessionRepository.findById(sessionId).orElseThrow();
+        preloadMeasuringFeaturePrototypes(latest);
+        preloadSetupProducts(latest);
+        return new WorkSessionIncrementResult(latest, completedByTarget);
     }
 
     private void preloadMeasuringFeaturePrototypes(WorkSession session) {

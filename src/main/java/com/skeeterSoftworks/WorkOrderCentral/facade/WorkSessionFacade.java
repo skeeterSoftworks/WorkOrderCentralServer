@@ -79,8 +79,10 @@ public class WorkSessionFacade {
     @PostMapping("/{id}/control-products")
     public ResponseEntity<?> addControlProduct(@PathVariable Long id, @RequestBody ControlProductCreateRequestTO body) {
         try {
-            WorkSession saved = workSessionService.addControlProduct(id, body);
-            return ResponseEntity.ok(workSessionMapperService.mapToTO(saved));
+            WorkSessionIncrementResult result = workSessionService.addControlProduct(id, body);
+            return ResponseEntity.ok(workSessionMapperService.mapToTO(
+                    result.session(),
+                    result.workOrderCompletedByTarget()));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();
