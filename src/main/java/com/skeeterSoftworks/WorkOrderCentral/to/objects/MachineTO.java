@@ -8,7 +8,7 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@ToString(exclude = "machineImageBase64")
 public class MachineTO {
     private Long id;
     private String machineName;
@@ -17,4 +17,6 @@ public class MachineTO {
     private String internalNumber;
     private String serialNumber;
     private String location;
+    /** Raw Base64 or data URL; omit on update to keep existing; empty string clears. */
+    private String machineImageBase64;
 }

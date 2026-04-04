@@ -75,6 +75,10 @@ public class MachineFacade {
         }
         try {
             Machine entity = machineMapperService.mapToEntity(machineTO);
+            if (machineTO.getMachineImageBase64() == null) {
+                machineService.getMachineById(machineTO.getId())
+                        .ifPresent(existing -> entity.setMachineImage(existing.getMachineImage()));
+            }
             Machine updated = machineService.updateMachine(entity);
             return ResponseEntity.ok(machineMapperService.mapToTO(updated));
         } catch (Exception e) {
