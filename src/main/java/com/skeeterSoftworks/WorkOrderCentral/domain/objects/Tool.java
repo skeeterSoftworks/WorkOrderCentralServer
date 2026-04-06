@@ -10,7 +10,7 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = "machine")
+@ToString(exclude = { "technology" })
 public class Tool {
 
     @Id
@@ -23,8 +23,14 @@ public class Tool {
     @Column(length = 2000)
     private String toolDescription;
 
+    @Column
+    private Integer orderNumber;
+
+    @Column
+    private Integer workingTime;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "machine_id", nullable = false)
-    private Machine machine;
+    @JoinColumn(name = "technology_id")
+    private Technology technology;
 
 }

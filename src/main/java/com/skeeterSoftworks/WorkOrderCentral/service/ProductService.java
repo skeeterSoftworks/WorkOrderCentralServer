@@ -59,8 +59,10 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @Transactional
     public void deleteProduct(Long id) throws Exception {
-        if (!productRepository.existsById(id)) {
+        Product product = productRepository.findById(id).orElse(null);
+        if (product == null) {
             throw new Exception("PRODUCT_NOT_FOUND");
         }
         long orderLines = productOrderRepository.countByProduct_Id(id);
@@ -68,7 +70,7 @@ public class ProductService {
             int count = orderLines > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) orderLines;
             throw new ProductDeleteBlockedException(count);
         }
-        productRepository.deleteById(id);
+        productRepository.delete(product);
     }
 
     @Transactional

@@ -6,6 +6,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Technology;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
@@ -31,7 +32,8 @@ import java.util.Locale;
 
 /**
  * Inserts the same demo batch as {@code ManualSampleDataGenerationTest} (10 rows per entity type).
- * Each product gets 3 demo {@link MeasuringFeaturePrototype}s and an embedded {@link SetupDataPrototype}.
+ * Each product gets 3 demo {@link MeasuringFeaturePrototype}s, an embedded {@link SetupDataPrototype},
+ * a {@link Technology} row (one-to-one), and the matching demo {@link Tool} references that technology.
  * Not idempotent: each call adds more rows.
  */
 @Service
@@ -79,7 +81,8 @@ public class SampleDataGenerationService {
             Tool t = new Tool();
             t.setToolName(faker.commerce().productName() + " tool");
             t.setToolDescription(faker.lorem().sentence(faker.number().numberBetween(8, 16)));
-            t.setMachine(savedMachines.get(i));
+            t.setOrderNumber(i + 1);
+            t.setWorkingTime(faker.number().numberBetween(5, 240));
             savedTools.add(toolRepository.save(t));
         }
 
@@ -102,11 +105,15 @@ public class SampleDataGenerationService {
             p.setProductGroup(faker.commerce().department());
             p.setStockQuantity((long) faker.number().numberBetween(0, 10_000));
             p.setTechnicalDrawing(sampleTechnicalDrawing);
-            p.setTool(savedTools.get(i));
             p.getMachines().add(savedMachines.get(i));
             p.getCustomers().add(savedCustomers.get(i));
             addDemoMeasuringFeatures(p, i);
-            p.setSetupDataPrototype(buildDemoSetupDataPrototype(i, savedTools.get(i)));
+            Technology tech = buildDemoTechnology(faker, i);
+            Tool toolForRow = savedTools.get(i);
+            toolForRow.setTechnology(tech);
+            tech.getTools().add(toolForRow);
+            p.setTechnologyData(tech);
+            p.setSetupDataPrototype(buildDemoSetupDataPrototype(i, toolForRow));
             productRepository.save(p);
         }
 
@@ -170,6 +177,15 @@ public class SampleDataGenerationService {
         surface.setCheckType(EMeasureCheckType.ATTRIBUTIVE);
         surface.setMeasuringTool("—");
         product.getMeasuringFeaturePrototypes().add(surface);
+    }
+
+    private static Technology buildDemoTechnology(Faker faker, int productIndex) {
+        int n = productIndex + 1;
+        Technology tech = new Technology();
+        tech.setCycleTime(n + " s / " + faker.number().numberBetween(8, 95));
+        tech.setNormType(faker.options().option("DIN", "ISO", "Customer-" + faker.regexify("[A-Z]{2}")));
+        tech.setPiecesPerMaterial(faker.number().numberBetween(1, 24));
+        return tech;
     }
 
     private static SetupDataPrototype buildDemoSetupDataPrototype(int productIndex, Tool assignedTool) {

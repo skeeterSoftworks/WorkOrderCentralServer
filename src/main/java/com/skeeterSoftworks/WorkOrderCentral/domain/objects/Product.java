@@ -17,7 +17,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "machines", "customers", "tool", "measuringFeaturePrototypes", "setupDataPrototype", "qualityInfoSteps", "technicalDrawing" })
+@ToString(exclude = { "machines", "customers", "measuringFeaturePrototypes", "setupDataPrototype",
+        "qualityInfoSteps", "technicalDrawing", "technologyData" })
 public class Product {
 
     @Id
@@ -62,10 +63,6 @@ public class Product {
     )
     private List<Customer> customers = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tool_id")
-    private Tool tool;
-
     @OneToMany(
             mappedBy = "product",
             cascade = CascadeType.ALL,
@@ -85,5 +82,9 @@ public class Product {
             fetch = FetchType.LAZY
     )
     private List<QualityInfoStep> qualityInfoSteps = new ArrayList<>();
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "technology_id", unique = true)
+    private Technology technologyData;
 
 }

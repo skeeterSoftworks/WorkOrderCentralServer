@@ -5,15 +5,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ToolTO {
+public class TechnologyTO {
+
     private Long id;
-    private String toolName;
-    private String toolDescription;
-    private Integer orderNumber;
-    private Integer workingTime;
-    private Long technologyId;
+    private String cycleTime;
+    private String normType;
+    private Integer piecesPerMaterial;
+    private List<ToolTO> tools = new ArrayList<>();
+
 }

@@ -6,14 +6,17 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeatureProt
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Technology;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
-import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ToolRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.TechnologyRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupDataPrototypeTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.TechnologyTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ToolTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,16 +32,16 @@ public class ProductMapperService {
 
     private final MachineRepository machineRepository;
     private final CustomerRepository customerRepository;
-    private final ToolRepository toolRepository;
+    private final TechnologyRepository technologyRepository;
 
     @Autowired
     public ProductMapperService(
             MachineRepository machineRepository,
             CustomerRepository customerRepository,
-            ToolRepository toolRepository) {
+            TechnologyRepository technologyRepository) {
         this.machineRepository = machineRepository;
         this.customerRepository = customerRepository;
-        this.toolRepository = toolRepository;
+        this.technologyRepository = technologyRepository;
     }
 
     public ProductTO mapToTO(Product product) {
@@ -58,9 +61,9 @@ public class ProductMapperService {
         } else {
             to.setCustomerIds(Collections.emptyList());
         }
-        if (product.getTool() != null) to.setToolId(product.getTool().getId());
 
         to.setSetupDataPrototype(mapSetupPrototypeToTO(product.getSetupDataPrototype()));
+        to.setTechnologyData(mapTechnologyToTO(product.getTechnologyData()));
 
         if (product.getMeasuringFeaturePrototypes() != null) {
             to.setMeasuringFeaturePrototypes(
@@ -70,6 +73,7 @@ public class ProductMapperService {
                             .toList()
             );
         }
+
         if (product.getQualityInfoSteps() != null) {
             to.setQualityInfoSteps(
                     product.getQualityInfoSteps().stream()
@@ -116,11 +120,9 @@ public class ProductMapperService {
         } else {
             product.setCustomers(new ArrayList<>());
         }
-        if (to.getToolId() != null) {
-            toolRepository.findById(to.getToolId()).ifPresent(product::setTool);
-        }
 
         product.setSetupDataPrototype(mapSetupPrototypeTOToEntity(to.getSetupDataPrototype()));
+        product.setTechnologyData(mapTechnologyTOToEntity(to.getTechnologyData()));
 
         if (to.getMeasuringFeaturePrototypes() != null) {
             List<MeasuringFeaturePrototype> prototypes = to.getMeasuringFeaturePrototypes()
@@ -143,6 +145,118 @@ public class ProductMapperService {
             product.setTechnicalDrawing(decodeBase64Image(to.getTechnicalDrawingBase64()));
         }
         return product;
+    }
+
+    public TechnologyTO mapTechnologyToTO(Technology entity) {
+        if (entity == null) {
+            return null;
+        }
+        TechnologyTO t = new TechnologyTO();
+        t.setId(entity.getId());
+        t.setCycleTime(entity.getCycleTime());
+        t.setNormType(entity.getNormType());
+        t.setPiecesPerMaterial(entity.getPiecesPerMaterial());
+        if (entity.getTools() != null && !entity.getTools().isEmpty()) {
+            t.setTools(entity.getTools().stream()
+                    .map(this::mapToolEntityToTO)
+                    .sorted(Comparator.comparing(ToolTO::getOrderNumber, Comparator.nullsLast(Integer::compareTo))
+                            .thenComparing(ToolTO::getId, Comparator.nullsLast(Long::compareTo)))
+                    .toList());
+        } else {
+            t.setTools(new ArrayList<>());
+        }
+        return t;
+    }
+
+    private ToolTO mapToolEntityToTO(Tool tool) {
+        if (tool == null) {
+            return null;
+        }
+        ToolTO t = new ToolTO();
+        t.setId(tool.getId());
+        t.setToolName(tool.getToolName());
+        t.setToolDescription(tool.getToolDescription());
+        t.setOrderNumber(tool.getOrderNumber());
+        t.setWorkingTime(tool.getWorkingTime());
+        if (tool.getTechnology() != null) {
+            t.setTechnologyId(tool.getTechnology().getId());
+        }
+        return t;
+    }
+
+    private Technology mapTechnologyTOToEntity(TechnologyTO to) {
+        if (to == null || isTechnologyTOEffectivelyEmpty(to)) {
+            return null;
+        }
+        if (to.getId() != null) {
+            return technologyRepository.findById(to.getId())
+                    .map(existing -> {
+                        applyTechnologyFields(existing, to);
+                        ensureTechnologyToolsList(existing);
+                        syncTechnologyTools(existing, to.getTools());
+                        return existing;
+                    })
+                    .orElseGet(() -> newTechnologyFromTo(to));
+        }
+        return newTechnologyFromTo(to);
+    }
+
+    private void ensureTechnologyToolsList(Technology tech) {
+        if (tech.getTools() == null) {
+            tech.setTools(new ArrayList<>());
+        }
+    }
+
+    private Technology newTechnologyFromTo(TechnologyTO to) {
+        Technology t = new Technology();
+        applyTechnologyFields(t, to);
+        t.setTools(new ArrayList<>());
+        syncTechnologyTools(t, to.getTools());
+        return t;
+    }
+
+    private void syncTechnologyTools(Technology tech, List<ToolTO> incoming) {
+        ensureTechnologyToolsList(tech);
+        List<ToolTO> list = incoming != null ? incoming : List.of();
+        tech.getTools().removeIf(tool ->
+                tool.getId() != null && list.stream().noneMatch(tt -> tool.getId().equals(tt.getId())));
+        for (ToolTO tt : list) {
+            Tool tool;
+            if (tt.getId() != null) {
+                tool = tech.getTools().stream()
+                        .filter(t -> tt.getId().equals(t.getId()))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            Tool n = new Tool();
+                            tech.getTools().add(n);
+                            return n;
+                        });
+            } else {
+                tool = new Tool();
+                tech.getTools().add(tool);
+            }
+            tool.setToolName(tt.getToolName());
+            tool.setToolDescription(tt.getToolDescription());
+            tool.setOrderNumber(tt.getOrderNumber());
+            tool.setWorkingTime(tt.getWorkingTime());
+            tool.setTechnology(tech);
+        }
+    }
+
+    private static void applyTechnologyFields(Technology target, TechnologyTO to) {
+        target.setCycleTime(to.getCycleTime());
+        target.setNormType(to.getNormType());
+        target.setPiecesPerMaterial(to.getPiecesPerMaterial());
+    }
+
+    private static boolean isTechnologyTOEffectivelyEmpty(TechnologyTO to) {
+        if (to.getTools() != null && !to.getTools().isEmpty()) {
+            return false;
+        }
+        boolean noStrings = (to.getCycleTime() == null || to.getCycleTime().isBlank())
+                && (to.getNormType() == null || to.getNormType().isBlank());
+        boolean noNumbers = to.getPiecesPerMaterial() == null;
+        return noStrings && noNumbers;
     }
 
     public SetupDataPrototypeTO mapSetupPrototypeToTO(SetupDataPrototype s) {

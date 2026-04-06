@@ -130,6 +130,10 @@ public class ProductFacade {
                 productService.getProductById(productTO.getId())
                         .ifPresent(p -> entity.setTechnicalDrawing(p.getTechnicalDrawing()));
             }
+            if (productTO.getTechnologyData() == null) {
+                productService.getProductById(productTO.getId())
+                        .ifPresent(p -> entity.setTechnologyData(p.getTechnologyData()));
+            }
             Product updated = productService.updateProduct(entity);
             return ResponseEntity.ok(productMapperService.mapToTO(updated));
         } catch (Exception e) {
