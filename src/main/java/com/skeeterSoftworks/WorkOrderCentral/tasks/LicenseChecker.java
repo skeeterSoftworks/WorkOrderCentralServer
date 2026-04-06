@@ -122,7 +122,7 @@ public class LicenseChecker {
 			boolean hasOldPurchaseOrders = purchaseOrderRepository.existsByCreatedAtBefore(cutoff);
 
 			if (hasOldPurchaseOrders) {
-				log.warn("Free trial allows recording purchase orders for up to 6 months.");
+				log.warn("Free trial allows recording purchase orders for up to 2 months.");
 				log.warn("License is not active or has expired; please apply for a new license from the developer to continue using the Central server.");
 				System.exit(-1);
 			}
