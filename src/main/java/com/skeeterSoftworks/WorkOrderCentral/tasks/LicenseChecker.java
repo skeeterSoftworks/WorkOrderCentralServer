@@ -117,8 +117,8 @@ public class LicenseChecker {
 			}
 
 
-			// Trial mode: allow usage for 6 months after first purchase order is created.
-			LocalDateTime cutoff = LocalDateTime.now().minusMonths(6);
+			// Trial mode: allow usage for 2 months after first purchase order is created.
+			LocalDateTime cutoff = LocalDateTime.now().minusMonths(2);
 			boolean hasOldPurchaseOrders = purchaseOrderRepository.existsByCreatedAtBefore(cutoff);
 
 			if (hasOldPurchaseOrders) {
