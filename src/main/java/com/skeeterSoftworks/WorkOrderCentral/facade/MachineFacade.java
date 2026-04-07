@@ -2,6 +2,7 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.MachineMapperService;
+import com.skeeterSoftworks.WorkOrderCentral.service.MachineDeleteBlockedByBookingsException;
 import com.skeeterSoftworks.WorkOrderCentral.service.MachineDeleteBlockedException;
 import com.skeeterSoftworks.WorkOrderCentral.service.MachineService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ApiErrorTO;
@@ -74,12 +75,9 @@ public class MachineFacade {
             return ResponseEntity.badRequest().body("INVALID_ID");
         }
         try {
-            Machine entity = machineMapperService.mapToEntity(machineTO);
-            if (machineTO.getMachineImageBase64() == null) {
-                machineService.getMachineById(machineTO.getId())
-                        .ifPresent(existing -> entity.setMachineImage(existing.getMachineImage()));
-            }
-            Machine updated = machineService.updateMachine(entity);
+            Machine partial = machineMapperService.mapToEntity(machineTO);
+            boolean updateImage = machineTO.getMachineImageBase64() != null;
+            Machine updated = machineService.updateMachineScalars(machineTO.getId(), partial, updateImage);
             return ResponseEntity.ok(machineMapperService.mapToTO(updated));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -97,6 +95,12 @@ public class MachineFacade {
             return ResponseEntity.status(409).body(new ApiErrorTO(
                     "errorMachineDeleteLinkedProducts",
                     Map.of("count", e.getLinkedProductCount())
+            ));
+        } catch (MachineDeleteBlockedByBookingsException e) {
+            log.warn("Machine {} delete blocked: {} machine booking(s)", id, e.getBookingCount());
+            return ResponseEntity.status(409).body(new ApiErrorTO(
+                    "errorMachineDeleteLinkedBookings",
+                    Map.of("count", e.getBookingCount())
             ));
         } catch (Exception e) {
             log.error(e.getMessage(), e);

@@ -13,6 +13,8 @@ import java.util.List;
 
 public interface MachineBookingRepository extends CrudRepository<MachineBooking, Long> {
 
+    long countByMachine_Id(Long machineId);
+
     List<MachineBooking> findAll();
 
     List<MachineBooking> findByMachine(Machine machine);

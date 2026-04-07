@@ -25,7 +25,8 @@ public class Machine {
     @ManyToMany(mappedBy = "machines", fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
 
-    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    /** Bookings are managed via {@link com.skeeterSoftworks.WorkOrderCentral.service.MachineBookingService}; no cascade (metadata updates must not clear schedules). */
+    @OneToMany(mappedBy = "machine", fetch = FetchType.LAZY)
     private List<MachineBooking> bookings = new ArrayList<>();
 
     @Column
