@@ -53,6 +53,9 @@ public class WorkSession {
     @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ControlProduct> controlProducts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ProductsRecord> productRecords = new ArrayList<>();
+
     public WorkSession(long id, Operator operator, LocalDateTime sessionStart, LocalDateTime sessionEnd) {
         super();
         this.id = id;

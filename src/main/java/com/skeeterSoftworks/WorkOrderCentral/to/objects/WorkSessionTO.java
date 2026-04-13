@@ -25,6 +25,8 @@ public class WorkSessionTO {
     private long setupProductCount;
     /** Recorded setup events with prototype snapshot and measured values. */
     private List<SetupProductTO> setupProducts;
+    /** Recorded good-product events with quantity and timestamp. */
+    private List<ProductsRecordTO> productRecords;
     private String productReferenceID;
     private String operatorQrCode;
     private String operatorName;

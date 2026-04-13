@@ -1,7 +1,9 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupProduct;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductsRecord;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSession;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductsRecordTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkSessionTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +56,15 @@ public class WorkSessionMapperService {
         } else {
             to.setSetupProducts(List.of());
         }
+        if (session.getProductRecords() != null && !session.getProductRecords().isEmpty()) {
+            to.setProductRecords(session.getProductRecords().stream()
+                    .sorted(Comparator.comparing(ProductsRecord::getTimestamp, Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(pr -> pr.getId() != null ? pr.getId() : 0L))
+                    .map(this::mapProductsRecord)
+                    .toList());
+        } else {
+            to.setProductRecords(List.of());
+        }
         to.setProductReferenceID(session.getProductReferenceID());
         if (session.getOperator() != null) {
             to.setOperatorQrCode(session.getOperator().getOperatorQrCode());
@@ -102,6 +113,14 @@ public class WorkSessionMapperService {
                 sp.getMeasuredHeightOk(),
                 sp.getMeasuredDiameter(),
                 sp.getMeasuredDiameterOk()
+        );
+    }
+
+    private ProductsRecordTO mapProductsRecord(ProductsRecord pr) {
+        return new ProductsRecordTO(
+                pr.getId(),
+                pr.getGoodProductsCount(),
+                pr.getTimestamp()
         );
     }
 

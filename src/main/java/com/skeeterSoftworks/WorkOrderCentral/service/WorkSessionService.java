@@ -36,6 +36,7 @@ public class WorkSessionService {
         WorkSession session = workSessionRepository.findById(id).orElseThrow(() -> new Exception("WORK_SESSION_NOT_FOUND"));
         preloadMeasuringFeaturePrototypes(session);
         preloadSetupProducts(session);
+        preloadProductRecords(session);
         return session;
     }
 
@@ -77,7 +78,9 @@ public class WorkSessionService {
         session.setStationInfo(station);
 
         preloadMeasuringFeaturePrototypes(workOrder);
-        return workSessionRepository.save(session);
+        WorkSession saved = workSessionRepository.save(session);
+        preloadProductRecords(saved);
+        return saved;
     }
 
     private void throwIfWorkOrderNotOpenForProduction(WorkOrder workOrder) throws Exception {
@@ -98,7 +101,9 @@ public class WorkSessionService {
         }
         session.setSessionEnd(LocalDateTime.now());
         preloadMeasuringFeaturePrototypes(session);
-        return workSessionRepository.save(session);
+        WorkSession saved = workSessionRepository.save(session);
+        preloadProductRecords(saved);
+        return saved;
     }
 
     @Transactional
@@ -111,6 +116,11 @@ public class WorkSessionService {
             throw new Exception("WORK_SESSION_ALREADY_ENDED");
         }
         session.setProductCount(session.getProductCount() + req.getDelta());
+        ProductsRecord record = new ProductsRecord();
+        record.setWorkSession(session);
+        record.setGoodProductsCount(req.getDelta());
+        record.setTimestamp(LocalDateTime.now());
+        session.getProductRecords().add(record);
         if (req.getProductReferenceID() != null && !req.getProductReferenceID().isBlank()) {
             session.setProductReferenceID(req.getProductReferenceID().trim());
         }
@@ -119,6 +129,7 @@ public class WorkSessionService {
         WorkSession latest = workSessionRepository.findById(sessionId).orElseThrow();
         preloadMeasuringFeaturePrototypes(latest);
         preloadSetupProducts(latest);
+        preloadProductRecords(latest);
         return new WorkSessionIncrementResult(latest, completedByTarget);
     }
 
@@ -192,6 +203,7 @@ public class WorkSessionService {
         WorkSession latest = workSessionRepository.findById(sessionId).orElseThrow();
         preloadMeasuringFeaturePrototypes(latest);
         preloadSetupProducts(latest);
+        preloadProductRecords(latest);
         return new WorkSessionIncrementResult(latest, completedByTarget);
     }
 
@@ -215,6 +227,13 @@ public class WorkSessionService {
         session.getSetupProducts().size();
     }
 
+    private void preloadProductRecords(WorkSession session) {
+        if (session == null || session.getProductRecords() == null) {
+            return;
+        }
+        session.getProductRecords().size();
+    }
+
     @Transactional
     public WorkSession addFaultyProduct(long sessionId, FaultyProductCreateRequestTO req) throws Exception {
         WorkSession session = getById(sessionId);
@@ -231,7 +250,9 @@ public class WorkSessionService {
 
         session.getFaultyProducts().add(fp);
         preloadMeasuringFeaturePrototypes(session);
-        return workSessionRepository.save(session);
+        WorkSession saved = workSessionRepository.save(session);
+        preloadProductRecords(saved);
+        return saved;
     }
 
     @Transactional
@@ -264,7 +285,9 @@ public class WorkSessionService {
 
         preloadMeasuringFeaturePrototypes(session);
         preloadSetupProducts(session);
-        return workSessionRepository.save(session);
+        WorkSession saved = workSessionRepository.save(session);
+        preloadProductRecords(saved);
+        return saved;
     }
 
     private static SetupDataPrototype copySetupDataPrototype(SetupDataPrototype src) {
