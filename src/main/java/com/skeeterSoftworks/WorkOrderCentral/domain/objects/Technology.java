@@ -31,8 +31,11 @@ public class Technology {
     @Column
     private String cycleTime;
 
-    @Column
-    private String normType;
+    @Column(nullable = false)
+    private Integer norm85;
+
+    @Column(nullable = false)
+    private Integer norm100;
 
     @Column
     private Integer piecesPerMaterial;
