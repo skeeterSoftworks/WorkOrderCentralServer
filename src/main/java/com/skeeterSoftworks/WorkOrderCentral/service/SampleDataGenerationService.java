@@ -183,7 +183,6 @@ public class SampleDataGenerationService {
         int n = productIndex + 1;
         Technology tech = new Technology();
         tech.setCycleTime(n + " s / " + faker.number().numberBetween(8, 95));
-        tech.setNorm85(faker.number().numberBetween(70, 96));
         tech.setNorm100(faker.number().numberBetween(90, 121));
         tech.setPiecesPerMaterial(faker.number().numberBetween(1, 24));
         return tech;

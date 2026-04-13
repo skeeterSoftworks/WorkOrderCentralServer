@@ -154,7 +154,6 @@ public class ProductMapperService {
         TechnologyTO t = new TechnologyTO();
         t.setId(entity.getId());
         t.setCycleTime(entity.getCycleTime());
-        t.setNorm85(entity.getNorm85());
         t.setNorm100(entity.getNorm100());
         t.setPiecesPerMaterial(entity.getPiecesPerMaterial());
         if (entity.getTools() != null && !entity.getTools().isEmpty()) {
@@ -246,7 +245,6 @@ public class ProductMapperService {
 
     private static void applyTechnologyFields(Technology target, TechnologyTO to) {
         target.setCycleTime(to.getCycleTime());
-        target.setNorm85(to.getNorm85());
         target.setNorm100(to.getNorm100());
         target.setPiecesPerMaterial(to.getPiecesPerMaterial());
     }
@@ -257,7 +255,6 @@ public class ProductMapperService {
         }
         boolean noStrings = (to.getCycleTime() == null || to.getCycleTime().isBlank());
         boolean noNumbers = to.getPiecesPerMaterial() == null
-                && to.getNorm85() == null
                 && to.getNorm100() == null;
         return noStrings && noNumbers;
     }

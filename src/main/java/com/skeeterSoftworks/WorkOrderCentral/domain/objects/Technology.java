@@ -32,9 +32,6 @@ public class Technology {
     private String cycleTime;
 
     @Column(nullable = false)
-    private Integer norm85;
-
-    @Column(nullable = false)
     private Integer norm100;
 
     @Column

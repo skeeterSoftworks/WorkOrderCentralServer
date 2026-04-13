@@ -16,7 +16,6 @@ public class TechnologyTO {
 
     private Long id;
     private String cycleTime;
-    private Integer norm85;
     private Integer norm100;
     private Integer piecesPerMaterial;
     private List<ToolTO> tools = new ArrayList<>();
