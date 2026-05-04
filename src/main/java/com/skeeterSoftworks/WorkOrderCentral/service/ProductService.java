@@ -130,6 +130,9 @@ public class ProductService {
                 continue;
             }
             QualityInfoStep entity = productMapperService.mapQualityStepTOToEntity(to);
+            // Replace flow clears and re-inserts rows; client sends existing ids from the prior load.
+            // New entities must not carry old ids or Hibernate treats them as detached on persist().
+            entity.setId(null);
             entity.setStepNumber(n++);
             entity.setProduct(product);
             product.getQualityInfoSteps().add(entity);
