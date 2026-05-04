@@ -90,7 +90,11 @@ public class CustomerFacade {
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(e.getMessage());
+            String msg = e.getMessage();
+            if ("INTERNAL_STOCK_ORDERER_DELETE_FORBIDDEN".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            return ResponseEntity.internalServerError().body(msg);
         }
     }
 }

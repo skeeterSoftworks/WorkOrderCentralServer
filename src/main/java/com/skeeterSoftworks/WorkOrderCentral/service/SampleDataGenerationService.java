@@ -46,18 +46,21 @@ public class SampleDataGenerationService {
     private final ToolRepository toolRepository;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
+    private final CustomerService customerService;
 
     public SampleDataGenerationService(
             UserRepository userRepository,
             MachineRepository machineRepository,
             ToolRepository toolRepository,
             ProductRepository productRepository,
-            CustomerRepository customerRepository) {
+            CustomerRepository customerRepository,
+            CustomerService customerService) {
         this.userRepository = userRepository;
         this.machineRepository = machineRepository;
         this.toolRepository = toolRepository;
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
+        this.customerService = customerService;
     }
 
     @Transactional
@@ -88,6 +91,8 @@ public class SampleDataGenerationService {
 
         byte[] sampleTechnicalDrawing = loadSampleTechnicalDrawing();
 
+        Customer internalStockOrderer = customerService.ensureInternalStockOrdererCustomerExists();
+
         List<Customer> savedCustomers = new ArrayList<>();
         for (int i = 1; i <= SAMPLE_COUNT; i++) {
             Customer c = new Customer();
@@ -107,6 +112,7 @@ public class SampleDataGenerationService {
             p.setTechnicalDrawing(sampleTechnicalDrawing);
             p.getMachines().add(savedMachines.get(i));
             p.getCustomers().add(savedCustomers.get(i));
+            p.getCustomers().add(internalStockOrderer);
             addDemoMeasuringFeatures(p, i);
             Technology tech = buildDemoTechnology(faker, i);
             Tool toolForRow = savedTools.get(i);

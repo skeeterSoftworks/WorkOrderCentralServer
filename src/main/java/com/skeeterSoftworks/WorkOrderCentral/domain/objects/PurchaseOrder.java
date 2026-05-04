@@ -52,6 +52,13 @@ public class PurchaseOrder {
     @Column
     private String comment;
 
+    /**
+     * When true, work orders on this purchase order represent internal stock-building demand:
+     * all produced good quantity counts toward available stock (not only surplus over line quantity).
+     */
+    @Column(nullable = false)
+    private boolean internalStockDemand = false;
+
     @Column
     private LocalDateTime createdAt;
 

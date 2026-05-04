@@ -1,5 +1,6 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
@@ -20,16 +21,19 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductOrderRepository productOrderRepository;
     private final ProductMapperService productMapperService;
+    private final CustomerService customerService;
 
     @Autowired
     public ProductService(
             ProductRepository productRepository,
             ProductOrderRepository productOrderRepository,
-            ProductMapperService productMapperService
+            ProductMapperService productMapperService,
+            CustomerService customerService
     ) {
         this.productRepository = productRepository;
         this.productOrderRepository = productOrderRepository;
         this.productMapperService = productMapperService;
+        this.customerService = customerService;
     }
 
     public List<Product> getAllProducts() {
@@ -49,6 +53,8 @@ public class ProductService {
 
     public Product addProduct(Product product) {
         product.setId(null);
+        Customer internal = customerService.ensureInternalStockOrdererCustomerExists();
+        attachInternalStockOrdererIfMissing(product, internal);
         return productRepository.save(product);
     }
 
@@ -56,7 +62,23 @@ public class ProductService {
         if (product.getId() == null || product.getId() <= 0 || !productRepository.existsById(product.getId())) {
             throw new Exception("PRODUCT_NOT_FOUND");
         }
+        Customer internal = customerService.ensureInternalStockOrdererCustomerExists();
+        attachInternalStockOrdererIfMissing(product, internal);
         return productRepository.save(product);
+    }
+
+    private static void attachInternalStockOrdererIfMissing(Product product, Customer internal) {
+        if (internal == null || internal.getId() == null) {
+            return;
+        }
+        if (product.getCustomers() == null) {
+            product.setCustomers(new ArrayList<>());
+        }
+        boolean linked = product.getCustomers().stream()
+                .anyMatch(c -> c.getId() != null && c.getId().equals(internal.getId()));
+        if (!linked) {
+            product.getCustomers().add(internal);
+        }
     }
 
     @Transactional
@@ -112,6 +134,8 @@ public class ProductService {
             entity.setProduct(product);
             product.getQualityInfoSteps().add(entity);
         }
+        Customer internal = customerService.ensureInternalStockOrdererCustomerExists();
+        attachInternalStockOrdererIfMissing(product, internal);
         return productRepository.save(product);
     }
 }

@@ -25,6 +25,8 @@ public class PurchaseOrderTO {
     private String deliveryTerms;
     private String shippingAddress;
     private String comment;
+    /** Internal stock demand PO: produced goods on linked work orders count fully toward product stock. */
+    private Boolean internalStockDemand;
     private LocalDateTime createdAt;
     private LocalDateTime confirmedAt;
     private LocalDateTime inProductionAt;

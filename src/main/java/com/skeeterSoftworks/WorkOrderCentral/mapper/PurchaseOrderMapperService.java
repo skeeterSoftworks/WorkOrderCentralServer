@@ -41,6 +41,7 @@ public class PurchaseOrderMapperService {
         to.setDeliveryTerms(po.getDeliveryTerms());
         to.setShippingAddress(po.getShippingAddress());
         to.setComment(po.getComment());
+        to.setInternalStockDemand(po.isInternalStockDemand());
         to.setCreatedAt(po.getCreatedAt());
         to.setConfirmedAt(po.getConfirmedAt());
         to.setInProductionAt(po.getInProductionAt());
@@ -67,6 +68,7 @@ public class PurchaseOrderMapperService {
         po.setDeliveryTerms(to.getDeliveryTerms());
         po.setShippingAddress(to.getShippingAddress());
         po.setComment(to.getComment());
+        po.setInternalStockDemand(Boolean.TRUE.equals(to.getInternalStockDemand()));
         if (to.getCreatedAt() != null) po.setCreatedAt(to.getCreatedAt());
         if (to.getConfirmedAt() != null) po.setConfirmedAt(to.getConfirmedAt());
         if (to.getInProductionAt() != null) po.setInProductionAt(to.getInProductionAt());
