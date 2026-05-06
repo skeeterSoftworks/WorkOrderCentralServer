@@ -23,6 +23,7 @@ public class ProductTO {
     private SetupDataPrototypeTO setupDataPrototype;
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
     private List<QualityInfoStepTO> qualityInfoSteps;
+    private List<MaterialTO> materials;
     /** Optional technical drawing image (raw Base64 or data URL). */
     private String technicalDrawingBase64;
 }

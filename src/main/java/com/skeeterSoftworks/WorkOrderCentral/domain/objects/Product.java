@@ -63,7 +63,7 @@ public class Product {
     )
     private List<Customer> customers = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @BatchSize(size = 32)
     @JoinTable(
             name = "product_material",
