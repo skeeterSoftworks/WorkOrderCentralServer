@@ -10,7 +10,7 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@ToString(exclude = { "provider", "products" })
 public class Material {
 
     @Id
@@ -18,10 +18,20 @@ public class Material {
     private long id;
 
     @Column
-    private String type;
+    private String name;
 
     @Column
-    private String provider;
+    private String code;
+
+    /**
+     * How many products can be produced from one material unit.
+     */
+    @Column
+    private Integer productsPerUnit;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "provider_id")
+    private MaterialProvider provider;
 
     @Column
     private float diameter;
@@ -34,5 +44,9 @@ public class Material {
 
     @Column
     private float width;
+
+    @ManyToMany(mappedBy = "materials", fetch = FetchType.LAZY)
+    private java.util.List<Product> products = new java.util.ArrayList<>();
+
 
 }

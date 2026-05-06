@@ -1,0 +1,52 @@
+-- Optional manual migration for existing PostgreSQL databases (if schema isn't auto-updated):
+-- 1) Rename material.type -> material.name
+-- 2) Add material.code and material.products_per_unit
+-- 3) Normalize provider into material_provider + FK material.provider_id
+-- 4) Add product<->material many-to-many join table
+
+-- 1) Rename column type -> name
+-- ALTER TABLE material RENAME COLUMN type TO name;
+
+-- 2) Add new material columns
+-- ALTER TABLE material ADD COLUMN IF NOT EXISTS code VARCHAR(255);
+-- ALTER TABLE material ADD COLUMN IF NOT EXISTS products_per_unit INTEGER;
+-- If order_id exists and is currently NOT NULL from legacy work-order mapping, relax it:
+-- ALTER TABLE material ALTER COLUMN order_id DROP NOT NULL;
+
+-- 3) Create provider table and relation
+-- CREATE TABLE IF NOT EXISTS material_provider (
+--   id BIGSERIAL PRIMARY KEY,
+--   name VARCHAR(255),
+--   contact_person VARCHAR(255),
+--   email_address VARCHAR(255),
+--   phone_number VARCHAR(255),
+--   grade INTEGER NOT NULL DEFAULT 0
+-- );
+-- ALTER TABLE material ADD COLUMN IF NOT EXISTS provider_id BIGINT;
+-- ALTER TABLE material
+--   ADD CONSTRAINT fk_material_provider
+--   FOREIGN KEY (provider_id) REFERENCES material_provider(id);
+
+-- Optional backfill from legacy material.provider text:
+-- INSERT INTO material_provider (contact_person, grade)
+-- SELECT DISTINCT m.provider, 0
+-- FROM material m
+-- WHERE m.provider IS NOT NULL AND btrim(m.provider) <> '';
+--
+-- UPDATE material m
+-- SET provider_id = mp.id
+-- FROM material_provider mp
+-- WHERE m.provider = mp.contact_person;
+--
+-- ALTER TABLE material DROP COLUMN IF EXISTS provider;
+
+-- 4) Product-Material many-to-many table
+-- CREATE TABLE IF NOT EXISTS product_material (
+--   product_id BIGINT NOT NULL,
+--   material_id BIGINT NOT NULL,
+--   PRIMARY KEY (product_id, material_id),
+--   CONSTRAINT fk_product_material_product
+--     FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE,
+--   CONSTRAINT fk_product_material_material
+--     FOREIGN KEY (material_id) REFERENCES material(id) ON DELETE CASCADE
+-- );

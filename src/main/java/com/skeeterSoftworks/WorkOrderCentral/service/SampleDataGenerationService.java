@@ -2,6 +2,8 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ApplicationUser;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
@@ -9,6 +11,8 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Technology;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ToolRepository;
@@ -33,7 +37,8 @@ import java.util.Locale;
 /**
  * Inserts the same demo batch as {@code ManualSampleDataGenerationTest} (10 rows per entity type).
  * Each product gets 3 demo {@link MeasuringFeaturePrototype}s, an embedded {@link SetupDataPrototype},
- * a {@link Technology} row (one-to-one), and the matching demo {@link Tool} references that technology.
+ * a {@link Technology} row (one-to-one), and one linked {@link Material}. Materials are linked to
+ * demo {@link MaterialProvider}s.
  * Not idempotent: each call adds more rows.
  */
 @Service
@@ -46,6 +51,8 @@ public class SampleDataGenerationService {
     private final ToolRepository toolRepository;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
+    private final MaterialRepository materialRepository;
+    private final MaterialProviderRepository materialProviderRepository;
     private final CustomerService customerService;
 
     public SampleDataGenerationService(
@@ -54,12 +61,16 @@ public class SampleDataGenerationService {
             ToolRepository toolRepository,
             ProductRepository productRepository,
             CustomerRepository customerRepository,
+            MaterialRepository materialRepository,
+            MaterialProviderRepository materialProviderRepository,
             CustomerService customerService) {
         this.userRepository = userRepository;
         this.machineRepository = machineRepository;
         this.toolRepository = toolRepository;
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
+        this.materialRepository = materialRepository;
+        this.materialProviderRepository = materialProviderRepository;
         this.customerService = customerService;
     }
 
@@ -102,6 +113,31 @@ public class SampleDataGenerationService {
             savedCustomers.add(customerRepository.save(c));
         }
 
+        List<MaterialProvider> savedProviders = new ArrayList<>();
+        for (int i = 1; i <= SAMPLE_COUNT; i++) {
+            MaterialProvider provider = new MaterialProvider();
+            provider.setName(faker.company().name() + " Materials");
+            provider.setContactPerson(faker.name().fullName());
+            provider.setEmailAddress("supplier" + i + "@example.com");
+            provider.setPhoneNumber("+3816" + faker.number().digits(7));
+            provider.setGrade(faker.number().numberBetween(0, 6));
+            savedProviders.add(materialProviderRepository.save(provider));
+        }
+
+        List<Material> savedMaterials = new ArrayList<>();
+        for (int i = 1; i <= SAMPLE_COUNT; i++) {
+            Material material = new Material();
+            material.setName(faker.commerce().material());
+            material.setCode("MAT-" + faker.regexify("[A-Z0-9]{6}") + "-" + i);
+            material.setProductsPerUnit(faker.number().numberBetween(1, 101));
+            material.setProvider(savedProviders.get(i - 1));
+            material.setDiameter((float) faker.number().randomDouble(2, 1, 100));
+            material.setWeight((float) faker.number().randomDouble(2, 1, 100));
+            material.setLength((float) faker.number().randomDouble(2, 1, 100));
+            material.setWidth((float) faker.number().randomDouble(2, 1, 100));
+            savedMaterials.add(materialRepository.save(material));
+        }
+
         for (int i = 0; i < SAMPLE_COUNT; i++) {
             Product p = new Product();
             p.setName(faker.commerce().productName());
@@ -113,6 +149,7 @@ public class SampleDataGenerationService {
             p.getMachines().add(savedMachines.get(i));
             p.getCustomers().add(savedCustomers.get(i));
             p.getCustomers().add(internalStockOrderer);
+            p.getMaterials().add(savedMaterials.get(i));
             addDemoMeasuringFeatures(p, i);
             Technology tech = buildDemoTechnology(faker, i);
             Tool toolForRow = savedTools.get(i);
@@ -138,7 +175,9 @@ public class SampleDataGenerationService {
                 savedTools.size(),
                 SAMPLE_COUNT,
                 SAMPLE_COUNT,
-                SAMPLE_COUNT);
+                SAMPLE_COUNT,
+                savedMaterials.size(),
+                savedProviders.size());
     }
 
     private static void addDemoMeasuringFeatures(Product product, int productIndex) {

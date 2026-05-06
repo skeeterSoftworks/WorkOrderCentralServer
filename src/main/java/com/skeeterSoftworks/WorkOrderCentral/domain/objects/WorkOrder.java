@@ -43,7 +43,7 @@ public class WorkOrder {
     private LocalDate endDate;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false, updatable = false)
+    @JoinColumn(name = "order_id")
     @JsonManagedReference
     private List<Material> materials = new ArrayList<>();
 

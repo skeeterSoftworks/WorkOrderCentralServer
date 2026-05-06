@@ -14,4 +14,6 @@ public class SampleDataGenerationResultTO {
     private int productsInserted;
     private int customersInserted;
     private int usersInserted;
+    private int materialsInserted;
+    private int materialProvidersInserted;
 }
