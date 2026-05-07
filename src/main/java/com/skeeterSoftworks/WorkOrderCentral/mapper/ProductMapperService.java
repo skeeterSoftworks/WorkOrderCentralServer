@@ -1,7 +1,6 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
@@ -11,11 +10,10 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Technology;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.TechnologyRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
-import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialProviderTO;
-import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupDataPrototypeTO;
@@ -36,15 +34,18 @@ public class ProductMapperService {
 
     private final MachineRepository machineRepository;
     private final CustomerRepository customerRepository;
+    private final MaterialProviderRepository materialProviderRepository;
     private final TechnologyRepository technologyRepository;
 
     @Autowired
     public ProductMapperService(
             MachineRepository machineRepository,
             CustomerRepository customerRepository,
+            MaterialProviderRepository materialProviderRepository,
             TechnologyRepository technologyRepository) {
         this.machineRepository = machineRepository;
         this.customerRepository = customerRepository;
+        this.materialProviderRepository = materialProviderRepository;
         this.technologyRepository = technologyRepository;
     }
 
@@ -65,10 +66,10 @@ public class ProductMapperService {
         } else {
             to.setCustomerIds(Collections.emptyList());
         }
-        if (product.getMaterials() != null && !product.getMaterials().isEmpty()) {
-            to.setMaterials(product.getMaterials().stream().map(this::mapMaterialToTO).toList());
+        if (product.getMaterialProviders() != null && !product.getMaterialProviders().isEmpty()) {
+            to.setMaterialProviderIds(product.getMaterialProviders().stream().map(MaterialProvider::getId).toList());
         } else {
-            to.setMaterials(Collections.emptyList());
+            to.setMaterialProviderIds(Collections.emptyList());
         }
 
         to.setSetupDataPrototype(mapSetupPrototypeToTO(product.getSetupDataPrototype()));
@@ -129,14 +130,14 @@ public class ProductMapperService {
         } else {
             product.setCustomers(new ArrayList<>());
         }
-        if (to.getMaterials() != null) {
-            List<Material> materials = to.getMaterials().stream()
-                    .map(this::mapMaterialTOToEntity)
-                    .filter(java.util.Objects::nonNull)
-                    .toList();
-            product.setMaterials(materials);
+        if (to.getMaterialProviderIds() != null && !to.getMaterialProviderIds().isEmpty()) {
+            List<MaterialProvider> providers = new ArrayList<>();
+            for (Long id : to.getMaterialProviderIds()) {
+                materialProviderRepository.findById(id).ifPresent(providers::add);
+            }
+            product.setMaterialProviders(providers);
         } else {
-            product.setMaterials(new ArrayList<>());
+            product.setMaterialProviders(new ArrayList<>());
         }
 
         product.setSetupDataPrototype(mapSetupPrototypeTOToEntity(to.getSetupDataPrototype()));
@@ -400,60 +401,5 @@ public class ProductMapperService {
         return Base64.getDecoder().decode(s);
     }
 
-    private MaterialTO mapMaterialToTO(Material m) {
-        if (m == null) return null;
-        MaterialTO to = new MaterialTO();
-        to.setId(m.getId());
-        to.setName(m.getName());
-        to.setCode(m.getCode());
-        to.setProductsPerUnit(m.getProductsPerUnit());
-        to.setDiameter(m.getDiameter());
-        to.setWeight(m.getWeight());
-        to.setLength(m.getLength());
-        to.setWidth(m.getWidth());
-        to.setProvider(mapProviderToTO(m.getProvider()));
-        return to;
-    }
-
-    private Material mapMaterialTOToEntity(MaterialTO to) {
-        if (to == null) return null;
-        Material m = new Material();
-        if (to.getId() != null) {
-            m.setId(to.getId());
-        }
-        m.setName(to.getName());
-        m.setCode(to.getCode());
-        m.setProductsPerUnit(to.getProductsPerUnit());
-        if (to.getDiameter() != null) m.setDiameter(to.getDiameter());
-        if (to.getWeight() != null) m.setWeight(to.getWeight());
-        if (to.getLength() != null) m.setLength(to.getLength());
-        if (to.getWidth() != null) m.setWidth(to.getWidth());
-        m.setProvider(mapProviderTOToEntity(to.getProvider()));
-        return m;
-    }
-
-    private MaterialProviderTO mapProviderToTO(MaterialProvider p) {
-        if (p == null) return null;
-        return new MaterialProviderTO(
-                p.getId(),
-                p.getName(),
-                p.getContactPerson(),
-                p.getEmailAddress(),
-                p.getPhoneNumber(),
-                p.getGrade()
-        );
-    }
-
-    private MaterialProvider mapProviderTOToEntity(MaterialProviderTO to) {
-        if (to == null) return null;
-        MaterialProvider p = new MaterialProvider();
-        if (to.getId() != null) p.setId(to.getId());
-        p.setName(to.getName());
-        p.setContactPerson(to.getContactPerson());
-        p.setEmailAddress(to.getEmailAddress());
-        p.setPhoneNumber(to.getPhoneNumber());
-        p.setGrade(to.getGrade() != null ? to.getGrade() : 0);
-        return p;
-    }
 }
 

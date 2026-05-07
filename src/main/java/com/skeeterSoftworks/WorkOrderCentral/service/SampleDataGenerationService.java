@@ -37,8 +37,7 @@ import java.util.Locale;
 /**
  * Inserts the same demo batch as {@code ManualSampleDataGenerationTest} (10 rows per entity type).
  * Each product gets 3 demo {@link MeasuringFeaturePrototype}s, an embedded {@link SetupDataPrototype},
- * a {@link Technology} row (one-to-one), and one linked {@link Material}. Materials are linked to
- * demo {@link MaterialProvider}s.
+ * a {@link Technology} row (one-to-one), and one linked {@link MaterialProvider}.
  * Not idempotent: each call adds more rows.
  */
 @Service
@@ -130,7 +129,7 @@ public class SampleDataGenerationService {
             material.setName(faker.commerce().material());
             material.setCode("MAT-" + faker.regexify("[A-Z0-9]{6}") + "-" + i);
             material.setProductsPerUnit(faker.number().numberBetween(1, 101));
-            material.setProvider(savedProviders.get(i - 1));
+            material.getProviders().add(savedProviders.get(i - 1));
             material.setDiameter((float) faker.number().randomDouble(2, 1, 100));
             material.setWeight((float) faker.number().randomDouble(2, 1, 100));
             material.setLength((float) faker.number().randomDouble(2, 1, 100));
@@ -149,7 +148,7 @@ public class SampleDataGenerationService {
             p.getMachines().add(savedMachines.get(i));
             p.getCustomers().add(savedCustomers.get(i));
             p.getCustomers().add(internalStockOrderer);
-            p.getMaterials().add(savedMaterials.get(i));
+            p.getMaterialProviders().add(savedProviders.get(i));
             addDemoMeasuringFeatures(p, i);
             Technology tech = buildDemoTechnology(faker, i);
             Tool toolForRow = savedTools.get(i);

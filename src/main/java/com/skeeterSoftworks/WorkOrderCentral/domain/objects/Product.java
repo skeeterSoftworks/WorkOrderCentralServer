@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString(exclude = { "machines", "customers", "measuringFeaturePrototypes", "setupDataPrototype",
-        "qualityInfoSteps", "technicalDrawing", "technologyData", "materials" })
+        "qualityInfoSteps", "technicalDrawing", "technologyData", "materialProviders" })
 public class Product {
 
     @Id
@@ -66,11 +66,11 @@ public class Product {
     @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @BatchSize(size = 32)
     @JoinTable(
-            name = "product_material",
+            name = "product_material_provider",
             joinColumns = @JoinColumn(name = "product_id"),
-            inverseJoinColumns = @JoinColumn(name = "material_id")
+            inverseJoinColumns = @JoinColumn(name = "provider_id")
     )
-    private List<Material> materials = new ArrayList<>();
+    private List<MaterialProvider> materialProviders = new ArrayList<>();
 
     @OneToMany(
             mappedBy = "product",

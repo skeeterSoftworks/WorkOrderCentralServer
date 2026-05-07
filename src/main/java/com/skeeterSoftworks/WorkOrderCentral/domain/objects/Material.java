@@ -10,7 +10,7 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "provider", "products" })
+@ToString(exclude = { "providers" })
 public class Material {
 
     @Id
@@ -29,9 +29,13 @@ public class Material {
     @Column
     private Integer productsPerUnit;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinColumn(name = "provider_id")
-    private MaterialProvider provider;
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(
+            name = "material_provider_link",
+            joinColumns = @JoinColumn(name = "material_id"),
+            inverseJoinColumns = @JoinColumn(name = "provider_id")
+    )
+    private java.util.List<MaterialProvider> providers = new java.util.ArrayList<>();
 
     @Column
     private float diameter;
@@ -44,9 +48,5 @@ public class Material {
 
     @Column
     private float width;
-
-    @ManyToMany(mappedBy = "materials", fetch = FetchType.LAZY)
-    private java.util.List<Product> products = new java.util.ArrayList<>();
-
 
 }

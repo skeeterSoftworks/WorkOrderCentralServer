@@ -1,7 +1,7 @@
 -- Optional manual migration for existing PostgreSQL databases (if schema isn't auto-updated):
 -- 1) Rename material.type -> material.name
 -- 2) Add material.code and material.products_per_unit
--- 3) Normalize provider into material_provider + FK material.provider_id
+-- 3) Normalize provider into material_provider (+ optional many-to-many link)
 -- 4) Add product<->material many-to-many join table
 
 -- 1) Rename column type -> name
@@ -22,10 +22,22 @@
 --   phone_number VARCHAR(255),
 --   grade INTEGER NOT NULL DEFAULT 0
 -- );
+-- Legacy single-provider relation (if still used):
 -- ALTER TABLE material ADD COLUMN IF NOT EXISTS provider_id BIGINT;
 -- ALTER TABLE material
 --   ADD CONSTRAINT fk_material_provider
 --   FOREIGN KEY (provider_id) REFERENCES material_provider(id);
+
+-- New many-to-many relation material <-> provider:
+-- CREATE TABLE IF NOT EXISTS material_provider_link (
+--   material_id BIGINT NOT NULL,
+--   provider_id BIGINT NOT NULL,
+--   PRIMARY KEY (material_id, provider_id),
+--   CONSTRAINT fk_material_provider_link_material
+--     FOREIGN KEY (material_id) REFERENCES material(id) ON DELETE CASCADE,
+--   CONSTRAINT fk_material_provider_link_provider
+--     FOREIGN KEY (provider_id) REFERENCES material_provider(id) ON DELETE CASCADE
+-- );
 
 -- Optional backfill from legacy material.provider text:
 -- INSERT INTO material_provider (contact_person, grade)
@@ -37,6 +49,12 @@
 -- SET provider_id = mp.id
 -- FROM material_provider mp
 -- WHERE m.provider = mp.contact_person;
+--
+-- INSERT INTO material_provider_link(material_id, provider_id)
+-- SELECT m.id, m.provider_id
+-- FROM material m
+-- WHERE m.provider_id IS NOT NULL
+-- ON CONFLICT DO NOTHING;
 --
 -- ALTER TABLE material DROP COLUMN IF EXISTS provider;
 

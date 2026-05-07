@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,5 +18,5 @@ public class MaterialTO {
     private Float weight;
     private Float length;
     private Float width;
-    private MaterialProviderTO provider;
+    private List<MaterialProviderTO> providers;
 }

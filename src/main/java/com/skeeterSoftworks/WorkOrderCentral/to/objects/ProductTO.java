@@ -19,11 +19,11 @@ public class ProductTO {
     private String reference;
     private List<Long> machineIds;
     private List<Long> customerIds;
+    private List<Long> materialProviderIds;
     private TechnologyTO technologyData;
     private SetupDataPrototypeTO setupDataPrototype;
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;
     private List<QualityInfoStepTO> qualityInfoSteps;
-    private List<MaterialTO> materials;
     /** Optional technical drawing image (raw Base64 or data URL). */
     private String technicalDrawingBase64;
 }

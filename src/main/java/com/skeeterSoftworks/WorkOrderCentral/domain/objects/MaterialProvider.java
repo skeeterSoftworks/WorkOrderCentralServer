@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = { "materials" })
+@ToString(exclude = { "materials", "products" })
 public class MaterialProvider {
 
     @Id
@@ -38,6 +38,9 @@ public class MaterialProvider {
     @Column(nullable = false)
     private int grade = 0;
 
-    @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "providers", fetch = FetchType.LAZY)
     private List<Material> materials = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "materialProviders", fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
 }
