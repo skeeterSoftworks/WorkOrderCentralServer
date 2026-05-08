@@ -37,7 +37,7 @@ import java.util.Locale;
 /**
  * Inserts the same demo batch as {@code ManualSampleDataGenerationTest} (10 rows per entity type).
  * Each product gets 3 demo {@link MeasuringFeaturePrototype}s, an embedded {@link SetupDataPrototype},
- * a {@link Technology} row (one-to-one), and one linked {@link MaterialProvider}.
+ * a {@link Technology} row (one-to-one), and one linked {@link Material}.
  * Not idempotent: each call adds more rows.
  */
 @Service
@@ -148,7 +148,7 @@ public class SampleDataGenerationService {
             p.getMachines().add(savedMachines.get(i));
             p.getCustomers().add(savedCustomers.get(i));
             p.getCustomers().add(internalStockOrderer);
-            p.getMaterialProviders().add(savedProviders.get(i));
+            p.getMaterials().add(savedMaterials.get(i));
             addDemoMeasuringFeatures(p, i);
             Technology tech = buildDemoTechnology(faker, i);
             Tool toolForRow = savedTools.get(i);

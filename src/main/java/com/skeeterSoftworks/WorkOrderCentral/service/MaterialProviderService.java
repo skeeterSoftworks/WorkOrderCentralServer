@@ -2,10 +2,8 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
-import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,15 +16,12 @@ public class MaterialProviderService {
 
     private final MaterialProviderRepository materialProviderRepository;
     private final MaterialRepository materialRepository;
-    private final ProductRepository productRepository;
 
     public MaterialProviderService(
             MaterialProviderRepository materialProviderRepository,
-            MaterialRepository materialRepository,
-            ProductRepository productRepository) {
+            MaterialRepository materialRepository) {
         this.materialProviderRepository = materialProviderRepository;
         this.materialRepository = materialRepository;
-        this.productRepository = productRepository;
     }
 
     public List<MaterialProvider> getAllMaterialProviders() {
@@ -64,16 +59,6 @@ public class MaterialProviderService {
         }
         for (Material material : changedMaterials) {
             materialRepository.save(material);
-        }
-
-        List<Product> changedProducts = new ArrayList<>();
-        for (Product product : productRepository.findAll()) {
-            if (product.getMaterialProviders() == null) continue;
-            boolean removed = product.getMaterialProviders().removeIf(p -> p.getId() != null && p.getId().equals(id));
-            if (removed) changedProducts.add(product);
-        }
-        for (Product product : changedProducts) {
-            productRepository.save(product);
         }
 
         materialProviderRepository.deleteById(id);

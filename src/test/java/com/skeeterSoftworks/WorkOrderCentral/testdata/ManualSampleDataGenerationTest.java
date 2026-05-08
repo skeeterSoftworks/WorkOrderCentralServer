@@ -58,8 +58,8 @@ class ManualSampleDataGenerationTest {
         assertEquals(SampleDataGenerationService.SAMPLE_COUNT, materialRepository.count());
         assertEquals(SampleDataGenerationService.SAMPLE_COUNT, materialProviderRepository.count());
         productRepository.findAll().forEach(product ->
-                assertTrue(product.getMaterialProviders() != null && !product.getMaterialProviders().isEmpty(),
-                        "Each generated product should have at least one material provider"));
+                assertTrue(product.getMaterials() != null && !product.getMaterials().isEmpty(),
+                        "Each generated product should have at least one material"));
         log.info(
                 "Sample data inserted: {} machines, {} tools, {} products, {} customers, {} users, {} materials, {} material providers",
                 result.getMachinesInserted(),

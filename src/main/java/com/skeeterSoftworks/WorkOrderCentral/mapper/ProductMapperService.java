@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
@@ -10,10 +11,13 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Technology;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.TechnologyRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialProviderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupDataPrototypeTO;
@@ -34,6 +38,7 @@ public class ProductMapperService {
 
     private final MachineRepository machineRepository;
     private final CustomerRepository customerRepository;
+    private final MaterialRepository materialRepository;
     private final MaterialProviderRepository materialProviderRepository;
     private final TechnologyRepository technologyRepository;
 
@@ -41,10 +46,12 @@ public class ProductMapperService {
     public ProductMapperService(
             MachineRepository machineRepository,
             CustomerRepository customerRepository,
+            MaterialRepository materialRepository,
             MaterialProviderRepository materialProviderRepository,
             TechnologyRepository technologyRepository) {
         this.machineRepository = machineRepository;
         this.customerRepository = customerRepository;
+        this.materialRepository = materialRepository;
         this.materialProviderRepository = materialProviderRepository;
         this.technologyRepository = technologyRepository;
     }
@@ -66,10 +73,10 @@ public class ProductMapperService {
         } else {
             to.setCustomerIds(Collections.emptyList());
         }
-        if (product.getMaterialProviders() != null && !product.getMaterialProviders().isEmpty()) {
-            to.setMaterialProviderIds(product.getMaterialProviders().stream().map(MaterialProvider::getId).toList());
+        if (product.getMaterials() != null && !product.getMaterials().isEmpty()) {
+            to.setMaterials(product.getMaterials().stream().map(this::mapMaterialToTO).toList());
         } else {
-            to.setMaterialProviderIds(Collections.emptyList());
+            to.setMaterials(Collections.emptyList());
         }
 
         to.setSetupDataPrototype(mapSetupPrototypeToTO(product.getSetupDataPrototype()));
@@ -130,14 +137,13 @@ public class ProductMapperService {
         } else {
             product.setCustomers(new ArrayList<>());
         }
-        if (to.getMaterialProviderIds() != null && !to.getMaterialProviderIds().isEmpty()) {
-            List<MaterialProvider> providers = new ArrayList<>();
-            for (Long id : to.getMaterialProviderIds()) {
-                materialProviderRepository.findById(id).ifPresent(providers::add);
-            }
-            product.setMaterialProviders(providers);
+        if (to.getMaterials() != null && !to.getMaterials().isEmpty()) {
+            List<Material> materials = to.getMaterials().stream()
+                    .map(this::mapMaterialToEntity)
+                    .toList();
+            product.setMaterials(materials);
         } else {
-            product.setMaterialProviders(new ArrayList<>());
+            product.setMaterials(new ArrayList<>());
         }
 
         product.setSetupDataPrototype(mapSetupPrototypeTOToEntity(to.getSetupDataPrototype()));
@@ -340,6 +346,86 @@ public class ProductMapperService {
                 p.getCheckType(),
                 p.getMeasuringTool()
         );
+    }
+
+    private MaterialTO mapMaterialToTO(Material material) {
+        if (material == null) {
+            return null;
+        }
+        List<MaterialProviderTO> providers = material.getProviders() == null
+                ? Collections.emptyList()
+                : material.getProviders().stream().map(this::mapMaterialProviderToTO).toList();
+        return new MaterialTO(
+                material.getId(),
+                material.getName(),
+                material.getCode(),
+                material.getProductsPerUnit(),
+                material.getDiameter(),
+                material.getWeight(),
+                material.getLength(),
+                material.getWidth(),
+                providers
+        );
+    }
+
+    private MaterialProviderTO mapMaterialProviderToTO(MaterialProvider provider) {
+        if (provider == null) {
+            return null;
+        }
+        return new MaterialProviderTO(
+                provider.getId(),
+                provider.getName(),
+                provider.getContactPerson(),
+                provider.getEmailAddress(),
+                provider.getPhoneNumber(),
+                provider.getGrade()
+        );
+    }
+
+    private Material mapMaterialToEntity(MaterialTO to) {
+        if (to == null) {
+            return null;
+        }
+        Material material = null;
+        if (to.getId() != null) {
+            material = materialRepository.findById(to.getId()).orElse(null);
+        }
+        if (material == null) {
+            material = new Material();
+            material.setId(to.getId());
+        }
+        material.setName(to.getName());
+        material.setCode(to.getCode());
+        material.setProductsPerUnit(to.getProductsPerUnit());
+        material.setDiameter(to.getDiameter() == null ? 0f : to.getDiameter());
+        material.setWeight(to.getWeight() == null ? 0f : to.getWeight());
+        material.setLength(to.getLength() == null ? 0f : to.getLength());
+        material.setWidth(to.getWidth() == null ? 0f : to.getWidth());
+
+        List<MaterialProvider> providers = new ArrayList<>();
+        if (to.getProviders() != null) {
+            for (MaterialProviderTO providerTo : to.getProviders()) {
+                if (providerTo == null) {
+                    continue;
+                }
+                MaterialProvider provider = null;
+                if (providerTo.getId() != null) {
+                    provider = materialProviderRepository.findById(providerTo.getId()).orElse(null);
+                }
+                if (provider == null) {
+                    provider = new MaterialProvider();
+                    provider.setId(providerTo.getId());
+                }
+                provider.setName(providerTo.getName());
+                provider.setContactPerson(providerTo.getContactPerson());
+                provider.setEmailAddress(providerTo.getEmailAddress());
+                provider.setPhoneNumber(providerTo.getPhoneNumber());
+                provider.setGrade(providerTo.getGrade() == null ? 0 : providerTo.getGrade());
+                providers.add(provider);
+            }
+        }
+        material.setProviders(providers);
+        return material;
     }
 
     private MeasuringFeaturePrototype mapPrototypeTOToEntity(MeasuringFeaturePrototypeTO to) {
