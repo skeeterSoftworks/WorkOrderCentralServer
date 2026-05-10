@@ -5,20 +5,21 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialReposit
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
 import com.skeeterSoftworks.WorkOrderCentral.service.SampleDataGenerationService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SampleDataGenerationResultTO;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Seeds the configured database with sample rows (10 each: users, machines, tools, products, customers,
- * materials, material providers).
+ * materials, material providers). Repository assertions compare deltas so existing rows do not fail the test.
  * <p>
  * Delegates to {@link SampleDataGenerationService} (same logic as the admin UI “Generate test data” action).
  * <p>
@@ -50,13 +51,25 @@ class ManualSampleDataGenerationTest {
 
     @Test
     @DisplayName("Generate sample users, machines, tools, products, customers, materials and providers (manual / disabled by default)")
-  //  @Disabled("Remove @Disabled or deactivate DisabledCondition to insert sample data into the database.")
+    //  @Disabled("Remove @Disabled or deactivate DisabledCondition to insert sample data into the database.")
+    @Transactional
+    @Rollback(false)
     void generateSampleData() {
+        long materialsBefore = materialRepository.count();
+        long providersBefore = materialProviderRepository.count();
+
         SampleDataGenerationResultTO result = sampleDataGenerationService.generateDemoBatch();
+
         assertEquals(SampleDataGenerationService.SAMPLE_COUNT, result.getMaterialsInserted());
         assertEquals(SampleDataGenerationService.SAMPLE_COUNT, result.getMaterialProvidersInserted());
-        assertEquals(SampleDataGenerationService.SAMPLE_COUNT, materialRepository.count());
-        assertEquals(SampleDataGenerationService.SAMPLE_COUNT, materialProviderRepository.count());
+        assertEquals(
+                materialsBefore + SampleDataGenerationService.SAMPLE_COUNT,
+                materialRepository.count(),
+                "Table-wide material count should increase by SAMPLE_COUNT for this invocation");
+        assertEquals(
+                providersBefore + SampleDataGenerationService.SAMPLE_COUNT,
+                materialProviderRepository.count(),
+                "Table-wide provider count should increase by SAMPLE_COUNT for this invocation");
         productRepository.findAll().forEach(product ->
                 assertTrue(product.getMaterials() != null && !product.getMaterials().isEmpty(),
                         "Each generated product should have at least one material"));
