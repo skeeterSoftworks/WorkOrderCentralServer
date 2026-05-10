@@ -8,12 +8,29 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProvide
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class MaterialOrderService {
+
+    public static final int STALE_LAST_CHANGE_DAYS = 3;
+
+    private static final Set<EMaterialOrderStatus> STALE_MONITOR_EXCLUDED_STATUSES = EnumSet.of(
+            EMaterialOrderStatus.RECEIVED_IN_STOCK,
+            EMaterialOrderStatus.VALIDATED);
+
+    private static final Set<EMaterialOrderStatus> MANUAL_TRANSITION_TARGETS = EnumSet.of(
+            EMaterialOrderStatus.ORDER_SENT,
+            EMaterialOrderStatus.ORDER_ACKNOWLEDGED,
+            EMaterialOrderStatus.ORDER_ACCEPTED,
+            EMaterialOrderStatus.IN_TRANSPORT);
 
     private final MaterialOrderRepository materialOrderRepository;
     private final MaterialRepository materialRepository;
@@ -41,8 +58,29 @@ public class MaterialOrderService {
         order.setId(0);
         // Creation flow owns initial state; clients must not set this.
         order.setStatus(EMaterialOrderStatus.ORDER_CREATED);
+        order.setLastChanged(LocalDateTime.now());
         order.setCertificate(null);
         validate(order);
+        return materialOrderRepository.save(order);
+    }
+
+    public List<MaterialOrder> findStaleForMonitoring() {
+        LocalDateTime threshold = LocalDateTime.now().minus(STALE_LAST_CHANGE_DAYS, ChronoUnit.DAYS);
+        return materialOrderRepository.findStaleMonitoringCandidates(threshold, STALE_MONITOR_EXCLUDED_STATUSES);
+    }
+
+    @Transactional
+    public MaterialOrder transitionStatus(Long id, EMaterialOrderStatus newStatus) throws Exception {
+        if (newStatus == null || !MANUAL_TRANSITION_TARGETS.contains(newStatus)) {
+            throw new Exception("MATERIAL_ORDER_STATUS_TRANSITION_NOT_ALLOWED");
+        }
+        MaterialOrder order = materialOrderRepository.findById(id).orElseThrow(() -> new Exception("MATERIAL_ORDER_NOT_FOUND"));
+        if (order.getStatus() == EMaterialOrderStatus.RECEIVED_IN_STOCK
+                || order.getStatus() == EMaterialOrderStatus.VALIDATED) {
+            throw new Exception("MATERIAL_ORDER_STATUS_LOCKED");
+        }
+        order.setStatus(newStatus);
+        order.setLastChanged(LocalDateTime.now());
         return materialOrderRepository.save(order);
     }
 
