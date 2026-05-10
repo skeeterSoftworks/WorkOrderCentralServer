@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.skeeterSoftworks</groupId>
 	<artifactId>WorkOrderCentral</artifactId>
-	<version>0.0.9-SNAPSHOT</version>
+	<version>0.1.0-SNAPSHOT</version>
 	<name>WorkOrderCentral</name>
 	<description>Work Order Central Server</description>
 	<url/>
@@ -171,7 +171,7 @@
 						</goals>
 						<configuration>
 							<headerType>console</headerType>
-							<outfile>${project.build.directory}/${project.artifactId}.exe</outfile>
+							<outfile>${project.build.directory}/${project.artifactId}-${project.version}.exe</outfile>
 							<jar>${project.build.directory}/${project.build.finalName}.jar</jar>
 							<dontWrapJar>false</dontWrapJar>
 							<jre>
