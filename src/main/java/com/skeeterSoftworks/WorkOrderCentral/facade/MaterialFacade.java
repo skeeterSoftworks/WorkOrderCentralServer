@@ -8,7 +8,11 @@ import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,6 +38,28 @@ public class MaterialFacade {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.internalServerError().body("ERROR_FETCHING_MATERIALS");
+        }
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<?> save(@RequestBody MaterialTO materialTO) {
+        try {
+            Material saved = materialService.saveMaterialFromTo(materialTO);
+            return ResponseEntity.ok(toTO(saved));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            materialService.deleteMaterial(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 
