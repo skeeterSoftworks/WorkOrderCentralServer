@@ -69,6 +69,10 @@ public class MaterialOrderService {
         return materialOrderRepository.findStaleMonitoringCandidates(threshold, STALE_MONITOR_EXCLUDED_STATUSES);
     }
 
+    public List<MaterialOrder> getOpenForReception() {
+        return materialOrderRepository.findByStatus(EMaterialOrderStatus.IN_TRANSPORT);
+    }
+
     @Transactional
     public MaterialOrder transitionStatus(Long id, EMaterialOrderStatus newStatus) throws Exception {
         if (newStatus == null || !MANUAL_TRANSITION_TARGETS.contains(newStatus)) {

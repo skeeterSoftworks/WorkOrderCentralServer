@@ -31,5 +31,8 @@ public interface MaterialOrderRepository extends CrudRepository<MaterialOrder, L
     List<MaterialOrder> findStaleMonitoringCandidates(
             @Param("threshold") LocalDateTime threshold,
             @Param("excluded") Collection<EMaterialOrderStatus> excluded);
+
+    @EntityGraph(attributePaths = {"material", "materialProvider"})
+    List<MaterialOrder> findByStatus(EMaterialOrderStatus status);
 }
 

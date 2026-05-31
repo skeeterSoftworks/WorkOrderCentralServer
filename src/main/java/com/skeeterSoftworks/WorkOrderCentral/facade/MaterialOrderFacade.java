@@ -42,6 +42,17 @@ public class MaterialOrderFacade {
         }
     }
 
+    @GetMapping("/open-for-reception")
+    public ResponseEntity<?> getOpenForReception() {
+        try {
+            List<MaterialOrder> list = materialOrderService.getOpenForReception();
+            return ResponseEntity.ok(list.stream().map(this::toTO).toList());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_MATERIAL_ORDERS_OPEN_FOR_RECEPTION");
+        }
+    }
+
     @GetMapping("/stale-monitoring")
     public ResponseEntity<?> getStaleMonitoring() {
         try {
