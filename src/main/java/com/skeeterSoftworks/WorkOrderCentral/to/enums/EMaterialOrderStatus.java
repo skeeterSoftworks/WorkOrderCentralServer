@@ -7,6 +7,7 @@ public enum EMaterialOrderStatus {
     ORDER_ACCEPTED,
     IN_TRANSPORT,
     RECEIVED_IN_STOCK,
-    VALIDATED
+    VALIDATED,
+    REJECTED
 }
 

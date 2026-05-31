@@ -47,6 +47,7 @@ public class PurchaseOrderMapperService {
         to.setInProductionAt(po.getInProductionAt());
         to.setCompletedAt(po.getCompletedAt());
         to.setDeliveredAt(po.getDeliveredAt());
+        to.setRejectedAt(po.getRejectedAt());
         return to;
     }
 
@@ -74,6 +75,7 @@ public class PurchaseOrderMapperService {
         if (to.getInProductionAt() != null) po.setInProductionAt(to.getInProductionAt());
         if (to.getCompletedAt() != null) po.setCompletedAt(to.getCompletedAt());
         if (to.getDeliveredAt() != null) po.setDeliveredAt(to.getDeliveredAt());
+        if (to.getRejectedAt() != null) po.setRejectedAt(to.getRejectedAt());
         return po;
     }
 

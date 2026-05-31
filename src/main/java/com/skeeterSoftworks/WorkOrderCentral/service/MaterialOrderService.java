@@ -3,10 +3,12 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderReceptionRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderCodeGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +26,13 @@ public class MaterialOrderService {
 
     private static final Set<EMaterialOrderStatus> STALE_MONITOR_EXCLUDED_STATUSES = EnumSet.of(
             EMaterialOrderStatus.RECEIVED_IN_STOCK,
-            EMaterialOrderStatus.VALIDATED);
+            EMaterialOrderStatus.VALIDATED,
+            EMaterialOrderStatus.REJECTED);
+
+    private static final Set<EMaterialOrderStatus> REJECT_BLOCKED_STATUSES = EnumSet.of(
+            EMaterialOrderStatus.RECEIVED_IN_STOCK,
+            EMaterialOrderStatus.VALIDATED,
+            EMaterialOrderStatus.REJECTED);
 
     private static final Set<EMaterialOrderStatus> MANUAL_TRANSITION_TARGETS = EnumSet.of(
             EMaterialOrderStatus.ORDER_SENT,
@@ -35,15 +43,18 @@ public class MaterialOrderService {
     private final MaterialOrderRepository materialOrderRepository;
     private final MaterialRepository materialRepository;
     private final MaterialProviderRepository materialProviderRepository;
+    private final MaterialOrderReceptionRepository materialOrderReceptionRepository;
 
     public MaterialOrderService(
             MaterialOrderRepository materialOrderRepository,
             MaterialRepository materialRepository,
-            MaterialProviderRepository materialProviderRepository
+            MaterialProviderRepository materialProviderRepository,
+            MaterialOrderReceptionRepository materialOrderReceptionRepository
     ) {
         this.materialOrderRepository = materialOrderRepository;
         this.materialRepository = materialRepository;
         this.materialProviderRepository = materialProviderRepository;
+        this.materialOrderReceptionRepository = materialOrderReceptionRepository;
     }
 
     public List<MaterialOrder> getAllMaterialOrders() {
@@ -58,9 +69,13 @@ public class MaterialOrderService {
         order.setId(0);
         // Creation flow owns initial state; clients must not set this.
         order.setStatus(EMaterialOrderStatus.ORDER_CREATED);
-        order.setLastChanged(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        order.setLastChanged(now);
+        order.setCreatedAt(now);
         order.setCertificate(null);
+        order.setCode(null);
         validate(order);
+        order.setCode(MaterialOrderCodeGenerator.resolveUnique(now, materialOrderRepository::existsByCode));
         return materialOrderRepository.save(order);
     }
 
@@ -80,11 +95,28 @@ public class MaterialOrderService {
         }
         MaterialOrder order = materialOrderRepository.findById(id).orElseThrow(() -> new Exception("MATERIAL_ORDER_NOT_FOUND"));
         if (order.getStatus() == EMaterialOrderStatus.RECEIVED_IN_STOCK
-                || order.getStatus() == EMaterialOrderStatus.VALIDATED) {
+                || order.getStatus() == EMaterialOrderStatus.VALIDATED
+                || order.getStatus() == EMaterialOrderStatus.REJECTED) {
             throw new Exception("MATERIAL_ORDER_STATUS_LOCKED");
         }
         order.setStatus(newStatus);
         order.setLastChanged(LocalDateTime.now());
+        return materialOrderRepository.save(order);
+    }
+
+    @Transactional
+    public MaterialOrder rejectMaterialOrder(Long id) throws Exception {
+        MaterialOrder order = materialOrderRepository.findById(id).orElseThrow(() -> new Exception("MATERIAL_ORDER_NOT_FOUND"));
+        if (REJECT_BLOCKED_STATUSES.contains(order.getStatus())) {
+            throw new Exception("MATERIAL_ORDER_REJECT_NOT_ALLOWED");
+        }
+        if (materialOrderReceptionRepository.existsByMaterialOrder_Id(id)) {
+            throw new Exception("MATERIAL_ORDER_HAS_RECEPTION");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        order.setStatus(EMaterialOrderStatus.REJECTED);
+        order.setRejectedAt(now);
+        order.setLastChanged(now);
         return materialOrderRepository.save(order);
     }
 

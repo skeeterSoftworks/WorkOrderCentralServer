@@ -31,6 +31,10 @@ public class MaterialOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    /** Server-generated order number, e.g. NM053120261101 (NM + MMddyyyyHHmm). */
+    @Column(unique = true, length = 24)
+    private String code;
+
     @Column
     private int quantity;
 
@@ -49,6 +53,12 @@ public class MaterialOrder {
     /** Server time when {@link #status} was last changed (including creation). */
     @Column
     private LocalDateTime lastChanged;
+
+    @Column
+    private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime rejectedAt;
 
     @JdbcTypeCode(SqlTypes.VARBINARY)
     @Column

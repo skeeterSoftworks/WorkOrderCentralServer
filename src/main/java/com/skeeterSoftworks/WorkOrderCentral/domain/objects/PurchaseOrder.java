@@ -74,4 +74,7 @@ public class PurchaseOrder {
     @Column
     private LocalDateTime deliveredAt;
 
+    @Column
+    private LocalDateTime rejectedAt;
+
 }

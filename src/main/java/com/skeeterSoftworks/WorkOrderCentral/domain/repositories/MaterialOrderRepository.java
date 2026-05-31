@@ -34,5 +34,7 @@ public interface MaterialOrderRepository extends CrudRepository<MaterialOrder, L
 
     @EntityGraph(attributePaths = {"material", "materialProvider"})
     List<MaterialOrder> findByStatus(EMaterialOrderStatus status);
+
+    boolean existsByCode(String code);
 }
 

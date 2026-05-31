@@ -1,0 +1,93 @@
+package com.skeeterSoftworks.WorkOrderCentral.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+
+/**
+ * Hibernate {@code ddl-auto=update} does not alter PostgreSQL check constraints when enum values
+ * are added in Java. Recreate {@code material_order_status_check} so {@code REJECTED} is allowed.
+ */
+@Slf4j
+@Component
+public class MaterialOrderSchemaPatch implements ApplicationRunner {
+
+    private static final String STATUS_CHECK = "material_order_status_check";
+
+    private final JdbcTemplate jdbcTemplate;
+    private final DataSource dataSource;
+
+    public MaterialOrderSchemaPatch(JdbcTemplate jdbcTemplate, DataSource dataSource) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.dataSource = dataSource;
+    }
+
+    @Override
+    public void run(ApplicationArguments args) {
+        if (!isPostgresql()) {
+            return;
+        }
+        try {
+            patchStatusCheckConstraint();
+            ensureTimestampColumns();
+        } catch (Exception e) {
+            log.warn("Could not patch material_order schema: {}", e.getMessage());
+        }
+    }
+
+    private boolean isPostgresql() {
+        try (Connection connection = dataSource.getConnection()) {
+            DatabaseMetaData meta = connection.getMetaData();
+            String product = meta.getDatabaseProductName();
+            return product != null && product.toLowerCase().contains("postgresql");
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    private void patchStatusCheckConstraint() {
+        if (constraintIncludesRejected()) {
+            return;
+        }
+        jdbcTemplate.execute("ALTER TABLE material_order DROP CONSTRAINT IF EXISTS " + STATUS_CHECK);
+        jdbcTemplate.execute("""
+                ALTER TABLE material_order ADD CONSTRAINT material_order_status_check CHECK (
+                    status IN (
+                        'ORDER_CREATED',
+                        'ORDER_SENT',
+                        'ORDER_ACKNOWLEDGED',
+                        'ORDER_ACCEPTED',
+                        'IN_TRANSPORT',
+                        'RECEIVED_IN_STOCK',
+                        'VALIDATED',
+                        'REJECTED'
+                    )
+                )
+                """);
+        log.info("Updated {} to allow REJECTED status", STATUS_CHECK);
+    }
+
+    private boolean constraintIncludesRejected() {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM pg_constraint c
+                JOIN pg_class t ON c.conrelid = t.oid
+                WHERE t.relname = 'material_order'
+                  AND c.conname = ?
+                  AND pg_get_constraintdef(c.oid) LIKE '%REJECTED%'
+                """, Integer.class, STATUS_CHECK);
+        return count != null && count > 0;
+    }
+
+    private void ensureTimestampColumns() {
+        jdbcTemplate.execute("ALTER TABLE material_order ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(6)");
+        jdbcTemplate.execute("ALTER TABLE material_order ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP(6)");
+    }
+}

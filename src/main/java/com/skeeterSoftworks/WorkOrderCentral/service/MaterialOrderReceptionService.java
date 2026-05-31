@@ -2,6 +2,7 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReceptionInternalControl;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderReceptionRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
@@ -68,6 +69,7 @@ public class MaterialOrderReceptionService {
         reception.setMaterialOrder(order);
         reception.setReceivedAt(to.getReceivedAt());
         reception.setReceivedQuantity(to.getReceivedQuantity());
+        reception.setInternalControl(new MaterialOrderReceptionInternalControl());
 
         MaterialOrderReception saved = materialOrderReceptionRepository.save(reception);
 

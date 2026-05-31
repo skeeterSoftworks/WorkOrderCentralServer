@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MaterialOrderTO {
     private Long id;
+    /** Server-generated material order number (NM + timestamp). */
+    private String code;
     private Integer quantity;
     private Long materialId;
     private String materialName;
@@ -20,6 +22,8 @@ public class MaterialOrderTO {
     private String materialProviderName;
     private EMaterialOrderStatus status;
     private LocalDateTime lastChanged;
+    private LocalDateTime createdAt;
+    private LocalDateTime rejectedAt;
     /** Raw Base64 or data URL for upload; omitted in list payloads. */
     private String certificateBase64;
     private Boolean certificatePresent;

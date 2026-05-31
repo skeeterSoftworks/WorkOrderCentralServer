@@ -95,4 +95,16 @@ public class PurchaseOrderFacade {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<?> reject(@PathVariable Long id) {
+        try {
+            PurchaseOrder rejected = purchaseOrderService.rejectPurchaseOrder(id);
+            PurchaseOrder loaded = purchaseOrderService.getPurchaseOrderById(rejected.getId()).orElse(rejected);
+            return ResponseEntity.ok(purchaseOrderMapperService.mapToTO(loaded));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

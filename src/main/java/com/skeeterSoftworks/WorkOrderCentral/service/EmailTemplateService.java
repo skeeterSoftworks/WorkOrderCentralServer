@@ -100,6 +100,8 @@ public class EmailTemplateService {
         m.put("materialLabel", materialLabel);
         m.put("materialName", materialName);
         m.put("materialCode", materialCode);
+        String materialOrderCode = order.getCode() != null ? order.getCode() : "";
+        m.put("materialOrderCode", materialOrderCode);
         m.put("quantity", String.valueOf(order.getQuantity()));
         return m;
     }
@@ -122,9 +124,9 @@ public class EmailTemplateService {
 
     private static String defaultSubject(EEmailTemplateCode code) {
         return switch (code) {
-            case MATERIAL_ORDER_INQUIRY -> "Material order {{materialLabel}}";
-            case MATERIAL_ORDER_REMINDER -> "Reminder: material order {{materialLabel}}";
-            case MATERIAL_DELIVERY_LATE -> "Late delivery: material order {{materialLabel}}";
+            case MATERIAL_ORDER_INQUIRY -> "Material order {{materialOrderCode}} — {{materialLabel}}";
+            case MATERIAL_ORDER_REMINDER -> "Reminder: material order {{materialOrderCode}}";
+            case MATERIAL_DELIVERY_LATE -> "Late delivery: material order {{materialOrderCode}}";
         };
     }
 
@@ -132,19 +134,20 @@ public class EmailTemplateService {
         return switch (code) {
             case MATERIAL_ORDER_INQUIRY ->
                     "Dear {{providerName}},\n\n"
+                            + "Order number: {{materialOrderCode}}\n"
                             + "Material: {{materialLabel}}\n"
                             + "Quantity: {{quantity}}\n\n"
                             + "Please confirm this material order.";
             case MATERIAL_ORDER_REMINDER ->
                     "Dear {{providerName}},\n\n"
-                            + "This is a friendly reminder regarding our material order for {{materialLabel}} "
-                            + "(quantity {{quantity}}).\n\n"
+                            + "This is a friendly reminder regarding material order {{materialOrderCode}} for "
+                            + "{{materialLabel}} (quantity {{quantity}}).\n\n"
                             + "Please confirm status at your earliest convenience.\n\n"
                             + "Thank you.";
             case MATERIAL_DELIVERY_LATE ->
                     "Dear {{providerName}},\n\n"
-                            + "We are writing regarding material order {{materialLabel}} (quantity {{quantity}}). "
-                            + "The delivery is currently delayed beyond our agreed timeline.\n\n"
+                            + "We are writing regarding material order {{materialOrderCode}} for {{materialLabel}} "
+                            + "(quantity {{quantity}}). The delivery is currently delayed beyond our agreed timeline.\n\n"
                             + "Please advise on the revised delivery schedule.\n\n"
                             + "Thank you.";
         };

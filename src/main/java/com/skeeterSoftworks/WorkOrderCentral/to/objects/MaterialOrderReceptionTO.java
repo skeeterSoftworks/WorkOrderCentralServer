@@ -12,9 +12,11 @@ import java.time.LocalDateTime;
 public class MaterialOrderReceptionTO {
     private Long id;
     private Long materialOrderId;
+    private String materialOrderCode;
     private String materialCode;
     private String materialName;
     private String materialProviderName;
     private LocalDateTime receivedAt;
     private Integer receivedQuantity;
+    private MaterialOrderReceptionInternalControlTO internalControl;
 }

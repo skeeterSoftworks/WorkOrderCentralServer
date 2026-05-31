@@ -32,5 +32,6 @@ public class PurchaseOrderTO {
     private LocalDateTime inProductionAt;
     private LocalDateTime completedAt;
     private LocalDateTime deliveredAt;
+    private LocalDateTime rejectedAt;
 }
 

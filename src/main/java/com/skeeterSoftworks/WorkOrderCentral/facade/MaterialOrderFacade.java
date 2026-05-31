@@ -89,9 +89,21 @@ public class MaterialOrderFacade {
         }
     }
 
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<?> reject(@PathVariable Long id) {
+        try {
+            MaterialOrder saved = materialOrderService.rejectMaterialOrder(id);
+            return ResponseEntity.ok(toTO(saved));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private MaterialOrderTO toTO(MaterialOrder e) {
         MaterialOrderTO to = new MaterialOrderTO();
         to.setId(e.getId());
+        to.setCode(e.getCode());
         to.setQuantity(e.getQuantity());
         if (e.getMaterial() != null) {
             to.setMaterialId(e.getMaterial().getId());
@@ -104,6 +116,8 @@ public class MaterialOrderFacade {
         }
         to.setStatus(e.getStatus());
         to.setLastChanged(e.getLastChanged());
+        to.setCreatedAt(e.getCreatedAt());
+        to.setRejectedAt(e.getRejectedAt());
         to.setCertificateBase64(null);
         to.setCertificatePresent(e.getCertificate() != null && e.getCertificate().length > 0);
         return to;

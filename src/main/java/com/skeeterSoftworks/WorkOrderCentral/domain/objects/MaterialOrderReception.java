@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.domain.objects;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -35,4 +36,7 @@ public class MaterialOrderReception {
 
     @Column(nullable = false)
     private int receivedQuantity;
+
+    @Embedded
+    private MaterialOrderReceptionInternalControl internalControl;
 }

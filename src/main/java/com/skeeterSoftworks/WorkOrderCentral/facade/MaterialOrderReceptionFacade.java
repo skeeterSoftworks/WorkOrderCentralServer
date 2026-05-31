@@ -3,6 +3,8 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionService;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReceptionInternalControl;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionInternalControlTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -73,6 +76,7 @@ public class MaterialOrderReceptionFacade {
         MaterialOrder order = r.getMaterialOrder();
         if (order != null) {
             to.setMaterialOrderId(order.getId());
+            to.setMaterialOrderCode(order.getCode());
             if (order.getMaterial() != null) {
                 to.setMaterialCode(order.getMaterial().getCode());
                 to.setMaterialName(order.getMaterial().getName());
@@ -81,6 +85,21 @@ public class MaterialOrderReceptionFacade {
                 to.setMaterialProviderName(order.getMaterialProvider().getName());
             }
         }
+        to.setInternalControl(toInternalControlTO(r.getInternalControl()));
+        return to;
+    }
+
+    private MaterialOrderReceptionInternalControlTO toInternalControlTO(MaterialOrderReceptionInternalControl ic) {
+        if (ic == null) {
+            return new MaterialOrderReceptionInternalControlTO();
+        }
+        MaterialOrderReceptionInternalControlTO to = new MaterialOrderReceptionInternalControlTO();
+        to.setDiameterSamples(ic.getDiameterSamples() != null ? new ArrayList<>(ic.getDiameterSamples()) : new ArrayList<>());
+        to.setLengthSamples(ic.getLengthSamples() != null ? new ArrayList<>(ic.getLengthSamples()) : new ArrayList<>());
+        to.setWidthSamples(ic.getWidthSamples() != null ? new ArrayList<>(ic.getWidthSamples()) : new ArrayList<>());
+        to.setWeightSamples(ic.getWeightSamples() != null ? new ArrayList<>(ic.getWeightSamples()) : new ArrayList<>());
+        to.setOverallWeight(ic.getOverallWeight());
+        to.setOverallAcceptance(ic.getOverallAcceptance());
         return to;
     }
 }
