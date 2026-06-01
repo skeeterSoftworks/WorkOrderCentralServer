@@ -106,9 +106,14 @@ public class MaterialOrderFacade {
         to.setCode(e.getCode());
         to.setQuantity(e.getQuantity());
         if (e.getMaterial() != null) {
-            to.setMaterialId(e.getMaterial().getId());
-            to.setMaterialName(e.getMaterial().getName());
-            to.setMaterialCode(e.getMaterial().getCode());
+            Material material = e.getMaterial();
+            to.setMaterialId(material.getId());
+            to.setMaterialName(material.getName());
+            to.setMaterialCode(material.getCode());
+            to.setMaterialDiameter(material.getDiameter());
+            to.setMaterialWeight(material.getWeight());
+            to.setMaterialLength(material.getLength());
+            to.setMaterialWidth(material.getWidth());
         }
         if (e.getMaterialProvider() != null) {
             to.setMaterialProviderId(e.getMaterialProvider().getId());

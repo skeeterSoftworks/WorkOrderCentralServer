@@ -21,4 +21,7 @@ public interface MaterialOrderReceptionRepository extends CrudRepository<Materia
     List<MaterialOrderReception> findByMaterialOrder_Id(Long materialOrderId);
 
     boolean existsByMaterialOrder_Id(Long materialOrderId);
+
+    @EntityGraph(attributePaths = {"materialOrder", "materialOrder.material", "materialOrder.materialProvider"})
+    Optional<MaterialOrderReception> findFirstByMaterialOrder_Id(Long materialOrderId);
 }

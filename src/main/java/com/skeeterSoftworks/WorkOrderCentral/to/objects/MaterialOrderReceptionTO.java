@@ -19,4 +19,14 @@ public class MaterialOrderReceptionTO {
     private LocalDateTime receivedAt;
     private Integer receivedQuantity;
     private MaterialOrderReceptionInternalControlTO internalControl;
+    /** Nominal diameter from linked material (0 = not defined). */
+    private Float materialDiameter;
+    /** Nominal weight from linked material (0 = not defined). */
+    private Float materialWeight;
+    /** Nominal length from linked material (0 = not defined). */
+    private Float materialLength;
+    /** Nominal width from linked material (0 = not defined). */
+    private Float materialWidth;
+    /** Quantities to add to stock locations; sum must equal {@link #receivedQuantity}. */
+    private java.util.List<MaterialReceptionStockAllocationTO> stockAllocations;
 }

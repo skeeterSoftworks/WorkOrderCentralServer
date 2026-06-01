@@ -1,5 +1,6 @@
 package com.skeeterSoftworks.WorkOrderCentral.facade;
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionService;
@@ -57,6 +58,31 @@ public class MaterialOrderReceptionFacade {
         }
     }
 
+    @Transactional(readOnly = true)
+    @GetMapping("/pending-validation")
+    public ResponseEntity<?> getPendingValidation() {
+        try {
+            List<MaterialOrderReception> list = materialOrderReceptionService.getPendingValidation();
+            return ResponseEntity.ok(list.stream().map(this::toTO).toList());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_PENDING_VALIDATION");
+        }
+    }
+
+    @PostMapping("/{id}/submit-internal-control")
+    public ResponseEntity<?> submitInternalControl(
+            @PathVariable Long id,
+            @RequestBody MaterialOrderReceptionInternalControlTO body) {
+        try {
+            MaterialOrderReception saved = materialOrderReceptionService.submitInternalControl(id, body);
+            return ResponseEntity.ok(toTO(saved));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/record")
     public ResponseEntity<?> record(@RequestBody MaterialOrderReceptionTO body) {
         try {
@@ -78,8 +104,13 @@ public class MaterialOrderReceptionFacade {
             to.setMaterialOrderId(order.getId());
             to.setMaterialOrderCode(order.getCode());
             if (order.getMaterial() != null) {
-                to.setMaterialCode(order.getMaterial().getCode());
-                to.setMaterialName(order.getMaterial().getName());
+                Material material = order.getMaterial();
+                to.setMaterialCode(material.getCode());
+                to.setMaterialName(material.getName());
+                to.setMaterialDiameter(material.getDiameter());
+                to.setMaterialWeight(material.getWeight());
+                to.setMaterialLength(material.getLength());
+                to.setMaterialWidth(material.getWidth());
             }
             if (order.getMaterialProvider() != null) {
                 to.setMaterialProviderName(order.getMaterialProvider().getName());

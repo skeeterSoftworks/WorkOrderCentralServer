@@ -27,5 +27,13 @@ public class MaterialOrderTO {
     /** Raw Base64 or data URL for upload; omitted in list payloads. */
     private String certificateBase64;
     private Boolean certificatePresent;
+    /** Nominal diameter from linked material (0 = not defined). */
+    private Float materialDiameter;
+    /** Nominal weight from linked material (0 = not defined). */
+    private Float materialWeight;
+    /** Nominal length from linked material (0 = not defined). */
+    private Float materialLength;
+    /** Nominal width from linked material (0 = not defined). */
+    private Float materialWidth;
 }
 
