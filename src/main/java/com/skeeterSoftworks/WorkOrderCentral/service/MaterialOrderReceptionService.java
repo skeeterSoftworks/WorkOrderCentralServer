@@ -93,7 +93,15 @@ public class MaterialOrderReceptionService {
             ic.setWeightSamples(parseSamples(body != null ? body.getWeightSamples() : null, "WEIGHT"));
         }
 
-        ic.setOverallAcceptance(true);
+        if (body == null || body.getOverallWeight() == null || !Float.isFinite(body.getOverallWeight())) {
+            throw new Exception("MATERIAL_ORDER_RECEPTION_OVERALL_WEIGHT_REQUIRED");
+        }
+        if (body.getOverallAcceptance() == null) {
+            throw new Exception("MATERIAL_ORDER_RECEPTION_OVERALL_ACCEPTANCE_REQUIRED");
+        }
+        ic.setOverallWeight(body.getOverallWeight());
+        ic.setOverallAcceptance(body.getOverallAcceptance());
+
         MaterialOrderReception saved = materialOrderReceptionRepository.save(reception);
 
         order.setStatus(EMaterialOrderStatus.VALIDATED);
