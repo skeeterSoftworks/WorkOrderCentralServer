@@ -7,6 +7,7 @@ import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderService;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderStatusTransitionTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderCertificateTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -94,6 +95,37 @@ public class MaterialOrderFacade {
         try {
             MaterialOrder saved = materialOrderService.rejectMaterialOrder(id);
             return ResponseEntity.ok(toTO(saved));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/certificate")
+    public ResponseEntity<?> getCertificate(@PathVariable Long id) {
+        try {
+            String dataUrl = materialOrderService.getCertificateDataUrl(id);
+            return ResponseEntity.ok(new MaterialOrderCertificateTO(dataUrl));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            if ("MATERIAL_ORDER_NOT_FOUND".equals(e.getMessage())
+                    || "MATERIAL_ORDER_CERTIFICATE_NOT_FOUND".equals(e.getMessage())) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/certificate")
+    public ResponseEntity<?> uploadCertificate(
+            @PathVariable Long id,
+            @RequestBody MaterialOrderCertificateTO body) {
+        try {
+            String payload = body != null ? body.getCertificateBase64() : null;
+            MaterialOrder saved = materialOrderService.uploadCertificate(id, payload);
+            MaterialOrderTO to = toTO(saved);
+            to.setCertificatePresent(true);
+            return ResponseEntity.ok(to);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.badRequest().body(e.getMessage());

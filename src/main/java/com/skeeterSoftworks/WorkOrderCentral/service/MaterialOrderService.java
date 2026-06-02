@@ -8,6 +8,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRe
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.util.BinaryMediaEncodingUtils;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderCodeGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -117,6 +118,28 @@ public class MaterialOrderService {
         order.setStatus(EMaterialOrderStatus.REJECTED);
         order.setRejectedAt(now);
         order.setLastChanged(now);
+        return materialOrderRepository.save(order);
+    }
+
+    @Transactional(readOnly = true)
+    public String getCertificateDataUrl(Long id) throws Exception {
+        MaterialOrder order = materialOrderRepository.findById(id).orElseThrow(() -> new Exception("MATERIAL_ORDER_NOT_FOUND"));
+        if (order.getCertificate() == null || order.getCertificate().length == 0) {
+            throw new Exception("MATERIAL_ORDER_CERTIFICATE_NOT_FOUND");
+        }
+        return BinaryMediaEncodingUtils.encodeToDataUrl(order.getCertificate());
+    }
+
+    @Transactional
+    public MaterialOrder uploadCertificate(Long id, String certificateBase64) throws Exception {
+        MaterialOrder order = materialOrderRepository.findById(id).orElseThrow(() -> new Exception("MATERIAL_ORDER_NOT_FOUND"));
+        if (order.getStatus() == EMaterialOrderStatus.REJECTED) {
+            throw new Exception("MATERIAL_ORDER_CERTIFICATE_UPLOAD_NOT_ALLOWED");
+        }
+        byte[] bytes = BinaryMediaEncodingUtils.decodeBase64Payload(certificateBase64);
+        BinaryMediaEncodingUtils.validateCertificateSize(bytes);
+        order.setCertificate(bytes);
+        order.setLastChanged(LocalDateTime.now());
         return materialOrderRepository.save(order);
     }
 
