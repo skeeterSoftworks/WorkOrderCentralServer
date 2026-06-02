@@ -150,6 +150,9 @@ public class MaterialOrderReceptionService {
         if (order.getMaterial() == null || order.getMaterial().getId() == null) {
             throw new Exception("MATERIAL_NOT_FOUND");
         }
+        if (order.getCertificate() == null || order.getCertificate().length == 0) {
+            throw new Exception("MATERIAL_ORDER_CERTIFICATE_REQUIRED");
+        }
 
         MaterialOrderReception reception = new MaterialOrderReception();
         reception.setMaterialOrder(order);
