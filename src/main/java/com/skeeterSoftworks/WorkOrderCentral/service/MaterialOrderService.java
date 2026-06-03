@@ -29,7 +29,7 @@ import java.util.Set;
 @Service
 public class MaterialOrderService {
 
-    public static final int STALE_LAST_CHANGE_DAYS = 3;
+    public static final int STALE_LAST_CHANGE_DAYS = 5;
 
     private static final Set<EMaterialOrderStatus> STALE_MONITOR_EXCLUDED_STATUSES = EnumSet.of(
             EMaterialOrderStatus.RECEIVED_IN_STOCK,
