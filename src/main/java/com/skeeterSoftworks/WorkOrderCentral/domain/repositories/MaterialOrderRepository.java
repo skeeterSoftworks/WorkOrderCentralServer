@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.domain.repositories;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MaterialOrderRepository extends CrudRepository<MaterialOrder, Long> {
+public interface MaterialOrderRepository extends CrudRepository<MaterialOrder, Long>, JpaSpecificationExecutor<MaterialOrder> {
 
     @Override
     @EntityGraph(attributePaths = {"material", "material.providers", "materialProvider"})

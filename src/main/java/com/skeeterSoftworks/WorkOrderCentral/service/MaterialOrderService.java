@@ -10,8 +10,14 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialReposit
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.util.BinaryMediaEncodingUtils;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderCodeGenerator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -60,6 +66,30 @@ public class MaterialOrderService {
 
     public List<MaterialOrder> getAllMaterialOrders() {
         return materialOrderRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MaterialOrder> searchMaterialOrders(MaterialOrderSearchCriteria criteria, int page,
+            int size, String sortBy, boolean asc) {
+
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 200);
+        Specification<MaterialOrder> spec = MaterialOrderSearchSpecifications.from(criteria);
+        Pageable pageable = PageRequest.of(safePage, safeSize, buildSort(sortBy, asc));
+        return materialOrderRepository.findAll(spec, pageable);
+    }
+
+    private static Sort buildSort(String sortBy, boolean asc) {
+        Sort.Direction direction = asc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        String field = StringUtils.hasText(sortBy) ? sortBy.trim() : "createdAt";
+        return switch (field) {
+            case "materialName" -> Sort.by(new Sort.Order(direction, "material.name"));
+            case "materialProviderName" -> Sort.by(new Sort.Order(direction, "materialProvider.name"));
+            case "certificatePresent" -> Sort.by(new Sort.Order(direction, "certificatePresent"));
+            case "code", "quantity", "status", "lastChanged", "createdAt" ->
+                    Sort.by(new Sort.Order(direction, field));
+            default -> Sort.by(new Sort.Order(direction, "createdAt"));
+        };
     }
 
     public Optional<MaterialOrder> getMaterialOrderById(Long id) {

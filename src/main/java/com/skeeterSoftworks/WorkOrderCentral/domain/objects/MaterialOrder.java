@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -63,5 +64,9 @@ public class MaterialOrder {
     @JdbcTypeCode(SqlTypes.VARBINARY)
     @Column
     private byte[] certificate;
+
+    /** Derived flag for search/sort; certificate is stored as PostgreSQL bytea. */
+    @Formula("(case when certificate is not null and length(certificate) > 0 then true else false end)")
+    private boolean certificatePresent;
 }
 
