@@ -89,9 +89,6 @@ public class MaterialOrderReceptionService {
         if (isDimensionDefined(material.getWidth())) {
             ic.setWidthSamples(parseSamples(body != null ? body.getWidthSamples() : null, "WIDTH"));
         }
-        if (isDimensionDefined(material.getWeight())) {
-            ic.setWeightSamples(parseSamples(body != null ? body.getWeightSamples() : null, "WEIGHT"));
-        }
 
         if (body == null || body.getOverallWeight() == null || !Float.isFinite(body.getOverallWeight())) {
             throw new Exception("MATERIAL_ORDER_RECEPTION_OVERALL_WEIGHT_REQUIRED");
