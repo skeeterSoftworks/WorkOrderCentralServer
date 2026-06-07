@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,6 +69,9 @@ public class MaterialOrderReceptionService {
         if (order.getStatus() != EMaterialOrderStatus.RECEIVED_IN_STOCK) {
             throw new Exception("MATERIAL_ORDER_NOT_PENDING_VALIDATION");
         }
+        if (!orderHasCertificate(order)) {
+            throw new Exception("MATERIAL_ORDER_CERTIFICATE_REQUIRED");
+        }
 
         Material material = order.getMaterial();
         if (material == null) {
@@ -81,22 +85,21 @@ public class MaterialOrderReceptionService {
         }
 
         if (isDimensionDefined(material.getDiameter())) {
-            ic.setDiameterSamples(parseSamples(body != null ? body.getDiameterSamples() : null, "DIAMETER"));
+            applyOptionalSamples(ic::setDiameterSamples, body != null ? body.getDiameterSamples() : null);
         }
         if (isDimensionDefined(material.getLength())) {
-            ic.setLengthSamples(parseSamples(body != null ? body.getLengthSamples() : null, "LENGTH"));
+            applyOptionalSamples(ic::setLengthSamples, body != null ? body.getLengthSamples() : null);
         }
         if (isDimensionDefined(material.getWidth())) {
-            ic.setWidthSamples(parseSamples(body != null ? body.getWidthSamples() : null, "WIDTH"));
+            applyOptionalSamples(ic::setWidthSamples, body != null ? body.getWidthSamples() : null);
         }
 
-        if (body == null || body.getOverallWeight() == null || !Float.isFinite(body.getOverallWeight())) {
-            throw new Exception("MATERIAL_ORDER_RECEPTION_OVERALL_WEIGHT_REQUIRED");
-        }
-        if (body.getOverallAcceptance() == null) {
+        if (body == null || body.getOverallAcceptance() == null) {
             throw new Exception("MATERIAL_ORDER_RECEPTION_OVERALL_ACCEPTANCE_REQUIRED");
         }
-        ic.setOverallWeight(body.getOverallWeight());
+        if (body.getOverallWeight() != null && Float.isFinite(body.getOverallWeight())) {
+            ic.setOverallWeight(body.getOverallWeight());
+        }
         ic.setOverallAcceptance(body.getOverallAcceptance());
 
         MaterialOrderReception saved = materialOrderReceptionRepository.save(reception);
@@ -112,19 +115,22 @@ public class MaterialOrderReceptionService {
         return value != 0f;
     }
 
-    private static List<Float> parseSamples(List<Float> samples, String dimensionLabel) throws Exception {
-        if (samples == null || samples.size() < REQUIRED_SAMPLES) {
-            throw new Exception("MATERIAL_ORDER_RECEPTION_SAMPLES_REQUIRED_" + dimensionLabel);
+    private static void applyOptionalSamples(Consumer<List<Float>> setter, List<Float> samples) {
+        if (samples == null || samples.isEmpty()) {
+            return;
+        }
+        if (samples.size() < REQUIRED_SAMPLES) {
+            return;
         }
         List<Float> parsed = samples.stream()
                 .limit(REQUIRED_SAMPLES)
                 .collect(Collectors.toCollection(ArrayList::new));
         for (Float sample : parsed) {
             if (sample == null || !Float.isFinite(sample)) {
-                throw new Exception("MATERIAL_ORDER_RECEPTION_SAMPLES_INVALID_" + dimensionLabel);
+                return;
             }
         }
-        return parsed;
+        setter.accept(parsed);
     }
 
     @Transactional
@@ -155,9 +161,6 @@ public class MaterialOrderReceptionService {
         if (order.getMaterial() == null || order.getMaterial().getId() == null) {
             throw new Exception("MATERIAL_NOT_FOUND");
         }
-        if (order.getCertificate() == null || order.getCertificate().length == 0) {
-            throw new Exception("MATERIAL_ORDER_CERTIFICATE_REQUIRED");
-        }
 
         MaterialOrderReception reception = new MaterialOrderReception();
         reception.setMaterialOrder(order);
@@ -177,5 +180,9 @@ public class MaterialOrderReceptionService {
         materialOrderRepository.save(order);
 
         return saved;
+    }
+
+    public static boolean orderHasCertificate(MaterialOrder order) {
+        return order != null && order.getCertificate() != null && order.getCertificate().length > 0;
     }
 }

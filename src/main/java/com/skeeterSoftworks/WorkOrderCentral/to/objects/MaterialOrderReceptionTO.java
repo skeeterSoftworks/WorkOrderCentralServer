@@ -29,4 +29,6 @@ public class MaterialOrderReceptionTO {
     private Float materialWidth;
     /** Quantities to add to stock locations; sum must equal {@link #receivedQuantity}. */
     private java.util.List<MaterialReceptionStockAllocationTO> stockAllocations;
+    /** Whether the linked material order has an uploaded certificate. */
+    private Boolean certificatePresent;
 }

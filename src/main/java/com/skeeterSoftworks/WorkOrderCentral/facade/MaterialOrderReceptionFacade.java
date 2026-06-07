@@ -115,6 +115,7 @@ public class MaterialOrderReceptionFacade {
             if (order.getMaterialProvider() != null) {
                 to.setMaterialProviderName(order.getMaterialProvider().getName());
             }
+            to.setCertificatePresent(MaterialOrderReceptionService.orderHasCertificate(order));
         }
         to.setInternalControl(toInternalControlTO(r.getInternalControl()));
         return to;
