@@ -3,6 +3,8 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.DeliveryNote;
+import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionRecordResult;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionService;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReceptionInternalControl;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionInternalControlTO;
@@ -86,12 +88,46 @@ public class MaterialOrderReceptionFacade {
     @PostMapping("/record")
     public ResponseEntity<?> record(@RequestBody MaterialOrderReceptionTO body) {
         try {
-            MaterialOrderReception saved = materialOrderReceptionService.recordReception(body);
-            return ResponseEntity.ok(toTO(saved));
+            MaterialOrderReceptionRecordResult result = materialOrderReceptionService.recordReception(body);
+            return ResponseEntity.ok(toRecordTO(result));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    private MaterialOrderReceptionTO toRecordTO(MaterialOrderReceptionRecordResult result) {
+        DeliveryNote note = result.deliveryNote();
+        MaterialOrderReceptionTO to = result.reception() != null
+                ? toTO(result.reception())
+                : new MaterialOrderReceptionTO();
+        to.setDeliveryNoteId(note.getId());
+        to.setDeliveryNoteNumber(note.getDeliveryNoteNumber());
+        to.setReceivedAt(note.getReceivedAt());
+        to.setReceivedQuantity(note.getQuantity());
+        to.setLineFullyReceived(result.lineFullyReceived());
+        MaterialOrder order = note.getMaterialOrder();
+        if (order != null) {
+            to.setMaterialOrderId(order.getId());
+            to.setMaterialOrderCode(order.getCode());
+            if (order.getMaterialProvider() != null) {
+                to.setMaterialProviderName(order.getMaterialProvider().getName());
+            }
+            to.setCertificatePresent(MaterialOrderReceptionService.orderHasCertificate(order));
+        }
+        if (note.getMaterialOrderLine() != null) {
+            to.setMaterialOrderLineId(note.getMaterialOrderLine().getId());
+            Material material = note.getMaterialOrderLine().getMaterial();
+            if (material != null) {
+                to.setMaterialCode(material.getCode());
+                to.setMaterialName(material.getName());
+                to.setMaterialDiameter(material.getDiameter());
+                to.setMaterialWeight(material.getWeight());
+                to.setMaterialLength(material.getLength());
+                to.setMaterialWidth(material.getWidth());
+            }
+        }
+        return to;
     }
 
     private MaterialOrderReceptionTO toTO(MaterialOrderReception r) {

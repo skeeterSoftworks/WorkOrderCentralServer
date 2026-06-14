@@ -4,12 +4,14 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.DeliveryNoteTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderTO;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,6 +21,13 @@ public final class MaterialOrderMapper {
     }
 
     public static MaterialOrderTO toTO(MaterialOrder order, Set<Long> receivedLineIds) {
+        return toTO(order, receivedLineIds, Map.of());
+    }
+
+    public static MaterialOrderTO toTO(
+            MaterialOrder order,
+            Set<Long> receivedLineIds,
+            Map<Long, LineDeliverySummary> deliveryByLineId) {
         MaterialOrderTO to = new MaterialOrderTO();
         to.setId(order.getId());
         to.setCode(order.getCode());
@@ -37,7 +46,10 @@ public final class MaterialOrderMapper {
         List<MaterialOrderLine> lines = order.getLines() != null ? order.getLines() : List.of();
         Set<Long> received = receivedLineIds != null ? receivedLineIds : Set.of();
         List<MaterialOrderLineTO> lineTos = lines.stream()
-                .map(line -> lineToTO(line, received.contains(line.getId())))
+                .map(line -> lineToTO(
+                        line,
+                        received.contains(line.getId()),
+                        deliveryByLineId.get(line.getId())))
                 .collect(Collectors.toCollection(ArrayList::new));
         to.setLines(lineTos);
 
@@ -58,10 +70,31 @@ public final class MaterialOrderMapper {
     }
 
     public static MaterialOrderLineTO lineToTO(MaterialOrderLine line, boolean received) {
+        return lineToTO(line, received, null);
+    }
+
+    public static MaterialOrderLineTO lineToTO(
+            MaterialOrderLine line,
+            boolean received,
+            LineDeliverySummary deliverySummary) {
         MaterialOrderLineTO to = new MaterialOrderLineTO();
         to.setId(line.getId());
         to.setQuantity(line.getQuantity());
         to.setReceived(received);
+        if (deliverySummary != null) {
+            to.setReceivedQuantityTotal(deliverySummary.receivedTotal());
+            int remaining = line.getQuantity() - deliverySummary.receivedTotal();
+            to.setRemainingQuantity(Math.max(0, remaining));
+            to.setDeliveryNotes(deliverySummary.deliveryNotes());
+        } else if (received) {
+            to.setReceivedQuantityTotal(line.getQuantity());
+            to.setRemainingQuantity(0);
+            to.setDeliveryNotes(List.of());
+        } else {
+            to.setReceivedQuantityTotal(0);
+            to.setRemainingQuantity(line.getQuantity());
+            to.setDeliveryNotes(List.of());
+        }
         Material material = line.getMaterial();
         if (material != null) {
             to.setMaterialId(material.getId());
@@ -132,5 +165,8 @@ public final class MaterialOrderMapper {
             }
         }
         return duplicates;
+    }
+
+    public record LineDeliverySummary(int receivedTotal, List<DeliveryNoteTO> deliveryNotes) {
     }
 }

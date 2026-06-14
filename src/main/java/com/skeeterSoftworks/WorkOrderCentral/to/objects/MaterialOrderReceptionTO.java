@@ -17,8 +17,15 @@ public class MaterialOrderReceptionTO {
     private String materialCode;
     private String materialName;
     private String materialProviderName;
+    /** ISO-8601 date-time of physical reception. */
     private LocalDateTime receivedAt;
     private Integer receivedQuantity;
+    /** Required when recording a batch; user-entered delivery note number. */
+    private String deliveryNoteNumber;
+    /** Id of the delivery note created by the latest record call. */
+    private Long deliveryNoteId;
+    /** True when the order line is fully received after this batch. */
+    private Boolean lineFullyReceived;
     private MaterialOrderReceptionInternalControlTO internalControl;
     /** Nominal diameter from linked material (0 = not defined). */
     private Float materialDiameter;

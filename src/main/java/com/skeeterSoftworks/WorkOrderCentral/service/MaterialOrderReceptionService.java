@@ -5,6 +5,8 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReceptionInternalControl;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.DeliveryNote;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.DeliveryNoteRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderReceptionRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
@@ -12,6 +14,7 @@ import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionIn
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,14 +31,17 @@ public class MaterialOrderReceptionService {
 
     private final MaterialOrderReceptionRepository materialOrderReceptionRepository;
     private final MaterialOrderRepository materialOrderRepository;
+    private final DeliveryNoteRepository deliveryNoteRepository;
     private final StockInventoryService stockInventoryService;
 
     public MaterialOrderReceptionService(
             MaterialOrderReceptionRepository materialOrderReceptionRepository,
             MaterialOrderRepository materialOrderRepository,
+            DeliveryNoteRepository deliveryNoteRepository,
             StockInventoryService stockInventoryService) {
         this.materialOrderReceptionRepository = materialOrderReceptionRepository;
         this.materialOrderRepository = materialOrderRepository;
+        this.deliveryNoteRepository = deliveryNoteRepository;
         this.stockInventoryService = stockInventoryService;
     }
 
@@ -119,7 +125,7 @@ public class MaterialOrderReceptionService {
     }
 
     private void refreshOrderValidationStatus(MaterialOrder order) {
-        Set<Long> receivedLineIds = materialOrderReceptionRepository.findReceivedLineIdsByMaterialOrderId(order.getId());
+        Set<Long> receivedLineIds = deliveryNoteRepository.findFullyReceivedLineIdsByMaterialOrderId(order.getId());
         boolean allReceived = order.getLines() != null
                 && !order.getLines().isEmpty()
                 && order.getLines().stream().allMatch(line -> receivedLineIds.contains(line.getId()));
@@ -162,12 +168,15 @@ public class MaterialOrderReceptionService {
     }
 
     @Transactional
-    public MaterialOrderReception recordReception(MaterialOrderReceptionTO to) throws Exception {
+    public MaterialOrderReceptionRecordResult recordReception(MaterialOrderReceptionTO to) throws Exception {
         if (to == null || to.getMaterialOrderId() == null || to.getMaterialOrderId() <= 0) {
             throw new Exception("MATERIAL_ORDER_RECEPTION_ORDER_REQUIRED");
         }
         if (to.getReceivedAt() == null) {
             throw new Exception("MATERIAL_ORDER_RECEPTION_DATE_REQUIRED");
+        }
+        if (!StringUtils.hasText(to.getDeliveryNoteNumber())) {
+            throw new Exception("DELIVERY_NOTE_NUMBER_REQUIRED");
         }
         if (to.getReceivedQuantity() == null || to.getReceivedQuantity() <= 0) {
             throw new Exception("MATERIAL_ORDER_RECEPTION_INVALID_QUANTITY");
@@ -185,32 +194,52 @@ public class MaterialOrderReceptionService {
         }
 
         MaterialOrderLine line = resolveLine(order, to.getMaterialOrderLineId());
-        if (materialOrderReceptionRepository.existsByMaterialOrderLine_Id(line.getId())) {
+        int alreadyReceived = deliveryNoteRepository.sumQuantityByMaterialOrderLineId(line.getId());
+        int remaining = line.getQuantity() - alreadyReceived;
+        if (remaining <= 0) {
             throw new Exception("MATERIAL_ORDER_LINE_ALREADY_RECEIVED");
         }
-        if (to.getReceivedQuantity() != line.getQuantity()) {
-            throw new Exception("MATERIAL_ORDER_RECEPTION_QUANTITY_MISMATCH");
+        if (to.getReceivedQuantity() > remaining) {
+            throw new Exception("MATERIAL_ORDER_RECEPTION_QUANTITY_EXCEEDS_REMAINING");
         }
         if (line.getMaterial() == null || line.getMaterial().getId() == null) {
             throw new Exception("MATERIAL_NOT_FOUND");
         }
 
-        MaterialOrderReception reception = new MaterialOrderReception();
-        reception.setMaterialOrder(order);
-        reception.setMaterialOrderLine(line);
-        reception.setReceivedAt(to.getReceivedAt());
-        reception.setReceivedQuantity(to.getReceivedQuantity());
-        reception.setInternalControl(new MaterialOrderReceptionInternalControl());
-
-        MaterialOrderReception saved = materialOrderReceptionRepository.save(reception);
+        DeliveryNote deliveryNote = new DeliveryNote();
+        deliveryNote.setMaterialOrder(order);
+        deliveryNote.setMaterialOrderLine(line);
+        deliveryNote.setDeliveryNoteNumber(to.getDeliveryNoteNumber().trim());
+        deliveryNote.setReceivedAt(to.getReceivedAt());
+        deliveryNote.setQuantity(to.getReceivedQuantity());
+        DeliveryNote savedNote = deliveryNoteRepository.save(deliveryNote);
 
         stockInventoryService.applyReceptionStockAllocations(
                 line.getMaterial(),
                 to.getReceivedQuantity(),
                 to.getStockAllocations());
 
+        int receivedAfter = alreadyReceived + to.getReceivedQuantity();
+        boolean lineFullyReceived = receivedAfter >= line.getQuantity();
+        MaterialOrderReception reception = null;
+        if (lineFullyReceived) {
+            reception = materialOrderReceptionRepository.findByMaterialOrderLine_Id(line.getId())
+                    .orElseGet(() -> {
+                        MaterialOrderReception created = new MaterialOrderReception();
+                        created.setMaterialOrder(order);
+                        created.setMaterialOrderLine(line);
+                        created.setReceivedAt(to.getReceivedAt());
+                        created.setReceivedQuantity(line.getQuantity());
+                        created.setInternalControl(new MaterialOrderReceptionInternalControl());
+                        return created;
+                    });
+            if (reception.getId() == null) {
+                reception = materialOrderReceptionRepository.save(reception);
+            }
+        }
+
         refreshOrderReceptionStatus(order);
-        return saved;
+        return new MaterialOrderReceptionRecordResult(savedNote, reception, lineFullyReceived);
     }
 
     private MaterialOrderLine resolveLine(MaterialOrder order, Long materialOrderLineId) throws Exception {
@@ -231,7 +260,7 @@ public class MaterialOrderReceptionService {
     }
 
     private void refreshOrderReceptionStatus(MaterialOrder order) {
-        Set<Long> receivedLineIds = materialOrderReceptionRepository.findReceivedLineIdsByMaterialOrderId(order.getId());
+        Set<Long> receivedLineIds = deliveryNoteRepository.findFullyReceivedLineIdsByMaterialOrderId(order.getId());
         boolean allReceived = order.getLines() != null
                 && !order.getLines().isEmpty()
                 && order.getLines().stream().allMatch(line -> receivedLineIds.contains(line.getId()));

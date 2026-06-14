@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -107,7 +108,7 @@ public class MaterialOrderFacade {
     public ResponseEntity<?> getOpenForReception() {
         try {
             List<MaterialOrder> list = materialOrderService.getOpenForReception();
-            return ResponseEntity.ok(list.stream().map(this::toTO).toList());
+            return ResponseEntity.ok(list.stream().map(this::toTOWithDeliveryDetails).toList());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.internalServerError().body("ERROR_FETCHING_MATERIAL_ORDERS_OPEN_FOR_RECEPTION");
@@ -198,6 +199,15 @@ public class MaterialOrderFacade {
                 ? materialOrderService.findReceivedLineIds(e.getId())
                 : new HashSet<>();
         return MaterialOrderMapper.toTO(e, receivedLineIds);
+    }
+
+    private MaterialOrderTO toTOWithDeliveryDetails(MaterialOrder e) {
+        Set<Long> receivedLineIds = e.getId() > 0
+                ? materialOrderService.findReceivedLineIds(e.getId())
+                : new HashSet<>();
+        Map<Long, MaterialOrderMapper.LineDeliverySummary> summaries =
+                materialOrderService.buildLineDeliverySummaries(e);
+        return MaterialOrderMapper.toTO(e, receivedLineIds, summaries);
     }
 
     private MaterialOrder toEntity(MaterialOrderTO to) {

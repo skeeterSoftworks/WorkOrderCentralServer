@@ -64,4 +64,6 @@ public interface MaterialOrderReceptionRepository extends CrudRepository<Materia
             "materialOrderLine.material"
     })
     Optional<MaterialOrderReception> findFirstByMaterialOrder_Id(Long materialOrderId);
+
+    Optional<MaterialOrderReception> findByMaterialOrderLine_Id(Long materialOrderLineId);
 }

@@ -38,6 +38,7 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
             patchStatusCheckConstraint();
             ensureTimestampColumns();
             migrateMaterialOrderLines();
+            ensureDeliveryNoteTable();
         } catch (Exception e) {
             log.warn("Could not patch material_order schema: {}", e.getMessage());
         }
@@ -129,5 +130,28 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
                   )
                 """);
         log.info("Ensured material_order_line table and migrated legacy material_order rows");
+    }
+
+    private void ensureDeliveryNoteTable() {
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS delivery_note (
+                    id BIGSERIAL PRIMARY KEY,
+                    material_order_id BIGINT NOT NULL REFERENCES material_order(id),
+                    material_order_line_id BIGINT NOT NULL REFERENCES material_order_line(id),
+                    delivery_note_number VARCHAR(255) NOT NULL,
+                    received_at TIMESTAMP(6) NOT NULL,
+                    quantity INT NOT NULL
+                )
+                """);
+        jdbcTemplate.execute("""
+                INSERT INTO delivery_note (material_order_id, material_order_line_id, delivery_note_number, received_at, quantity)
+                SELECT r.material_order_id, r.material_order_line_id, 'LEGACY-' || r.id, r.received_at, r.received_quantity
+                FROM material_order_reception r
+                WHERE r.material_order_line_id IS NOT NULL
+                  AND NOT EXISTS (
+                      SELECT 1 FROM delivery_note d WHERE d.material_order_line_id = r.material_order_line_id
+                  )
+                """);
+        log.info("Ensured delivery_note table and migrated legacy receptions");
     }
 }

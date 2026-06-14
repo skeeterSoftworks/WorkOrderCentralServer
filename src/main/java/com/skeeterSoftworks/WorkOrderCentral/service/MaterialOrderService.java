@@ -4,6 +4,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.DeliveryNoteRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderReceptionRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
@@ -12,6 +13,7 @@ import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO;
 import com.skeeterSoftworks.WorkOrderCentral.util.BinaryMediaEncodingUtils;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderCodeGenerator;
+import com.skeeterSoftworks.WorkOrderCentral.util.DeliveryNoteMapper;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,8 +28,10 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -56,17 +60,20 @@ public class MaterialOrderService {
     private final MaterialRepository materialRepository;
     private final MaterialProviderRepository materialProviderRepository;
     private final MaterialOrderReceptionRepository materialOrderReceptionRepository;
+    private final DeliveryNoteRepository deliveryNoteRepository;
 
     public MaterialOrderService(
             MaterialOrderRepository materialOrderRepository,
             MaterialRepository materialRepository,
             MaterialProviderRepository materialProviderRepository,
-            MaterialOrderReceptionRepository materialOrderReceptionRepository
+            MaterialOrderReceptionRepository materialOrderReceptionRepository,
+            DeliveryNoteRepository deliveryNoteRepository
     ) {
         this.materialOrderRepository = materialOrderRepository;
         this.materialRepository = materialRepository;
         this.materialProviderRepository = materialProviderRepository;
         this.materialOrderReceptionRepository = materialOrderReceptionRepository;
+        this.deliveryNoteRepository = deliveryNoteRepository;
     }
 
     public List<MaterialOrder> getAllMaterialOrders() {
@@ -150,7 +157,7 @@ public class MaterialOrderService {
         if (REJECT_BLOCKED_STATUSES.contains(order.getStatus())) {
             throw new Exception("MATERIAL_ORDER_REJECT_NOT_ALLOWED");
         }
-        if (materialOrderReceptionRepository.existsByMaterialOrder_Id(id)) {
+        if (deliveryNoteRepository.existsByMaterialOrder_Id(id)) {
             throw new Exception("MATERIAL_ORDER_HAS_RECEPTION");
         }
         LocalDateTime now = LocalDateTime.now();
@@ -184,7 +191,27 @@ public class MaterialOrderService {
 
     @Transactional(readOnly = true)
     public Set<Long> findReceivedLineIds(Long materialOrderId) {
-        return materialOrderReceptionRepository.findReceivedLineIdsByMaterialOrderId(materialOrderId);
+        return deliveryNoteRepository.findFullyReceivedLineIdsByMaterialOrderId(materialOrderId);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, MaterialOrderMapper.LineDeliverySummary> buildLineDeliverySummaries(MaterialOrder order) {
+        Map<Long, MaterialOrderMapper.LineDeliverySummary> map = new HashMap<>();
+        if (order.getLines() == null) {
+            return map;
+        }
+        for (MaterialOrderLine line : order.getLines()) {
+            if (line.getId() <= 0) {
+                continue;
+            }
+            int receivedTotal = deliveryNoteRepository.sumQuantityByMaterialOrderLineId(line.getId());
+            var notes = deliveryNoteRepository.findByMaterialOrderLine_IdOrderByReceivedAtDescIdDesc(line.getId())
+                    .stream()
+                    .map(DeliveryNoteMapper::toTO)
+                    .toList();
+            map.put(line.getId(), new MaterialOrderMapper.LineDeliverySummary(receivedTotal, notes));
+        }
+        return map;
     }
 
     private void validateProvider(MaterialOrder order) throws Exception {
@@ -241,7 +268,7 @@ public class MaterialOrderService {
         if (order.getLines() == null || order.getLines().isEmpty()) {
             return false;
         }
-        Set<Long> received = materialOrderReceptionRepository.findReceivedLineIdsByMaterialOrderId(order.getId());
+        Set<Long> received = deliveryNoteRepository.findFullyReceivedLineIdsByMaterialOrderId(order.getId());
         return order.getLines().stream().anyMatch(line -> line.getId() > 0 && !received.contains(line.getId()));
     }
 }
