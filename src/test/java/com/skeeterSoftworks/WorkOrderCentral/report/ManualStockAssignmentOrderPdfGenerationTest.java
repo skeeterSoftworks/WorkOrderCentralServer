@@ -40,7 +40,7 @@ class ManualStockAssignmentOrderPdfGenerationTest {
     private static final Logger log = LoggerFactory.getLogger(ManualStockAssignmentOrderPdfGenerationTest.class);
 
     @Test
-   // @Disabled("Remove @Disabled or deactivate DisabledCondition to write a sample PDF to target/ for visual review.")
+    @Disabled("Remove @Disabled or deactivate DisabledCondition to write a sample PDF to target/ for visual review.")
     @DisplayName("Dump Stock Assignment Order PDF sample (manual / disabled by default)")
     void dumpSampleStockAssignmentOrderPdf() throws Exception {
         Faker faker = new Faker(new Locale("sr", "RS"));
