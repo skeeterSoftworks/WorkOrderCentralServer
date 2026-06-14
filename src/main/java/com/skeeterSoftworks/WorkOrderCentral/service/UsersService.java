@@ -116,6 +116,32 @@ public class UsersService {
         }
     }
 
+    /**
+     * Resolves {@code name + surname} for a user QR code, or empty when unknown / blank.
+     */
+    public String resolveFullNameByQrCode(String qrCode) {
+        if (!StringUtils.hasText(qrCode)) {
+            return "";
+        }
+        ApplicationUser user = usersRepository.findByQrCode(qrCode.trim());
+        return formatFullName(user);
+    }
+
+    public static String formatFullName(ApplicationUser user) {
+        if (user == null) {
+            return "";
+        }
+        String name = user.getName() != null ? user.getName().trim() : "";
+        String surname = user.getSurname() != null ? user.getSurname().trim() : "";
+        if (name.isEmpty()) {
+            return surname;
+        }
+        if (surname.isEmpty()) {
+            return name;
+        }
+        return name + " " + surname;
+    }
+
     public void deleteUser(Long id) throws Exception {
 
         Optional<ApplicationUser> userOpt = usersRepository.findById(id);

@@ -32,4 +32,6 @@ public class WorkOrderTO {
     private EWorkOrderState state;
     /** Optional stock allocations when creating a work order (create only). */
     private java.util.List<WorkOrderStockAllocationTO> stockAssignments;
+    /** Logged-in user QR code (create only); shown as creator on stock assignment PDF. */
+    private String createdByUserQrCode;
 }

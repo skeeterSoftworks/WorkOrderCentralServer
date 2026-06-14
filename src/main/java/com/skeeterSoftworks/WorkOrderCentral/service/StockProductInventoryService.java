@@ -155,7 +155,8 @@ public class StockProductInventoryService {
 
     public String generateStockAssignmentOrderPdfBase64(
             WorkOrder workOrder,
-            List<WorkOrderStockAssignment> assignments) throws Exception {
+            List<WorkOrderStockAssignment> assignments,
+            String createdByFullName) throws Exception {
         if (assignments == null || assignments.isEmpty()) {
             return null;
         }
@@ -178,6 +179,7 @@ public class StockProductInventoryService {
         params.put("labelProduct", stockAssignmentReportLocale.get("product"));
         params.put("labelRequiredAssigned", stockAssignmentReportLocale.get("requiredAssigned"));
         params.put("labelAssignedAt", stockAssignmentReportLocale.get("assignedAt"));
+        params.put("labelCreatedBy", stockAssignmentReportLocale.get("createdBy"));
         params.put("labelStockLocation", stockAssignmentReportLocale.get("stockLocation"));
         params.put("labelQuantity", stockAssignmentReportLocale.get("quantity"));
         params.put("workOrderId", workOrder.getId() != null ? "#" + workOrder.getId() : "—");
@@ -190,10 +192,15 @@ public class StockProductInventoryService {
         params.put("requiredQuantity", line != null ? String.valueOf(line.getQuantity()) : "0");
         params.put("assignedTotal", String.valueOf(assignedTotal));
         params.put("assignedAt", assignments.get(0).getAssignedAt().format(stockAssignmentReportLocale.assignedAtFormatter()));
+        params.put("createdBy", formatReportValue(createdByFullName));
 
         JasperPrint print = JasperFillManager.fillReport(getCompiledReport(), params, new JRBeanCollectionDataSource(reportLines));
         byte[] pdf = JasperExportManager.exportReportToPdf(print);
         return Base64.getEncoder().encodeToString(pdf);
+    }
+
+    private static String formatReportValue(String value) {
+        return value != null && !value.isBlank() ? value.trim() : "—";
     }
 
     private JasperReport getCompiledReport() throws Exception {

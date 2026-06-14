@@ -31,6 +31,7 @@ public class WorkOrderService {
     private final ProductMapperService productMapperService;
     private final StockProductInventoryService stockProductInventoryService;
     private final WorkOrderMapperService workOrderMapperService;
+    private final UsersService usersService;
 
     @Autowired
     public WorkOrderService(
@@ -40,7 +41,8 @@ public class WorkOrderService {
             MachineBookingRepository machineBookingRepository,
             ProductMapperService productMapperService,
             StockProductInventoryService stockProductInventoryService,
-            WorkOrderMapperService workOrderMapperService
+            WorkOrderMapperService workOrderMapperService,
+            UsersService usersService
     ) {
         this.workOrderRepository = workOrderRepository;
         this.purchaseOrderService = purchaseOrderService;
@@ -49,6 +51,7 @@ public class WorkOrderService {
         this.productMapperService = productMapperService;
         this.stockProductInventoryService = stockProductInventoryService;
         this.workOrderMapperService = workOrderMapperService;
+        this.usersService = usersService;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
@@ -95,7 +98,8 @@ public class WorkOrderService {
     @Transactional
     public WorkOrderCreateResultTO addWorkOrderWithStockAssignments(
             WorkOrder workOrder,
-            List<WorkOrderStockAllocationTO> stockAssignments) throws Exception {
+            List<WorkOrderStockAllocationTO> stockAssignments,
+            String createdByUserQrCode) throws Exception {
         WorkOrder saved = addWorkOrder(workOrder);
         if (stockAssignments == null || stockAssignments.isEmpty()) {
             return new WorkOrderCreateResultTO(workOrderMapperService.mapToTO(saved), null);
@@ -106,7 +110,9 @@ public class WorkOrderService {
         saved.setProductOrder(line);
         List<WorkOrderStockAssignment> assignments =
                 stockProductInventoryService.applyWorkOrderStockAssignments(saved, stockAssignments);
-        String pdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(saved, assignments);
+        String createdByFullName = usersService.resolveFullNameByQrCode(createdByUserQrCode);
+        String pdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(
+                saved, assignments, createdByFullName);
         return new WorkOrderCreateResultTO(workOrderMapperService.mapToTO(saved), pdf);
     }
 

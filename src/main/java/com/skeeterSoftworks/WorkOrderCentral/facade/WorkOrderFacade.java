@@ -94,7 +94,8 @@ public class WorkOrderFacade {
             WorkOrder entity = workOrderMapperService.mapToEntity(workOrderTO);
             WorkOrderCreateResultTO result = workOrderService.addWorkOrderWithStockAssignments(
                     entity,
-                    workOrderTO.getStockAssignments());
+                    workOrderTO.getStockAssignments(),
+                    workOrderTO.getCreatedByUserQrCode());
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
