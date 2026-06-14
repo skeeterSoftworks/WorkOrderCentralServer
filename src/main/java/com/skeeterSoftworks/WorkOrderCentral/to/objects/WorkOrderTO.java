@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EStockAssignmentOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 
 import java.time.LocalDate;
@@ -34,4 +35,8 @@ public class WorkOrderTO {
     private java.util.List<WorkOrderStockAllocationTO> stockAssignments;
     /** Logged-in user QR code (create only); shown as creator on stock assignment PDF. */
     private String createdByUserQrCode;
+    /** Denormalized: 8-digit stock assignment order code when present. */
+    private String stockAssignmentOrderCode;
+    /** Denormalized: stock assignment order fulfillment status. */
+    private EStockAssignmentOrderStatus stockAssignmentOrderStatus;
 }

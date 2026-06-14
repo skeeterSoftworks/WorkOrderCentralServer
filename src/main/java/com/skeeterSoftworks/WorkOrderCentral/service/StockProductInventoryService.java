@@ -3,17 +3,20 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockedProduct;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrderStockAssignment;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.PurchaseOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockedProductRepository;
-import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderStockAssignmentRepository;
+import com.skeeterSoftworks.WorkOrderCentral.mapper.StockAssignmentOrderMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.report.StockAssignmentReportLine;
 import com.skeeterSoftworks.WorkOrderCentral.report.StockAssignmentReportLocale;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EStockAssignmentOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductStockAvailabilityTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.StockAssignmentOrderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderStockAllocationTO;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -24,6 +27,7 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -31,34 +35,38 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class StockProductInventoryService {
 
     private final StockedProductRepository stockedProductRepository;
     private final ProductRepository productRepository;
-    private final WorkOrderStockAssignmentRepository workOrderStockAssignmentRepository;
+    private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
     private final StockService stockService;
     private final ProductOrderRepository productOrderRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final StockAssignmentReportLocale stockAssignmentReportLocale;
+    private final StockAssignmentOrderMapperService stockAssignmentOrderMapperService;
     private volatile JasperReport compiledReport;
 
     public StockProductInventoryService(
             StockedProductRepository stockedProductRepository,
             ProductRepository productRepository,
-            WorkOrderStockAssignmentRepository workOrderStockAssignmentRepository,
+            StockAssignmentOrderRepository stockAssignmentOrderRepository,
             StockService stockService,
             ProductOrderRepository productOrderRepository,
             PurchaseOrderRepository purchaseOrderRepository,
-            StockAssignmentReportLocale stockAssignmentReportLocale) {
+            StockAssignmentReportLocale stockAssignmentReportLocale,
+            StockAssignmentOrderMapperService stockAssignmentOrderMapperService) {
         this.stockedProductRepository = stockedProductRepository;
         this.productRepository = productRepository;
-        this.workOrderStockAssignmentRepository = workOrderStockAssignmentRepository;
+        this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
         this.stockService = stockService;
         this.productOrderRepository = productOrderRepository;
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.stockAssignmentReportLocale = stockAssignmentReportLocale;
+        this.stockAssignmentOrderMapperService = stockAssignmentOrderMapperService;
     }
 
     @Transactional(readOnly = true)
@@ -78,26 +86,34 @@ public class StockProductInventoryService {
                 available);
     }
 
+    @Transactional(readOnly = true)
+    public StockAssignmentOrderTO getAssignmentOrderByCode(String code) throws Exception {
+        StockAssignmentOrder order = findByNormalizedCode(code)
+                .orElseThrow(() -> new Exception("STOCK_ASSIGNMENT_ORDER_NOT_FOUND"));
+        return stockAssignmentOrderMapperService.mapToTO(order);
+    }
+
     /**
-     * Derives assignable finished-goods quantity without writing to {@code stocked_product}.
+     * Reserves quantity for a work order (status UNASSIGNED). Physical stock is reduced on stock-local fulfill.
      */
     @Transactional(readOnly = true)
     public long computeUnassignedAvailableQuantity(long productId) {
         long aggregateAvailable = stockService.getAvailableQuantityForProduct(productId);
-        long alreadyAssigned = workOrderStockAssignmentRepository.sumAssignedQuantityByProductId(productId);
-        return Math.max(0, aggregateAvailable - alreadyAssigned);
+        long reserved = stockAssignmentOrderRepository.sumReservedQuantityByProductId(productId);
+        return Math.max(0, aggregateAvailable - reserved);
     }
 
     @Transactional
     public void ensureStockedProductsSyncedForProduct(long productId) {
         long aggregateAvailable = stockService.getAvailableQuantityForProduct(productId);
-        long alreadyAssigned = workOrderStockAssignmentRepository.sumAssignedQuantityByProductId(productId);
-        long unassignedAvailable = Math.max(0, aggregateAvailable - alreadyAssigned);
+        long assignedReserved = stockAssignmentOrderRepository.sumQuantityByProductIdAndStatus(
+                productId, EStockAssignmentOrderStatus.ASSIGNED);
+        long targetPhysical = Math.max(0, aggregateAvailable - assignedReserved);
         long storedTotal = stockedProductRepository.sumQuantityByProductId(productId);
-        if (unassignedAvailable <= storedTotal) {
+        if (targetPhysical <= storedTotal) {
             return;
         }
-        int delta = (int) Math.min(Integer.MAX_VALUE, unassignedAvailable - storedTotal);
+        int delta = (int) Math.min(Integer.MAX_VALUE, targetPhysical - storedTotal);
         if (delta <= 0) {
             return;
         }
@@ -107,9 +123,10 @@ public class StockProductInventoryService {
     }
 
     @Transactional
-    public List<WorkOrderStockAssignment> applyWorkOrderStockAssignments(
+    public List<StockAssignmentOrder> createStockAssignmentOrdersForWorkOrder(
             WorkOrder workOrder,
-            List<WorkOrderStockAllocationTO> allocations) throws Exception {
+            List<WorkOrderStockAllocationTO> allocations,
+            String createdByFullName) throws Exception {
         if (allocations == null || allocations.isEmpty()) {
             return List.of();
         }
@@ -133,46 +150,71 @@ public class StockProductInventoryService {
             throw new Exception("WORK_ORDER_STOCK_ASSIGNMENT_EXCEEDS_REQUIRED");
         }
 
+        Product product = line.getProduct();
+        StockAssignmentOrder order = new StockAssignmentOrder();
+        order.setCode(generateUniqueEightDigitCode());
+        order.setWorkOrder(workOrder);
+        order.setProduct(product);
+        order.setQuantity(assignedTotal);
+        order.setStatus(EStockAssignmentOrderStatus.UNASSIGNED);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setCreatedByFullName(StringUtils.hasText(createdByFullName) ? createdByFullName.trim() : null);
+        return List.of(stockAssignmentOrderRepository.save(order));
+    }
+
+    @Transactional
+    public StockAssignmentOrderTO fulfillAssignmentOrderByCode(String code, String operatorUserQrCode) throws Exception {
+        StockAssignmentOrder order = findByNormalizedCode(code)
+                .orElseThrow(() -> new Exception("STOCK_ASSIGNMENT_ORDER_NOT_FOUND"));
+        if (order.getStatus() == EStockAssignmentOrderStatus.ASSIGNED) {
+            throw new Exception("STOCK_ASSIGNMENT_ORDER_ALREADY_ASSIGNED");
+        }
+        long productId = order.getProduct().getId();
         ensureStockedProductsSyncedForProduct(productId);
 
         StockedProduct stocked = stockedProductRepository.findByProduct_Id(productId)
-                .orElseThrow(() -> new Exception("WORK_ORDER_STOCK_ASSIGNMENT_UNAVAILABLE"));
-        if (stocked.getQuantity() < assignedTotal) {
-            throw new Exception("WORK_ORDER_STOCK_ASSIGNMENT_INSUFFICIENT_QUANTITY");
+                .orElseThrow(() -> new Exception("STOCK_ASSIGNMENT_ORDER_INSUFFICIENT_STOCK"));
+        if (stocked.getQuantity() < order.getQuantity()) {
+            throw new Exception("STOCK_ASSIGNMENT_ORDER_INSUFFICIENT_STOCK");
         }
-        stocked.setQuantity(stocked.getQuantity() - assignedTotal);
+        stocked.setQuantity(stocked.getQuantity() - order.getQuantity());
         stockedProductRepository.save(stocked);
 
-        Product product = line.getProduct();
-        LocalDateTime assignedAt = LocalDateTime.now();
-        WorkOrderStockAssignment assignment = new WorkOrderStockAssignment();
-        assignment.setWorkOrder(workOrder);
-        assignment.setProduct(product);
-        assignment.setQuantity(assignedTotal);
-        assignment.setAssignedAt(assignedAt);
-        return List.of(workOrderStockAssignmentRepository.save(assignment));
+        order.setStatus(EStockAssignmentOrderStatus.ASSIGNED);
+        order.setAssignedAt(LocalDateTime.now());
+        if (StringUtils.hasText(operatorUserQrCode)) {
+            order.setAssignedByUserQr(operatorUserQrCode.trim());
+        }
+        return stockAssignmentOrderMapperService.mapToTO(stockAssignmentOrderRepository.save(order));
     }
 
-    public String generateStockAssignmentOrderPdfBase64(
-            WorkOrder workOrder,
-            List<WorkOrderStockAssignment> assignments,
-            String createdByFullName) throws Exception {
-        if (assignments == null || assignments.isEmpty()) {
+    @Transactional(readOnly = true)
+    public String generateStockAssignmentOrderPdfBase64ForWorkOrder(long workOrderId) throws Exception {
+        StockAssignmentOrder order = stockAssignmentOrderRepository.findFirstByWorkOrder_IdOrderByIdDesc(workOrderId)
+                .orElseThrow(() -> new Exception("STOCK_ASSIGNMENT_ORDER_NOT_FOUND"));
+        return generateStockAssignmentOrderPdfBase64(order);
+    }
+
+    public String generateStockAssignmentOrderPdfBase64(StockAssignmentOrder order) throws Exception {
+        if (order == null) {
             return null;
         }
-        ProductOrder line = workOrder.getProductOrder();
-        Product product = line != null ? line.getProduct() : null;
+        WorkOrder workOrder = order.getWorkOrder();
+        ProductOrder line = workOrder != null ? workOrder.getProductOrder() : null;
+        Product product = order.getProduct() != null ? order.getProduct() : (line != null ? line.getProduct() : null);
         PurchaseOrder purchaseOrder = resolvePurchaseOrder(line);
         String customerName = purchaseOrder != null && purchaseOrder.getCustomer() != null
                 ? purchaseOrder.getCustomer().getCompanyName()
                 : "";
 
-        int assignedTotal = assignments.stream().mapToInt(WorkOrderStockAssignment::getQuantity).sum();
         List<StockAssignmentReportLine> reportLines = List.of(
-                new StockAssignmentReportLine(stockAssignmentReportLocale.stockLocationLabel(), assignedTotal));
+                new StockAssignmentReportLine(stockAssignmentReportLocale.stockLocationLabel(), order.getQuantity()));
+
+        LocalDateTime displayAssignedAt = order.getAssignedAt() != null ? order.getAssignedAt() : order.getCreatedAt();
 
         Map<String, Object> params = new HashMap<>();
         params.put("reportTitle", stockAssignmentReportLocale.get("title"));
+        params.put("labelAssignmentOrderCode", stockAssignmentReportLocale.get("assignmentOrderCode"));
         params.put("labelWorkOrder", stockAssignmentReportLocale.get("workOrder"));
         params.put("labelPurchaseOrder", stockAssignmentReportLocale.get("purchaseOrder"));
         params.put("labelCustomer", stockAssignmentReportLocale.get("customer"));
@@ -182,7 +224,8 @@ public class StockProductInventoryService {
         params.put("labelCreatedBy", stockAssignmentReportLocale.get("createdBy"));
         params.put("labelStockLocation", stockAssignmentReportLocale.get("stockLocation"));
         params.put("labelQuantity", stockAssignmentReportLocale.get("quantity"));
-        params.put("workOrderId", workOrder.getId() != null ? "#" + workOrder.getId() : "—");
+        params.put("assignmentOrderCode", order.getCode());
+        params.put("workOrderId", workOrder != null && workOrder.getId() != null ? "#" + workOrder.getId() : "—");
         params.put("purchaseOrderId", purchaseOrder != null && purchaseOrder.getId() > 0
                 ? "#" + purchaseOrder.getId()
                 : "—");
@@ -190,13 +233,43 @@ public class StockProductInventoryService {
         params.put("productReference", product != null && product.getReference() != null ? product.getReference() : "");
         params.put("productName", product != null && product.getName() != null ? product.getName() : "");
         params.put("requiredQuantity", line != null ? String.valueOf(line.getQuantity()) : "0");
-        params.put("assignedTotal", String.valueOf(assignedTotal));
-        params.put("assignedAt", assignments.get(0).getAssignedAt().format(stockAssignmentReportLocale.assignedAtFormatter()));
-        params.put("createdBy", formatReportValue(createdByFullName));
+        params.put("assignedTotal", String.valueOf(order.getQuantity()));
+        params.put("assignedAt", displayAssignedAt.format(stockAssignmentReportLocale.assignedAtFormatter()));
+        params.put("createdBy", formatReportValue(order.getCreatedByFullName()));
 
         JasperPrint print = JasperFillManager.fillReport(getCompiledReport(), params, new JRBeanCollectionDataSource(reportLines));
         byte[] pdf = JasperExportManager.exportReportToPdf(print);
         return Base64.getEncoder().encodeToString(pdf);
+    }
+
+    private java.util.Optional<StockAssignmentOrder> findByNormalizedCode(String code) throws Exception {
+        String normalized = normalizeAssignmentOrderCode(code);
+        if (normalized == null) {
+            throw new Exception("STOCK_ASSIGNMENT_ORDER_INVALID_CODE");
+        }
+        return stockAssignmentOrderRepository.findByCode(normalized);
+    }
+
+    static String normalizeAssignmentOrderCode(String code) {
+        if (!StringUtils.hasText(code)) {
+            return null;
+        }
+        String digits = code.trim().replaceAll("\\s+", "");
+        if (!digits.matches("\\d{8}")) {
+            return null;
+        }
+        return digits;
+    }
+
+    private String generateUniqueEightDigitCode() {
+        for (int attempt = 0; attempt < 200; attempt++) {
+            int value = ThreadLocalRandom.current().nextInt(100_000_000);
+            String code = String.format("%08d", value);
+            if (!stockAssignmentOrderRepository.existsByCode(code)) {
+                return code;
+            }
+        }
+        throw new IllegalStateException("Could not generate unique stock assignment order code");
     }
 
     private static String formatReportValue(String value) {

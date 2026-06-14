@@ -1,8 +1,10 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +14,14 @@ import org.springframework.stereotype.Service;
 public class WorkOrderMapperService {
 
     private final ProductOrderRepository productOrderRepository;
+    private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
 
     @Autowired
-    public WorkOrderMapperService(ProductOrderRepository productOrderRepository) {
+    public WorkOrderMapperService(
+            ProductOrderRepository productOrderRepository,
+            StockAssignmentOrderRepository stockAssignmentOrderRepository) {
         this.productOrderRepository = productOrderRepository;
+        this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
     }
 
     public WorkOrderTO mapToTO(WorkOrder workOrder) {
@@ -42,7 +48,16 @@ public class WorkOrderMapperService {
         to.setComment(workOrder.getComment());
         to.setProducedGoodQuantity(workOrder.getProducedGoodQuantity());
         to.setState(workOrder.getState() != null ? workOrder.getState() : EWorkOrderState.INCOMPLETE);
+        if (workOrder.getId() != null) {
+            stockAssignmentOrderRepository.findFirstByWorkOrder_IdOrderByIdDesc(workOrder.getId())
+                    .ifPresent(order -> enrichStockAssignmentOrder(to, order));
+        }
         return to;
+    }
+
+    private static void enrichStockAssignmentOrder(WorkOrderTO to, StockAssignmentOrder order) {
+        to.setStockAssignmentOrderCode(order.getCode());
+        to.setStockAssignmentOrderStatus(order.getStatus());
     }
 
     public WorkOrder mapToEntity(WorkOrderTO to) {

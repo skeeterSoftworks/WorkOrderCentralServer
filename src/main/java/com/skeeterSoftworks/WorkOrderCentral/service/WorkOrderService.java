@@ -3,7 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrderStockAssignment;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
@@ -108,12 +108,23 @@ public class WorkOrderService {
         ProductOrder line = productOrderRepository.findById(lineId)
                 .orElseThrow(() -> new Exception("PRODUCT_ORDER_NOT_FOUND"));
         saved.setProductOrder(line);
-        List<WorkOrderStockAssignment> assignments =
-                stockProductInventoryService.applyWorkOrderStockAssignments(saved, stockAssignments);
         String createdByFullName = usersService.resolveFullNameByQrCode(createdByUserQrCode);
-        String pdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(
-                saved, assignments, createdByFullName);
+        List<StockAssignmentOrder> orders =
+                stockProductInventoryService.createStockAssignmentOrdersForWorkOrder(
+                        saved, stockAssignments, createdByFullName);
+        String pdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(orders.get(0));
         return new WorkOrderCreateResultTO(workOrderMapperService.mapToTO(saved), pdf);
+    }
+
+    @Transactional(readOnly = true)
+    public String getStockAssignmentOrderPdfBase64ForWorkOrder(long workOrderId) throws Exception {
+        if (workOrderId <= 0) {
+            throw new Exception("INVALID_WORK_ORDER_ID");
+        }
+        if (!workOrderRepository.existsById(workOrderId)) {
+            throw new Exception("WORK_ORDER_NOT_FOUND");
+        }
+        return stockProductInventoryService.generateStockAssignmentOrderPdfBase64ForWorkOrder(workOrderId);
     }
 
     public WorkOrder addWorkOrder(WorkOrder workOrder) throws Exception {

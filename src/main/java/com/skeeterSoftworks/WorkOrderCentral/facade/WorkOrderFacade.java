@@ -114,6 +114,28 @@ public class WorkOrderFacade {
         }
     }
 
+    @GetMapping("/{id}/stock-assignment-order/pdf")
+    public ResponseEntity<?> getStockAssignmentOrderPdf(@PathVariable Long id) {
+        log.debug("Facade call: getStockAssignmentOrderPdf({})", id);
+        try {
+            if (id == null || id <= 0) {
+                return ResponseEntity.badRequest().body("INVALID_WORK_ORDER_ID");
+            }
+            String pdf = workOrderService.getStockAssignmentOrderPdfBase64ForWorkOrder(id);
+            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, pdf));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            String msg = e.getMessage();
+            if ("WORK_ORDER_NOT_FOUND".equals(msg) || "INVALID_WORK_ORDER_ID".equals(msg)) {
+                return ResponseEntity.notFound().build();
+            }
+            if ("STOCK_ASSIGNMENT_ORDER_NOT_FOUND".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            return ResponseEntity.internalServerError().body("ERROR_GENERATING_STOCK_ASSIGNMENT_ORDER_PDF");
+        }
+    }
+
     @PostMapping("/update")
     public ResponseEntity<?> update(@RequestBody WorkOrderTO workOrderTO) {
         log.debug("Facade call: updateWorkOrder");

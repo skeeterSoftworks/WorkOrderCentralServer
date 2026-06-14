@@ -4,9 +4,11 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrderStockAssignment;
+import com.skeeterSoftworks.WorkOrderCentral.mapper.StockAssignmentOrderMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.service.StockProductInventoryService;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EStockAssignmentOrderStatus;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.List;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,13 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Generates a sample Stock Assignment Order PDF with faker data and writes it under {@code target/}
  * for visual review. No database required.
- * <p>
- * <b>How to run on demand</b>
- * <ul>
- *   <li>IntelliJ: remove {@link Disabled} from {@link #dumpSampleStockAssignmentOrderPdf()}, or use a run
- *       configuration that includes disabled tests.</li>
- *   <li>Maven: {@code mvn test -Dtest=ManualStockAssignmentOrderPdfGenerationTest -Djunit.jupiter.conditions.deactivate=org.junit.jupiter.api.condition.DisabledCondition}</li>
- * </ul>
  */
 class ManualStockAssignmentOrderPdfGenerationTest {
 
@@ -69,24 +63,22 @@ class ManualStockAssignmentOrderPdfGenerationTest {
         workOrder.setProductOrder(line);
 
         int assignedQty = faker.number().numberBetween(1, Math.max(1, line.getQuantity()));
-        WorkOrderStockAssignment assignment = new WorkOrderStockAssignment();
-        assignment.setWorkOrder(workOrder);
-        assignment.setProduct(product);
-        assignment.setQuantity(assignedQty);
-        assignment.setAssignedAt(LocalDateTime.now());
-
-        String createdByFullName = "Marko Živković (Čč Žž Šš Đđ)";
+        StockAssignmentOrder order = new StockAssignmentOrder();
+        order.setCode("12345678");
+        order.setWorkOrder(workOrder);
+        order.setProduct(product);
+        order.setQuantity(assignedQty);
+        order.setStatus(EStockAssignmentOrderStatus.UNASSIGNED);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setCreatedByFullName("Marko Živković (Čč Žž Šš Đđ)");
 
         StockAssignmentReportLocale locale = new StockAssignmentReportLocale();
         ReflectionTestUtils.setField(locale, "configuredLocale", "sr");
 
         StockProductInventoryService service = new StockProductInventoryService(
-                null, null, null, null, null, null, locale);
+                null, null, null, null, null, null, locale, new StockAssignmentOrderMapperService());
 
-        String pdfBase64 = service.generateStockAssignmentOrderPdfBase64(
-                workOrder,
-                List.of(assignment),
-                createdByFullName);
+        String pdfBase64 = service.generateStockAssignmentOrderPdfBase64(order);
 
         byte[] pdfBytes = Base64.getDecoder().decode(pdfBase64);
         assertTrue(pdfBytes.length > 100, "PDF should contain non-trivial content");
@@ -96,6 +88,6 @@ class ManualStockAssignmentOrderPdfGenerationTest {
         Files.write(output, pdfBytes);
 
         log.info("Stock Assignment Order sample PDF written to {}", output.toAbsolutePath());
-        log.info("Created by (faker): {}", createdByFullName);
+        log.info("Order code: {}", order.getCode());
     }
 }
