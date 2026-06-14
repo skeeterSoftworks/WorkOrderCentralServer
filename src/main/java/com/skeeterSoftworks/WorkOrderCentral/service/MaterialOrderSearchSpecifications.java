@@ -2,6 +2,7 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -25,8 +26,12 @@ public final class MaterialOrderSearchSpecifications {
 
     public static Specification<MaterialOrder> from(MaterialOrderSearchCriteria criteria) {
         return (root, query, cb) -> {
+            if (query != null) {
+                query.distinct(true);
+            }
             List<Predicate> predicates = new ArrayList<>();
-            Join<MaterialOrder, Material> material = root.join("material", JoinType.LEFT);
+            Join<MaterialOrder, MaterialOrderLine> lines = root.join("lines", JoinType.LEFT);
+            Join<MaterialOrderLine, Material> material = lines.join("material", JoinType.LEFT);
             Join<MaterialOrder, MaterialProvider> provider = root.join("materialProvider", JoinType.LEFT);
 
             if (criteria.getStatus() != null) {
@@ -65,7 +70,7 @@ public final class MaterialOrderSearchSpecifications {
             }
 
             if (criteria.getQuantity() != null) {
-                predicates.add(cb.equal(root.get("quantity"), criteria.getQuantity()));
+                predicates.add(cb.equal(lines.get("quantity"), criteria.getQuantity()));
             }
 
             if (criteria.getLastChangedFrom() != null) {

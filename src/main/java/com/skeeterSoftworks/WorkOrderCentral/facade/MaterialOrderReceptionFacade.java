@@ -103,8 +103,15 @@ public class MaterialOrderReceptionFacade {
         if (order != null) {
             to.setMaterialOrderId(order.getId());
             to.setMaterialOrderCode(order.getCode());
-            if (order.getMaterial() != null) {
-                Material material = order.getMaterial();
+            if (order.getMaterialProvider() != null) {
+                to.setMaterialProviderName(order.getMaterialProvider().getName());
+            }
+            to.setCertificatePresent(MaterialOrderReceptionService.orderHasCertificate(order));
+        }
+        if (r.getMaterialOrderLine() != null) {
+            to.setMaterialOrderLineId(r.getMaterialOrderLine().getId());
+            Material material = r.getMaterialOrderLine().getMaterial();
+            if (material != null) {
                 to.setMaterialCode(material.getCode());
                 to.setMaterialName(material.getName());
                 to.setMaterialDiameter(material.getDiameter());
@@ -112,10 +119,6 @@ public class MaterialOrderReceptionFacade {
                 to.setMaterialLength(material.getLength());
                 to.setMaterialWidth(material.getWidth());
             }
-            if (order.getMaterialProvider() != null) {
-                to.setMaterialProviderName(order.getMaterialProvider().getName());
-            }
-            to.setCertificatePresent(MaterialOrderReceptionService.orderHasCertificate(order));
         }
         to.setInternalControl(toInternalControlTO(r.getInternalControl()));
         return to;

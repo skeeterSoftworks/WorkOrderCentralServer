@@ -16,14 +16,14 @@ import java.util.Optional;
 public interface MaterialOrderRepository extends CrudRepository<MaterialOrder, Long>, JpaSpecificationExecutor<MaterialOrder> {
 
     @Override
-    @EntityGraph(attributePaths = {"material", "material.providers", "materialProvider"})
+    @EntityGraph(attributePaths = {"lines", "lines.material", "lines.material.providers", "materialProvider"})
     List<MaterialOrder> findAll();
 
     @Override
-    @EntityGraph(attributePaths = {"material", "material.providers", "materialProvider"})
+    @EntityGraph(attributePaths = {"lines", "lines.material", "lines.material.providers", "materialProvider"})
     Optional<MaterialOrder> findById(Long id);
 
-    @EntityGraph(attributePaths = {"material", "materialProvider"})
+    @EntityGraph(attributePaths = {"lines", "lines.material", "materialProvider"})
     @Query("""
             SELECT m FROM MaterialOrder m
             WHERE (m.lastChanged IS NULL OR m.lastChanged < :threshold)
@@ -33,9 +33,8 @@ public interface MaterialOrderRepository extends CrudRepository<MaterialOrder, L
             @Param("threshold") LocalDateTime threshold,
             @Param("excluded") Collection<EMaterialOrderStatus> excluded);
 
-    @EntityGraph(attributePaths = {"material", "materialProvider"})
+    @EntityGraph(attributePaths = {"lines", "lines.material", "materialProvider"})
     List<MaterialOrder> findByStatus(EMaterialOrderStatus status);
 
     boolean existsByCode(String code);
 }
-

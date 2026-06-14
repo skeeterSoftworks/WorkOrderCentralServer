@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class MaterialOrderReceptionTO {
     private Long id;
     private Long materialOrderId;
+    private Long materialOrderLineId;
     private String materialOrderCode;
     private String materialCode;
     private String materialName;

@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -14,7 +16,9 @@ public class MaterialOrderTO {
     private Long id;
     /** Server-generated material order number (NM + timestamp). */
     private String code;
+    /** Sum of line quantities; kept for list views and legacy clients. */
     private Integer quantity;
+    /** First line material id when exactly one line; omitted for multi-line orders. */
     private Long materialId;
     private String materialName;
     private String materialCode;
@@ -27,13 +31,13 @@ public class MaterialOrderTO {
     /** Raw Base64 or data URL for upload; omitted in list payloads. */
     private String certificateBase64;
     private Boolean certificatePresent;
-    /** Nominal diameter from linked material (0 = not defined). */
+    /** Nominal diameter from first/only line material (0 = not defined). */
     private Float materialDiameter;
-    /** Nominal weight from linked material (0 = not defined). */
+    /** Nominal weight from first/only line material (0 = not defined). */
     private Float materialWeight;
-    /** Nominal length from linked material (0 = not defined). */
+    /** Nominal length from first/only line material (0 = not defined). */
     private Float materialLength;
-    /** Nominal width from linked material (0 = not defined). */
+    /** Nominal width from first/only line material (0 = not defined). */
     private Float materialWidth;
+    private List<MaterialOrderLineTO> lines = new ArrayList<>();
 }
-

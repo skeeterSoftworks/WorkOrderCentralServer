@@ -2,14 +2,17 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderReceptionRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO;
 import com.skeeterSoftworks.WorkOrderCentral.util.BinaryMediaEncodingUtils;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderCodeGenerator;
+import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +24,9 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -83,11 +88,11 @@ public class MaterialOrderService {
         Sort.Direction direction = asc ? Sort.Direction.ASC : Sort.Direction.DESC;
         String field = StringUtils.hasText(sortBy) ? sortBy.trim() : "createdAt";
         return switch (field) {
-            case "materialName" -> Sort.by(new Sort.Order(direction, "material.name"));
             case "materialProviderName" -> Sort.by(new Sort.Order(direction, "materialProvider.name"));
             case "certificatePresent" -> Sort.by(new Sort.Order(direction, "certificatePresent"));
-            case "code", "quantity", "status", "lastChanged", "createdAt" ->
+            case "code", "status", "lastChanged", "createdAt" ->
                     Sort.by(new Sort.Order(direction, field));
+            case "materialName", "quantity" -> Sort.by(new Sort.Order(direction, "createdAt"));
             default -> Sort.by(new Sort.Order(direction, "createdAt"));
         };
     }
@@ -96,16 +101,18 @@ public class MaterialOrderService {
         return materialOrderRepository.findById(id);
     }
 
-    public MaterialOrder addMaterialOrder(MaterialOrder order) throws Exception {
+    @Transactional
+    public MaterialOrder addMaterialOrder(MaterialOrder order, List<MaterialOrderLineTO> lineInputs) throws Exception {
         order.setId(0);
-        // Creation flow owns initial state; clients must not set this.
         order.setStatus(EMaterialOrderStatus.ORDER_CREATED);
         LocalDateTime now = LocalDateTime.now();
         order.setLastChanged(now);
         order.setCreatedAt(now);
         order.setCertificate(null);
         order.setCode(null);
-        validate(order);
+        order.setLines(new ArrayList<>());
+        validateProvider(order);
+        validateAndAttachLines(order, lineInputs);
         order.setCode(MaterialOrderCodeGenerator.resolveUnique(now, materialOrderRepository::existsByCode));
         return materialOrderRepository.save(order);
     }
@@ -116,7 +123,9 @@ public class MaterialOrderService {
     }
 
     public List<MaterialOrder> getOpenForReception() {
-        return materialOrderRepository.findByStatus(EMaterialOrderStatus.IN_TRANSPORT);
+        return materialOrderRepository.findByStatus(EMaterialOrderStatus.IN_TRANSPORT).stream()
+                .filter(this::hasUnreceivedLine)
+                .toList();
     }
 
     @Transactional
@@ -173,19 +182,12 @@ public class MaterialOrderService {
         return materialOrderRepository.save(order);
     }
 
-    private void validate(MaterialOrder order) throws Exception {
-        if (order.getQuantity() <= 0) {
-            throw new Exception("MATERIAL_ORDER_INVALID_QUANTITY");
-        }
-        if (order.getMaterial() == null || order.getMaterial().getId() == null || order.getMaterial().getId() <= 0) {
-            throw new Exception("MATERIAL_ORDER_MATERIAL_REQUIRED");
-        }
-        Material material = materialRepository.findById(order.getMaterial().getId()).orElse(null);
-        if (material == null) {
-            throw new Exception("MATERIAL_NOT_FOUND");
-        }
-        order.setMaterial(material);
+    @Transactional(readOnly = true)
+    public Set<Long> findReceivedLineIds(Long materialOrderId) {
+        return materialOrderReceptionRepository.findReceivedLineIdsByMaterialOrderId(materialOrderId);
+    }
 
+    private void validateProvider(MaterialOrder order) throws Exception {
         if (order.getMaterialProvider() == null
                 || order.getMaterialProvider().getId() == null
                 || order.getMaterialProvider().getId() <= 0) {
@@ -195,13 +197,51 @@ public class MaterialOrderService {
         if (provider == null) {
             throw new Exception("MATERIAL_PROVIDER_NOT_FOUND");
         }
-
-        boolean providerAttachedToMaterial = material.getProviders() != null
-                && material.getProviders().stream().anyMatch(p -> p.getId() != null && p.getId().equals(provider.getId()));
-        if (!providerAttachedToMaterial) {
-            throw new Exception("MATERIAL_ORDER_PROVIDER_NOT_ALLOWED_FOR_MATERIAL");
-        }
         order.setMaterialProvider(provider);
     }
-}
 
+    private void validateAndAttachLines(MaterialOrder order, List<MaterialOrderLineTO> lineInputs) throws Exception {
+        if (lineInputs == null || lineInputs.isEmpty()) {
+            throw new Exception("MATERIAL_ORDER_LINES_REQUIRED");
+        }
+        if (!MaterialOrderMapper.duplicateMaterialIds(lineInputs).isEmpty()) {
+            throw new Exception("MATERIAL_ORDER_DUPLICATE_MATERIAL");
+        }
+        MaterialProvider provider = order.getMaterialProvider();
+        Set<Long> usedMaterialIds = new HashSet<>();
+        for (MaterialOrderLineTO input : lineInputs) {
+            if (input.getMaterialId() == null || input.getMaterialId() <= 0) {
+                throw new Exception("MATERIAL_ORDER_MATERIAL_REQUIRED");
+            }
+            if (input.getQuantity() == null || input.getQuantity() <= 0) {
+                throw new Exception("MATERIAL_ORDER_INVALID_QUANTITY");
+            }
+            if (!usedMaterialIds.add(input.getMaterialId())) {
+                throw new Exception("MATERIAL_ORDER_DUPLICATE_MATERIAL");
+            }
+            Material material = materialRepository.findById(input.getMaterialId()).orElse(null);
+            if (material == null) {
+                throw new Exception("MATERIAL_NOT_FOUND");
+            }
+            boolean providerAttachedToMaterial = material.getProviders() != null
+                    && material.getProviders().stream()
+                    .anyMatch(p -> p.getId() != null && p.getId().equals(provider.getId()));
+            if (!providerAttachedToMaterial) {
+                throw new Exception("MATERIAL_ORDER_PROVIDER_NOT_ALLOWED_FOR_MATERIAL");
+            }
+            MaterialOrderLine line = new MaterialOrderLine();
+            line.setMaterialOrder(order);
+            line.setMaterial(material);
+            line.setQuantity(input.getQuantity());
+            order.getLines().add(line);
+        }
+    }
+
+    private boolean hasUnreceivedLine(MaterialOrder order) {
+        if (order.getLines() == null || order.getLines().isEmpty()) {
+            return false;
+        }
+        Set<Long> received = materialOrderReceptionRepository.findReceivedLineIdsByMaterialOrderId(order.getId());
+        return order.getLines().stream().anyMatch(line -> line.getId() > 0 && !received.contains(line.getId()));
+    }
+}

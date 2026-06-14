@@ -1,12 +1,14 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.EmailTemplate;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.EmailTemplateRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EEmailTemplateCode;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.EmailTemplateTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.RenderedEmailTO;
+import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,13 +81,17 @@ public class EmailTemplateService {
 
     private Map<String, String> placeholdersFor(MaterialOrder order) {
         Map<String, String> m = new LinkedHashMap<>();
-        String materialName = order.getMaterial() != null && order.getMaterial().getName() != null
-                ? order.getMaterial().getName()
-                : "";
-        String materialCode = order.getMaterial() != null && order.getMaterial().getCode() != null
-                ? order.getMaterial().getCode()
-                : "";
-        String materialLabel = !materialName.isBlank() ? materialName : (!materialCode.isBlank() ? materialCode : "");
+        String linesSummary = MaterialOrderMapper.linesSummary(order);
+        String materialName = "";
+        String materialCode = "";
+        if (order.getLines() != null && order.getLines().size() == 1 && order.getLines().get(0).getMaterial() != null) {
+            Material material = order.getLines().get(0).getMaterial();
+            materialName = material.getName() != null ? material.getName() : "";
+            materialCode = material.getCode() != null ? material.getCode() : "";
+        }
+        String materialLabel = !linesSummary.isBlank()
+                ? linesSummary
+                : (!materialName.isBlank() ? materialName : (!materialCode.isBlank() ? materialCode : ""));
         String providerName = order.getMaterialProvider() != null && order.getMaterialProvider().getName() != null
                 ? order.getMaterialProvider().getName()
                 : "";
@@ -98,11 +104,15 @@ public class EmailTemplateService {
         m.put("providerCompany", providerName);
         m.put("providerContact", contactPerson);
         m.put("materialLabel", materialLabel);
+        m.put("materialLinesSummary", linesSummary);
         m.put("materialName", materialName);
         m.put("materialCode", materialCode);
         String materialOrderCode = order.getCode() != null ? order.getCode() : "";
         m.put("materialOrderCode", materialOrderCode);
-        m.put("quantity", String.valueOf(order.getQuantity()));
+        int totalQuantity = order.getLines() != null
+                ? order.getLines().stream().mapToInt(line -> line.getQuantity()).sum()
+                : 0;
+        m.put("quantity", String.valueOf(totalQuantity));
         return m;
     }
 

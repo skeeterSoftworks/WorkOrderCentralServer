@@ -37,6 +37,7 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
         try {
             patchStatusCheckConstraint();
             ensureTimestampColumns();
+            migrateMaterialOrderLines();
         } catch (Exception e) {
             log.warn("Could not patch material_order schema: {}", e.getMessage());
         }
@@ -89,5 +90,44 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
     private void ensureTimestampColumns() {
         jdbcTemplate.execute("ALTER TABLE material_order ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(6)");
         jdbcTemplate.execute("ALTER TABLE material_order ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP(6)");
+    }
+
+    private void migrateMaterialOrderLines() {
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS material_order_line (
+                    id BIGSERIAL PRIMARY KEY,
+                    material_order_id BIGINT NOT NULL REFERENCES material_order(id),
+                    material_id BIGINT NOT NULL REFERENCES material(id),
+                    quantity INT NOT NULL
+                )
+                """);
+        jdbcTemplate.execute("""
+                INSERT INTO material_order_line (material_order_id, material_id, quantity)
+                SELECT mo.id, mo.material_id, mo.quantity
+                FROM material_order mo
+                WHERE mo.material_id IS NOT NULL
+                  AND mo.quantity IS NOT NULL
+                  AND NOT EXISTS (
+                      SELECT 1 FROM material_order_line l WHERE l.material_order_id = mo.id
+                  )
+                """);
+        jdbcTemplate.execute("""
+                ALTER TABLE material_order_reception
+                ADD COLUMN IF NOT EXISTS material_order_line_id BIGINT REFERENCES material_order_line(id)
+                """);
+        jdbcTemplate.execute("""
+                UPDATE material_order_reception r
+                SET material_order_line_id = (
+                    SELECT l.id FROM material_order_line l
+                    WHERE l.material_order_id = r.material_order_id
+                    ORDER BY l.id
+                    LIMIT 1
+                )
+                WHERE r.material_order_line_id IS NULL
+                  AND EXISTS (
+                      SELECT 1 FROM material_order_line l WHERE l.material_order_id = r.material_order_id
+                  )
+                """);
+        log.info("Ensured material_order_line table and migrated legacy material_order rows");
     }
 }

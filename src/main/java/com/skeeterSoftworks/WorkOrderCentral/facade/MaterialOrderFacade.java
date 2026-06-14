@@ -1,6 +1,5 @@
 package com.skeeterSoftworks.WorkOrderCentral.facade;
 
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderSearchCriteria;
@@ -10,6 +9,7 @@ import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderStatusTrans
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderCertificateTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderPageTO;
+import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -126,7 +128,8 @@ public class MaterialOrderFacade {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody MaterialOrderTO to) {
         try {
-            MaterialOrder saved = materialOrderService.addMaterialOrder(toEntity(to));
+            normalizeLegacyCreatePayload(to);
+            MaterialOrder saved = materialOrderService.addMaterialOrder(toEntity(to), to.getLines());
             return ResponseEntity.ok(toTO(saved));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -191,31 +194,10 @@ public class MaterialOrderFacade {
     }
 
     private MaterialOrderTO toTO(MaterialOrder e) {
-        MaterialOrderTO to = new MaterialOrderTO();
-        to.setId(e.getId());
-        to.setCode(e.getCode());
-        to.setQuantity(e.getQuantity());
-        if (e.getMaterial() != null) {
-            Material material = e.getMaterial();
-            to.setMaterialId(material.getId());
-            to.setMaterialName(material.getName());
-            to.setMaterialCode(material.getCode());
-            to.setMaterialDiameter(material.getDiameter());
-            to.setMaterialWeight(material.getWeight());
-            to.setMaterialLength(material.getLength());
-            to.setMaterialWidth(material.getWidth());
-        }
-        if (e.getMaterialProvider() != null) {
-            to.setMaterialProviderId(e.getMaterialProvider().getId());
-            to.setMaterialProviderName(e.getMaterialProvider().getName());
-        }
-        to.setStatus(e.getStatus());
-        to.setLastChanged(e.getLastChanged());
-        to.setCreatedAt(e.getCreatedAt());
-        to.setRejectedAt(e.getRejectedAt());
-        to.setCertificateBase64(null);
-        to.setCertificatePresent(e.getCertificate() != null && e.getCertificate().length > 0);
-        return to;
+        Set<Long> receivedLineIds = e.getId() > 0
+                ? materialOrderService.findReceivedLineIds(e.getId())
+                : new HashSet<>();
+        return MaterialOrderMapper.toTO(e, receivedLineIds);
     }
 
     private MaterialOrder toEntity(MaterialOrderTO to) {
@@ -223,10 +205,6 @@ public class MaterialOrderFacade {
         if (to.getId() != null) {
             e.setId(to.getId());
         }
-        e.setQuantity(to.getQuantity() == null ? 0 : to.getQuantity());
-        Material m = new Material();
-        m.setId(to.getMaterialId());
-        e.setMaterial(m);
         MaterialProvider p = new MaterialProvider();
         p.setId(to.getMaterialProviderId());
         e.setMaterialProvider(p);
@@ -234,5 +212,20 @@ public class MaterialOrderFacade {
         e.setCertificate(null);
         return e;
     }
-}
 
+    private static void normalizeLegacyCreatePayload(MaterialOrderTO to) {
+        if (to == null) {
+            return;
+        }
+        if (to.getLines() != null && !to.getLines().isEmpty()) {
+            return;
+        }
+        if (to.getMaterialId() != null && to.getQuantity() != null && to.getQuantity() > 0) {
+            com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO line =
+                    new com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO();
+            line.setMaterialId(to.getMaterialId());
+            line.setQuantity(to.getQuantity());
+            to.setLines(java.util.List.of(line));
+        }
+    }
+}
