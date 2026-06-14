@@ -30,4 +30,6 @@ public class WorkOrderTO {
     private Integer requiredQuantity;
     private Long producedGoodQuantity;
     private EWorkOrderState state;
+    /** Optional stock allocations when creating a work order (create only). */
+    private java.util.List<WorkOrderStockAllocationTO> stockAssignments;
 }

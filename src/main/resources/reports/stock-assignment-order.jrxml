@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="stock-assignment-order"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20">
+    <parameter name="reportTitle" class="java.lang.String"/>
+    <parameter name="labelWorkOrder" class="java.lang.String"/>
+    <parameter name="labelPurchaseOrder" class="java.lang.String"/>
+    <parameter name="labelCustomer" class="java.lang.String"/>
+    <parameter name="labelProduct" class="java.lang.String"/>
+    <parameter name="labelRequiredAssigned" class="java.lang.String"/>
+    <parameter name="labelAssignedAt" class="java.lang.String"/>
+    <parameter name="labelStockLocation" class="java.lang.String"/>
+    <parameter name="labelQuantity" class="java.lang.String"/>
+    <parameter name="workOrderId" class="java.lang.String"/>
+    <parameter name="purchaseOrderId" class="java.lang.String"/>
+    <parameter name="customerName" class="java.lang.String"/>
+    <parameter name="productReference" class="java.lang.String"/>
+    <parameter name="productName" class="java.lang.String"/>
+    <parameter name="requiredQuantity" class="java.lang.String"/>
+    <parameter name="assignedTotal" class="java.lang.String"/>
+    <parameter name="assignedAt" class="java.lang.String"/>
+    <field name="locationCode" class="java.lang.String"/>
+    <field name="quantity" class="java.lang.Integer"/>
+    <title>
+        <band height="50">
+            <textField>
+                <reportElement x="0" y="10" width="555" height="30"/>
+                <textElement textAlignment="Center">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{reportTitle}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    <pageHeader>
+        <band height="120">
+            <textField>
+                <reportElement x="0" y="0" width="140" height="18"/>
+                <textElement><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelWorkOrder} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="0" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{workOrderId}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="20" width="140" height="18"/>
+                <textElement><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelPurchaseOrder} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="20" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{purchaseOrderId}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="40" width="140" height="18"/>
+                <textElement><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelCustomer} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="40" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{customerName}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="60" width="140" height="18"/>
+                <textElement><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelProduct} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="60" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{productReference} + " — " + $P{productName}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="80" width="140" height="18"/>
+                <textElement><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelRequiredAssigned} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="80" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{requiredQuantity} + " / " + $P{assignedTotal}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="100" width="140" height="18"/>
+                <textElement><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelAssignedAt} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="100" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{assignedAt}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+    <columnHeader>
+        <band height="24">
+            <textField>
+                <reportElement x="0" y="4" width="380" height="18"/>
+                <textElement><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelStockLocation}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="380" y="4" width="175" height="18"/>
+                <textElement textAlignment="Right"><font isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{labelQuantity}]]></textFieldExpression>
+            </textField>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="20">
+            <textField>
+                <reportElement x="0" y="2" width="380" height="16"/>
+                <textFieldExpression><![CDATA[$F{locationCode}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="380" y="2" width="175" height="16"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+</jasperReport>

@@ -4,6 +4,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.WorkOrderMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.service.WorkOrderService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderCreateResultTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,14 +92,21 @@ public class WorkOrderFacade {
         log.debug("Facade call: addWorkOrder");
         try {
             WorkOrder entity = workOrderMapperService.mapToEntity(workOrderTO);
-            WorkOrder saved = workOrderService.addWorkOrder(entity);
-            return ResponseEntity.ok(workOrderMapperService.mapToTO(saved));
+            WorkOrderCreateResultTO result = workOrderService.addWorkOrderWithStockAssignments(
+                    entity,
+                    workOrderTO.getStockAssignments());
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();
             if ("INVALID_PRODUCT_ORDER".equals(msg)
                     || "PRODUCT_ORDER_NOT_FOUND".equals(msg)
-                    || "WORK_ORDER_ALREADY_EXISTS_FOR_PRODUCT_ORDER".equals(msg)) {
+                    || "WORK_ORDER_ALREADY_EXISTS_FOR_PRODUCT_ORDER".equals(msg)
+                    || "WORK_ORDER_PRODUCT_REQUIRED".equals(msg)
+                    || "WORK_ORDER_STOCK_ASSIGNMENT_EXCEEDS_REQUIRED".equals(msg)
+                    || "WORK_ORDER_STOCK_ASSIGNMENT_UNAVAILABLE".equals(msg)
+                    || "WORK_ORDER_STOCK_ASSIGNMENT_INSUFFICIENT_QUANTITY".equals(msg)
+                    || "WORK_ORDER_STOCK_ASSIGNMENT_QUANTITY_INVALID".equals(msg)) {
                 return ResponseEntity.badRequest().body(msg);
             }
             return ResponseEntity.internalServerError().body("ERROR_SAVING_WORK_ORDER");

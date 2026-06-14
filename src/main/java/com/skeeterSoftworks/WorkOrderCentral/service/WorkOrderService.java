@@ -3,11 +3,15 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrderStockAssignment;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
+import com.skeeterSoftworks.WorkOrderCentral.mapper.WorkOrderMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderCreateResultTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderStockAllocationTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +29,8 @@ public class WorkOrderService {
     private final ProductOrderRepository productOrderRepository;
     private final MachineBookingRepository machineBookingRepository;
     private final ProductMapperService productMapperService;
+    private final StockProductInventoryService stockProductInventoryService;
+    private final WorkOrderMapperService workOrderMapperService;
 
     @Autowired
     public WorkOrderService(
@@ -32,13 +38,17 @@ public class WorkOrderService {
             PurchaseOrderService purchaseOrderService,
             ProductOrderRepository productOrderRepository,
             MachineBookingRepository machineBookingRepository,
-            ProductMapperService productMapperService
+            ProductMapperService productMapperService,
+            StockProductInventoryService stockProductInventoryService,
+            WorkOrderMapperService workOrderMapperService
     ) {
         this.workOrderRepository = workOrderRepository;
         this.purchaseOrderService = purchaseOrderService;
         this.productOrderRepository = productOrderRepository;
         this.machineBookingRepository = machineBookingRepository;
         this.productMapperService = productMapperService;
+        this.stockProductInventoryService = stockProductInventoryService;
+        this.workOrderMapperService = workOrderMapperService;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
@@ -80,6 +90,24 @@ public class WorkOrderService {
             product.getQualityInfoSteps().size();
         }
         return productMapperService.toQualityInfoStepTOList(product.getQualityInfoSteps());
+    }
+
+    @Transactional
+    public WorkOrderCreateResultTO addWorkOrderWithStockAssignments(
+            WorkOrder workOrder,
+            List<WorkOrderStockAllocationTO> stockAssignments) throws Exception {
+        WorkOrder saved = addWorkOrder(workOrder);
+        if (stockAssignments == null || stockAssignments.isEmpty()) {
+            return new WorkOrderCreateResultTO(workOrderMapperService.mapToTO(saved), null);
+        }
+        long lineId = saved.getProductOrder().getId();
+        ProductOrder line = productOrderRepository.findById(lineId)
+                .orElseThrow(() -> new Exception("PRODUCT_ORDER_NOT_FOUND"));
+        saved.setProductOrder(line);
+        List<WorkOrderStockAssignment> assignments =
+                stockProductInventoryService.applyWorkOrderStockAssignments(saved, stockAssignments);
+        String pdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(saved, assignments);
+        return new WorkOrderCreateResultTO(workOrderMapperService.mapToTO(saved), pdf);
     }
 
     public WorkOrder addWorkOrder(WorkOrder workOrder) throws Exception {

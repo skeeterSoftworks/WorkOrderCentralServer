@@ -83,4 +83,39 @@ public class StockService {
         ));
         return rows;
     }
+
+    /**
+     * Finished-good quantity available for assignment for a single product (same rules as aggregate availability).
+     */
+    public long getAvailableQuantityForProduct(long productId) {
+        if (productId <= 0) {
+            return 0;
+        }
+        long total = 0;
+        for (WorkOrder wo : workOrderRepository.findAll()) {
+            ProductOrder line = wo.getProductOrder();
+            if (line == null || line.getProduct() == null || line.getProduct().getId() == null) {
+                continue;
+            }
+            if (line.getProduct().getId() != productId) {
+                continue;
+            }
+            PurchaseOrder purchaseOrder = line.getPurchaseOrder();
+            boolean internalDemand = purchaseOrder != null && purchaseOrder.isInternalStockDemand();
+            long produced = wo.getProducedGoodQuantity();
+            int required = line.getQuantity();
+            long contribution;
+            if (internalDemand) {
+                contribution = produced;
+            } else if (required > 0) {
+                contribution = Math.max(0, produced - (long) required);
+            } else {
+                contribution = 0;
+            }
+            if (contribution > 0) {
+                total += contribution;
+            }
+        }
+        return total;
+    }
 }
