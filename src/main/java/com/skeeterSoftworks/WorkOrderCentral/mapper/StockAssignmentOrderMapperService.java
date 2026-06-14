@@ -28,6 +28,7 @@ public class StockAssignmentOrderMapperService {
         to.setCreatedByFullName(order.getCreatedByFullName());
         to.setAssignedAt(order.getAssignedAt());
         to.setAssignedByUserQr(order.getAssignedByUserQr());
+        to.setAssignedByFullName(order.getAssignedByFullName());
         return to;
     }
 }

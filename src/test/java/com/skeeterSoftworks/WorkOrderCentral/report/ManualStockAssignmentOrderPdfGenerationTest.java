@@ -76,7 +76,7 @@ class ManualStockAssignmentOrderPdfGenerationTest {
         ReflectionTestUtils.setField(locale, "configuredLocale", "sr");
 
         StockProductInventoryService service = new StockProductInventoryService(
-                null, null, null, null, null, null, locale, new StockAssignmentOrderMapperService());
+                null, null, null, null, null, null, locale, new StockAssignmentOrderMapperService(), null);
 
         String pdfBase64 = service.generateStockAssignmentOrderPdfBase64(order);
 

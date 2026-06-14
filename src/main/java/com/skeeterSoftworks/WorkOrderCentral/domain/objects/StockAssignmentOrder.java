@@ -49,4 +49,7 @@ public class StockAssignmentOrder {
 
     @Column(length = 32)
     private String assignedByUserQr;
+
+    @Column(length = 200)
+    private String assignedByFullName;
 }

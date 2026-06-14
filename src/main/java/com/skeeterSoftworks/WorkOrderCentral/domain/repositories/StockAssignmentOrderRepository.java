@@ -2,6 +2,7 @@ package com.skeeterSoftworks.WorkOrderCentral.domain.repositories;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EStockAssignmentOrderStatus;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +10,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface StockAssignmentOrderRepository extends CrudRepository<StockAssignmentOrder, Long> {
+public interface StockAssignmentOrderRepository extends CrudRepository<StockAssignmentOrder, Long>,
+        JpaSpecificationExecutor<StockAssignmentOrder> {
 
     Optional<StockAssignmentOrder> findByCode(String code);
 

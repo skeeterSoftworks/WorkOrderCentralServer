@@ -48,6 +48,7 @@ public class StockProductInventoryService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final StockAssignmentReportLocale stockAssignmentReportLocale;
     private final StockAssignmentOrderMapperService stockAssignmentOrderMapperService;
+    private final UsersService usersService;
     private volatile JasperReport compiledReport;
 
     public StockProductInventoryService(
@@ -58,7 +59,8 @@ public class StockProductInventoryService {
             ProductOrderRepository productOrderRepository,
             PurchaseOrderRepository purchaseOrderRepository,
             StockAssignmentReportLocale stockAssignmentReportLocale,
-            StockAssignmentOrderMapperService stockAssignmentOrderMapperService) {
+            StockAssignmentOrderMapperService stockAssignmentOrderMapperService,
+            UsersService usersService) {
         this.stockedProductRepository = stockedProductRepository;
         this.productRepository = productRepository;
         this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
@@ -67,6 +69,7 @@ public class StockProductInventoryService {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.stockAssignmentReportLocale = stockAssignmentReportLocale;
         this.stockAssignmentOrderMapperService = stockAssignmentOrderMapperService;
+        this.usersService = usersService;
     }
 
     @Transactional(readOnly = true)
@@ -183,7 +186,12 @@ public class StockProductInventoryService {
         order.setStatus(EStockAssignmentOrderStatus.ASSIGNED);
         order.setAssignedAt(LocalDateTime.now());
         if (StringUtils.hasText(operatorUserQrCode)) {
-            order.setAssignedByUserQr(operatorUserQrCode.trim());
+            String qr = operatorUserQrCode.trim();
+            order.setAssignedByUserQr(qr);
+            String fullName = usersService.resolveFullNameByQrCode(qr);
+            if (StringUtils.hasText(fullName)) {
+                order.setAssignedByFullName(fullName);
+            }
         }
         return stockAssignmentOrderMapperService.mapToTO(stockAssignmentOrderRepository.save(order));
     }
