@@ -60,7 +60,6 @@ public class MaterialOrderReceptionService {
     public List<MaterialOrderReception> getPendingValidation() {
         return materialOrderReceptionRepository.findAll().stream()
                 .filter(r -> r.getMaterialOrder() != null
-                        && orderHasCertificate(r.getMaterialOrder())
                         && (r.getInternalControl() == null
                         || r.getInternalControl().getOverallAcceptance() == null))
                 .toList();
@@ -81,9 +80,6 @@ public class MaterialOrderReceptionService {
         if (reception.getInternalControl() != null
                 && reception.getInternalControl().getOverallAcceptance() != null) {
             throw new Exception("MATERIAL_ORDER_RECEPTION_ALREADY_VALIDATED");
-        }
-        if (!orderHasCertificate(order)) {
-            throw new Exception("MATERIAL_ORDER_CERTIFICATE_REQUIRED");
         }
 
         MaterialOrderLine line = reception.getMaterialOrderLine();
