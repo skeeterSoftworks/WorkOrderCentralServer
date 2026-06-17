@@ -19,7 +19,8 @@ public interface MaterialOrderReceptionRepository extends CrudRepository<Materia
             "materialOrder.lines.material",
             "materialOrder.materialProvider",
             "materialOrderLine",
-            "materialOrderLine.material"
+            "materialOrderLine.material",
+            "deliveryNote"
     })
     List<MaterialOrderReception> findAll();
 
@@ -30,7 +31,8 @@ public interface MaterialOrderReceptionRepository extends CrudRepository<Materia
             "materialOrder.lines.material",
             "materialOrder.materialProvider",
             "materialOrderLine",
-            "materialOrderLine.material"
+            "materialOrderLine.material",
+            "deliveryNote"
     })
     Optional<MaterialOrderReception> findById(Long id);
 
@@ -40,13 +42,14 @@ public interface MaterialOrderReceptionRepository extends CrudRepository<Materia
             "materialOrder.lines.material",
             "materialOrder.materialProvider",
             "materialOrderLine",
-            "materialOrderLine.material"
+            "materialOrderLine.material",
+            "deliveryNote"
     })
     List<MaterialOrderReception> findByMaterialOrder_Id(Long materialOrderId);
 
     boolean existsByMaterialOrder_Id(Long materialOrderId);
 
-    boolean existsByMaterialOrderLine_Id(Long materialOrderLineId);
+    boolean existsByDeliveryNote_Id(Long deliveryNoteId);
 
     @Query("""
             SELECT r.materialOrderLine.id FROM MaterialOrderReception r
@@ -61,9 +64,8 @@ public interface MaterialOrderReceptionRepository extends CrudRepository<Materia
             "materialOrder.lines.material",
             "materialOrder.materialProvider",
             "materialOrderLine",
-            "materialOrderLine.material"
+            "materialOrderLine.material",
+            "deliveryNote"
     })
     Optional<MaterialOrderReception> findFirstByMaterialOrder_Id(Long materialOrderId);
-
-    Optional<MaterialOrderReception> findByMaterialOrderLine_Id(Long materialOrderLineId);
 }

@@ -39,6 +39,7 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
             ensureTimestampColumns();
             migrateMaterialOrderLines();
             ensureDeliveryNoteTable();
+            ensureReceptionPerDeliveryNote();
         } catch (Exception e) {
             log.warn("Could not patch material_order schema: {}", e.getMessage());
         }
@@ -153,5 +154,63 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
                   )
                 """);
         log.info("Ensured delivery_note table and migrated legacy receptions");
+    }
+
+    private void ensureReceptionPerDeliveryNote() {
+        jdbcTemplate.execute("""
+                ALTER TABLE material_order_reception
+                ADD COLUMN IF NOT EXISTS delivery_note_id BIGINT REFERENCES delivery_note(id)
+                """);
+        jdbcTemplate.execute("""
+                UPDATE material_order_reception r
+                SET delivery_note_id = (
+                    SELECT d.id FROM delivery_note d
+                    WHERE d.material_order_line_id = r.material_order_line_id
+                    ORDER BY d.received_at DESC, d.id DESC
+                    LIMIT 1
+                )
+                WHERE r.delivery_note_id IS NULL
+                  AND r.material_order_line_id IS NOT NULL
+                  AND EXISTS (
+                      SELECT 1 FROM delivery_note d WHERE d.material_order_line_id = r.material_order_line_id
+                  )
+                """);
+        jdbcTemplate.execute("""
+                INSERT INTO delivery_note (material_order_id, material_order_line_id, delivery_note_number, received_at, quantity)
+                SELECT r.material_order_id, r.material_order_line_id, 'LEGACY-' || r.id, r.received_at, r.received_quantity
+                FROM material_order_reception r
+                WHERE r.material_order_line_id IS NOT NULL
+                  AND r.delivery_note_id IS NULL
+                  AND NOT EXISTS (
+                      SELECT 1 FROM delivery_note d WHERE d.material_order_line_id = r.material_order_line_id
+                  )
+                """);
+        jdbcTemplate.execute("""
+                UPDATE material_order_reception r
+                SET delivery_note_id = (
+                    SELECT d.id FROM delivery_note d
+                    WHERE d.material_order_line_id = r.material_order_line_id
+                    ORDER BY d.received_at DESC, d.id DESC
+                    LIMIT 1
+                )
+                WHERE r.delivery_note_id IS NULL
+                  AND r.material_order_line_id IS NOT NULL
+                """);
+        jdbcTemplate.execute("""
+                INSERT INTO material_order_reception (
+                    material_order_id, material_order_line_id, delivery_note_id, received_at, received_quantity
+                )
+                SELECT d.material_order_id, d.material_order_line_id, d.id, d.received_at, d.quantity
+                FROM delivery_note d
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM material_order_reception r WHERE r.delivery_note_id = d.id
+                )
+                """);
+        jdbcTemplate.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS uk_material_order_reception_delivery_note
+                ON material_order_reception (delivery_note_id)
+                WHERE delivery_note_id IS NOT NULL
+                """);
+        log.info("Linked material_order_reception rows to delivery_note batches");
     }
 }

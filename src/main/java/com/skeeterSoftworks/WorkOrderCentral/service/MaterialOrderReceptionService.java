@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -62,6 +63,7 @@ public class MaterialOrderReceptionService {
                 .filter(r -> r.getMaterialOrder() != null
                         && (r.getInternalControl() == null
                         || r.getInternalControl().getOverallAcceptance() == null))
+                .sorted(Comparator.comparing(MaterialOrderReception::getReceivedAt).reversed())
                 .toList();
     }
 
@@ -128,11 +130,19 @@ public class MaterialOrderReceptionService {
         if (!allReceived) {
             return;
         }
+        List<DeliveryNote> deliveryNotes =
+                deliveryNoteRepository.findByMaterialOrder_IdOrderByReceivedAtDescIdDesc(order.getId());
+        if (deliveryNotes.isEmpty()) {
+            return;
+        }
         List<MaterialOrderReception> receptions = materialOrderReceptionRepository.findByMaterialOrder_Id(order.getId());
-        boolean allValidated = !receptions.isEmpty()
-                && receptions.stream().allMatch(r ->
-                r.getInternalControl() != null && r.getInternalControl().getOverallAcceptance() != null);
-        if (allValidated) {
+        boolean allBatchesValidated = deliveryNotes.stream().allMatch(note ->
+                receptions.stream().anyMatch(reception ->
+                        reception.getDeliveryNote() != null
+                                && reception.getDeliveryNote().getId() == note.getId()
+                                && reception.getInternalControl() != null
+                                && reception.getInternalControl().getOverallAcceptance() != null));
+        if (allBatchesValidated) {
             order.setStatus(EMaterialOrderStatus.VALIDATED);
         } else {
             order.setStatus(EMaterialOrderStatus.RECEIVED_IN_STOCK);
@@ -217,24 +227,18 @@ public class MaterialOrderReceptionService {
 
         int receivedAfter = alreadyReceived + to.getReceivedQuantity();
         boolean lineFullyReceived = receivedAfter >= line.getQuantity();
-        MaterialOrderReception reception = null;
-        if (lineFullyReceived) {
-            reception = materialOrderReceptionRepository.findByMaterialOrderLine_Id(line.getId())
-                    .orElseGet(() -> {
-                        MaterialOrderReception created = new MaterialOrderReception();
-                        created.setMaterialOrder(order);
-                        created.setMaterialOrderLine(line);
-                        created.setReceivedAt(to.getReceivedAt());
-                        created.setReceivedQuantity(line.getQuantity());
-                        created.setInternalControl(new MaterialOrderReceptionInternalControl());
-                        return created;
-                    });
-            if (reception.getId() == null) {
-                reception = materialOrderReceptionRepository.save(reception);
-            }
-        }
+
+        MaterialOrderReception reception = new MaterialOrderReception();
+        reception.setMaterialOrder(order);
+        reception.setMaterialOrderLine(line);
+        reception.setDeliveryNote(savedNote);
+        reception.setReceivedAt(to.getReceivedAt());
+        reception.setReceivedQuantity(to.getReceivedQuantity());
+        reception.setInternalControl(new MaterialOrderReceptionInternalControl());
+        reception = materialOrderReceptionRepository.save(reception);
 
         refreshOrderReceptionStatus(order);
+        refreshOrderValidationStatus(order);
         return new MaterialOrderReceptionRecordResult(savedNote, reception, lineFullyReceived);
     }
 

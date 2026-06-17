@@ -35,6 +35,10 @@ public class MaterialOrderReception {
     @JoinColumn(name = "material_order_line_id", nullable = false)
     private MaterialOrderLine materialOrderLine;
 
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_note_id", unique = true)
+    private DeliveryNote deliveryNote;
+
     @Column(nullable = false)
     private LocalDateTime receivedAt;
 

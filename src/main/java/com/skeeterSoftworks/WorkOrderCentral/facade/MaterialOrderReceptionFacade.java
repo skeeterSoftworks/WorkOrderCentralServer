@@ -1,12 +1,12 @@
 package com.skeeterSoftworks.WorkOrderCentral.facade;
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.DeliveryNote;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.DeliveryNote;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReceptionInternalControl;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionRecordResult;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionService;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReceptionInternalControl;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionInternalControlTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionTO;
 import lombok.extern.slf4j.Slf4j;
@@ -98,35 +98,12 @@ public class MaterialOrderReceptionFacade {
 
     private MaterialOrderReceptionTO toRecordTO(MaterialOrderReceptionRecordResult result) {
         DeliveryNote note = result.deliveryNote();
-        MaterialOrderReceptionTO to = result.reception() != null
-                ? toTO(result.reception())
-                : new MaterialOrderReceptionTO();
+        MaterialOrderReceptionTO to = toTO(result.reception());
         to.setDeliveryNoteId(note.getId());
         to.setDeliveryNoteNumber(note.getDeliveryNoteNumber());
         to.setReceivedAt(note.getReceivedAt());
         to.setReceivedQuantity(note.getQuantity());
         to.setLineFullyReceived(result.lineFullyReceived());
-        MaterialOrder order = note.getMaterialOrder();
-        if (order != null) {
-            to.setMaterialOrderId(order.getId());
-            to.setMaterialOrderCode(order.getCode());
-            if (order.getMaterialProvider() != null) {
-                to.setMaterialProviderName(order.getMaterialProvider().getName());
-            }
-            to.setCertificatePresent(MaterialOrderReceptionService.orderHasCertificate(order));
-        }
-        if (note.getMaterialOrderLine() != null) {
-            to.setMaterialOrderLineId(note.getMaterialOrderLine().getId());
-            Material material = note.getMaterialOrderLine().getMaterial();
-            if (material != null) {
-                to.setMaterialCode(material.getCode());
-                to.setMaterialName(material.getName());
-                to.setMaterialDiameter(material.getDiameter());
-                to.setMaterialWeight(material.getWeight());
-                to.setMaterialLength(material.getLength());
-                to.setMaterialWidth(material.getWidth());
-            }
-        }
         return to;
     }
 
@@ -135,6 +112,13 @@ public class MaterialOrderReceptionFacade {
         to.setId(r.getId());
         to.setReceivedAt(r.getReceivedAt());
         to.setReceivedQuantity(r.getReceivedQuantity());
+        DeliveryNote deliveryNote = r.getDeliveryNote();
+        if (deliveryNote != null) {
+            to.setDeliveryNoteId(deliveryNote.getId());
+            to.setDeliveryNoteNumber(deliveryNote.getDeliveryNoteNumber());
+            to.setReceivedAt(deliveryNote.getReceivedAt());
+            to.setReceivedQuantity(deliveryNote.getQuantity());
+        }
         MaterialOrder order = r.getMaterialOrder();
         if (order != null) {
             to.setMaterialOrderId(order.getId());
