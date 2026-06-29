@@ -11,6 +11,7 @@ import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.WorkOrderMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderCreateResultTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderMaterialRequirementsTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderStockAllocationTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class WorkOrderService {
     private final StockProductInventoryService stockProductInventoryService;
     private final WorkOrderMapperService workOrderMapperService;
     private final UsersService usersService;
+    private final WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService;
 
     @Autowired
     public WorkOrderService(
@@ -42,7 +44,8 @@ public class WorkOrderService {
             ProductMapperService productMapperService,
             StockProductInventoryService stockProductInventoryService,
             WorkOrderMapperService workOrderMapperService,
-            UsersService usersService
+            UsersService usersService,
+            WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService
     ) {
         this.workOrderRepository = workOrderRepository;
         this.purchaseOrderService = purchaseOrderService;
@@ -52,6 +55,7 @@ public class WorkOrderService {
         this.stockProductInventoryService = stockProductInventoryService;
         this.workOrderMapperService = workOrderMapperService;
         this.usersService = usersService;
+        this.workOrderMaterialRequirementsService = workOrderMaterialRequirementsService;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
@@ -101,19 +105,40 @@ public class WorkOrderService {
             List<WorkOrderStockAllocationTO> stockAssignments,
             String createdByUserQrCode) throws Exception {
         WorkOrder saved = addWorkOrder(workOrder);
+        String createdByFullName = usersService.resolveFullNameByQrCode(createdByUserQrCode);
+        String materialRequirementsPdf = workOrderMaterialRequirementsService.generatePdfBase64ForWorkOrder(
+                saved.getId(), createdByFullName);
+
         if (stockAssignments == null || stockAssignments.isEmpty()) {
-            return new WorkOrderCreateResultTO(workOrderMapperService.mapToTO(saved), null);
+            return new WorkOrderCreateResultTO(
+                    workOrderMapperService.mapToTO(saved), null, materialRequirementsPdf);
         }
         long lineId = saved.getProductOrder().getId();
         ProductOrder line = productOrderRepository.findById(lineId)
                 .orElseThrow(() -> new Exception("PRODUCT_ORDER_NOT_FOUND"));
         saved.setProductOrder(line);
-        String createdByFullName = usersService.resolveFullNameByQrCode(createdByUserQrCode);
         List<StockAssignmentOrder> orders =
                 stockProductInventoryService.createStockAssignmentOrdersForWorkOrder(
                         saved, stockAssignments, createdByFullName);
-        String pdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(orders.get(0));
-        return new WorkOrderCreateResultTO(workOrderMapperService.mapToTO(saved), pdf);
+        String stockAssignmentPdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(orders.get(0));
+        return new WorkOrderCreateResultTO(
+                workOrderMapperService.mapToTO(saved), stockAssignmentPdf, materialRequirementsPdf);
+    }
+
+    @Transactional(readOnly = true)
+    public WorkOrderMaterialRequirementsTO previewMaterialRequirements(long productId, int quantity) throws Exception {
+        return workOrderMaterialRequirementsService.previewForProduct(productId, quantity);
+    }
+
+    @Transactional(readOnly = true)
+    public String getMaterialRequirementsPdfBase64ForWorkOrder(long workOrderId) throws Exception {
+        if (workOrderId <= 0) {
+            throw new Exception("INVALID_WORK_ORDER_ID");
+        }
+        if (!workOrderRepository.existsById(workOrderId)) {
+            throw new Exception("WORK_ORDER_NOT_FOUND");
+        }
+        return workOrderMaterialRequirementsService.generatePdfBase64ForWorkOrder(workOrderId, null);
     }
 
     @Transactional(readOnly = true)

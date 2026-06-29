@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="work-order-material-requirements"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20">
+    <style name="Base" isDefault="true" fontName="DejaVu Sans" fontSize="10"
+           pdfFontName="DejaVu Sans" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+    <style name="BaseBold" fontName="DejaVu Sans" fontSize="10" isBold="true"
+           pdfFontName="DejaVu Sans" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+    <style name="Title" fontName="DejaVu Sans" fontSize="18" isBold="true"
+           pdfFontName="DejaVu Sans" pdfEncoding="Identity-H" isPdfEmbedded="true"/>
+    <parameter name="reportTitle" class="java.lang.String"/>
+    <parameter name="labelWorkOrder" class="java.lang.String"/>
+    <parameter name="labelPurchaseOrder" class="java.lang.String"/>
+    <parameter name="labelCustomer" class="java.lang.String"/>
+    <parameter name="labelProduct" class="java.lang.String"/>
+    <parameter name="labelProductQuantity" class="java.lang.String"/>
+    <parameter name="labelGeneratedAt" class="java.lang.String"/>
+    <parameter name="labelCreatedBy" class="java.lang.String"/>
+    <parameter name="labelMaterialCode" class="java.lang.String"/>
+    <parameter name="labelMaterialName" class="java.lang.String"/>
+    <parameter name="labelUnit" class="java.lang.String"/>
+    <parameter name="labelRequired" class="java.lang.String"/>
+    <parameter name="labelAvailable" class="java.lang.String"/>
+    <parameter name="labelMissing" class="java.lang.String"/>
+    <parameter name="noBillOfMaterials" class="java.lang.String"/>
+    <parameter name="workOrderId" class="java.lang.String"/>
+    <parameter name="purchaseOrderId" class="java.lang.String"/>
+    <parameter name="customerName" class="java.lang.String"/>
+    <parameter name="productReference" class="java.lang.String"/>
+    <parameter name="productName" class="java.lang.String"/>
+    <parameter name="productQuantity" class="java.lang.String"/>
+    <parameter name="generatedAt" class="java.lang.String"/>
+    <parameter name="createdBy" class="java.lang.String"/>
+    <field name="materialCode" class="java.lang.String"/>
+    <field name="materialName" class="java.lang.String"/>
+    <field name="unitOfMeasure" class="java.lang.String"/>
+    <field name="requiredQuantity" class="java.lang.String"/>
+    <field name="availableQuantity" class="java.lang.String"/>
+    <field name="missingQuantity" class="java.lang.String"/>
+    <title>
+        <band height="50">
+            <textField>
+                <reportElement x="0" y="10" width="555" height="30" style="Title"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$P{reportTitle}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    <pageHeader>
+        <band height="120">
+            <textField>
+                <reportElement x="0" y="0" width="140" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelWorkOrder} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="0" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{workOrderId}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="20" width="140" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelPurchaseOrder} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="20" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{purchaseOrderId}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="40" width="140" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelCustomer} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="40" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{customerName}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="60" width="140" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelProduct} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="60" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{productReference} + " — " + $P{productName}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="80" width="140" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelProductQuantity} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="80" width="415" height="18"/>
+                <textFieldExpression><![CDATA[$P{productQuantity}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="100" width="140" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelGeneratedAt} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="100" width="200" height="18"/>
+                <textFieldExpression><![CDATA[$P{generatedAt}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="340" y="100" width="100" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelCreatedBy} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="440" y="100" width="115" height="18"/>
+                <textFieldExpression><![CDATA[$P{createdBy}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+    <columnHeader>
+        <band height="24">
+            <textField>
+                <reportElement x="0" y="4" width="70" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelMaterialCode}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="70" y="4" width="150" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelMaterialName}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="220" y="4" width="55" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelUnit}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="275" y="4" width="90" height="18" style="BaseBold"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{labelRequired}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="365" y="4" width="90" height="18" style="BaseBold"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{labelAvailable}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="455" y="4" width="100" height="18" style="BaseBold"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{labelMissing}]]></textFieldExpression>
+            </textField>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="20">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="2" width="70" height="16"/>
+                <textFieldExpression><![CDATA[$F{materialCode}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="70" y="2" width="150" height="16"/>
+                <textFieldExpression><![CDATA[$F{materialName}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="220" y="2" width="55" height="16"/>
+                <textFieldExpression><![CDATA[$F{unitOfMeasure}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="275" y="2" width="90" height="16"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{requiredQuantity}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="365" y="2" width="90" height="16"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{availableQuantity}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="455" y="2" width="100" height="16"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{missingQuantity}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+    <noData>
+        <band height="30">
+            <textField>
+                <reportElement x="0" y="6" width="555" height="18"/>
+                <textFieldExpression><![CDATA[$P{noBillOfMaterials}]]></textFieldExpression>
+            </textField>
+        </band>
+    </noData>
+</jasperReport>

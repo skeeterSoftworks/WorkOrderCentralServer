@@ -5,6 +5,7 @@ import com.skeeterSoftworks.WorkOrderCentral.mapper.WorkOrderMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.service.WorkOrderService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderCreateResultTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderMaterialRequirementsTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,6 +115,51 @@ public class WorkOrderFacade {
         }
     }
 
+    @GetMapping("/material-requirements/preview")
+    public ResponseEntity<?> previewMaterialRequirements(
+            @RequestParam Long productId,
+            @RequestParam int quantity) {
+        try {
+            if (productId == null || productId <= 0) {
+                return ResponseEntity.badRequest().body("INVALID_PRODUCT_ID");
+            }
+            if (quantity <= 0) {
+                return ResponseEntity.badRequest().body("INVALID_PRODUCT_QUANTITY");
+            }
+            WorkOrderMaterialRequirementsTO result = workOrderService.previewMaterialRequirements(productId, quantity);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            String msg = e.getMessage();
+            if ("PRODUCT_NOT_FOUND".equals(msg)) {
+                return ResponseEntity.notFound().build();
+            }
+            if ("INVALID_PRODUCT_ID".equals(msg) || "INVALID_PRODUCT_QUANTITY".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            return ResponseEntity.internalServerError().body("ERROR_PREVIEWING_MATERIAL_REQUIREMENTS");
+        }
+    }
+
+    @GetMapping("/{id}/material-requirements/pdf")
+    public ResponseEntity<?> getMaterialRequirementsPdf(@PathVariable Long id) {
+        log.debug("Facade call: getMaterialRequirementsPdf({})", id);
+        try {
+            if (id == null || id <= 0) {
+                return ResponseEntity.badRequest().body("INVALID_WORK_ORDER_ID");
+            }
+            String pdf = workOrderService.getMaterialRequirementsPdfBase64ForWorkOrder(id);
+            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, null, pdf));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            String msg = e.getMessage();
+            if ("WORK_ORDER_NOT_FOUND".equals(msg) || "INVALID_WORK_ORDER_ID".equals(msg)) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.internalServerError().body("ERROR_GENERATING_MATERIAL_REQUIREMENTS_PDF");
+        }
+    }
+
     @GetMapping("/{id}/stock-assignment-order/pdf")
     public ResponseEntity<?> getStockAssignmentOrderPdf(@PathVariable Long id) {
         log.debug("Facade call: getStockAssignmentOrderPdf({})", id);
@@ -122,7 +168,7 @@ public class WorkOrderFacade {
                 return ResponseEntity.badRequest().body("INVALID_WORK_ORDER_ID");
             }
             String pdf = workOrderService.getStockAssignmentOrderPdfBase64ForWorkOrder(id);
-            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, pdf));
+            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, pdf, null));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();
