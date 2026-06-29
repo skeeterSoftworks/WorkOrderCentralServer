@@ -131,10 +131,7 @@ public class SampleDataGenerationService {
             material.setName(faker.commerce().material());
             material.setCode("MAT-" + faker.regexify("[A-Z0-9]{6}") + "-" + i);
             material.getProviders().add(savedProviders.get(i - 1));
-            material.setDiameter((float) faker.number().randomDouble(2, 1, 100));
-            material.setWeight((float) faker.number().randomDouble(2, 1, 100));
-            material.setLength((float) faker.number().randomDouble(2, 1, 100));
-            material.setWidth((float) faker.number().randomDouble(2, 1, 100));
+            material.setUnitOfMeasure(EUnitOfMeasure.PCS);
             savedMaterials.add(materialRepository.save(material));
         }
 
@@ -153,7 +150,6 @@ public class SampleDataGenerationService {
             productMaterial.setProduct(p);
             productMaterial.setMaterial(savedMaterials.get(i));
             productMaterial.setQuantityPerProductUnit(1d / faker.number().numberBetween(1, 20));
-            productMaterial.setUnitOfMeasure(EUnitOfMeasure.PCS);
             p.getProductMaterials().add(productMaterial);
             addDemoMeasuringFeatures(p, i);
             Technology tech = buildDemoTechnology(faker, i);

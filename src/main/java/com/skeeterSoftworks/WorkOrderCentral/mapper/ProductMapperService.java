@@ -153,7 +153,6 @@ public class ProductMapperService {
                 productMaterial.setProduct(product);
                 productMaterial.setMaterial(material);
                 productMaterial.setQuantityPerProductUnit(quantity);
-                productMaterial.setUnitOfMeasure(resolveUnitOfMeasure(row.getUnitOfMeasure()));
                 productMaterials.add(productMaterial);
             }
             product.setProductMaterials(productMaterials);
@@ -370,18 +369,14 @@ public class ProductMapperService {
         ProductMaterialTO to = new ProductMaterialTO();
         to.setId(row.getId());
         to.setQuantityPerProductUnit(row.getQuantityPerProductUnit());
-        to.setUnitOfMeasure(row.getUnitOfMeasure() != null ? row.getUnitOfMeasure() : EUnitOfMeasure.PCS);
         Material material = row.getMaterial();
         if (material != null) {
             to.setMaterialId(material.getId());
             to.setMaterialName(material.getName());
             to.setMaterialCode(material.getCode());
+            to.setUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
         }
         return to;
-    }
-
-    private EUnitOfMeasure resolveUnitOfMeasure(EUnitOfMeasure unit) {
-        return unit != null ? unit : EUnitOfMeasure.PCS;
     }
 
     private MeasuringFeaturePrototype mapPrototypeTOToEntity(MeasuringFeaturePrototypeTO to) {

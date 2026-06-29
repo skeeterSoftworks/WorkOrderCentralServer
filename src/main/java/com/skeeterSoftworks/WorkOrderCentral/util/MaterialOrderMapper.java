@@ -100,10 +100,6 @@ public final class MaterialOrderMapper {
             to.setMaterialId(material.getId());
             to.setMaterialName(material.getName());
             to.setMaterialCode(material.getCode());
-            to.setMaterialDiameter(material.getDiameter());
-            to.setMaterialWeight(material.getWeight());
-            to.setMaterialLength(material.getLength());
-            to.setMaterialWidth(material.getWidth());
         }
         return to;
     }
@@ -116,10 +112,6 @@ public final class MaterialOrderMapper {
         to.setMaterialId(material.getId());
         to.setMaterialName(material.getName());
         to.setMaterialCode(material.getCode());
-        to.setMaterialDiameter(material.getDiameter());
-        to.setMaterialWeight(material.getWeight());
-        to.setMaterialLength(material.getLength());
-        to.setMaterialWidth(material.getWidth());
     }
 
     public static String materialLabel(Material material) {

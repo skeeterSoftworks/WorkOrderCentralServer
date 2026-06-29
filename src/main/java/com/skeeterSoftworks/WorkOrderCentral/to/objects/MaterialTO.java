@@ -1,5 +1,6 @@
 package com.skeeterSoftworks.WorkOrderCentral.to.objects;
 
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,9 +14,6 @@ public class MaterialTO {
     private Long id;
     private String name;
     private String code;
-    private Float diameter;
-    private Float weight;
-    private Float length;
-    private Float width;
+    private EUnitOfMeasure unitOfMeasure;
     private List<MaterialProviderTO> providers;
 }

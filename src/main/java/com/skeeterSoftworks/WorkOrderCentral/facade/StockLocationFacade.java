@@ -9,6 +9,7 @@ import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialProviderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.StockLocationTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.StockedMaterialTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -123,10 +124,7 @@ public class StockLocationFacade {
                 m.getId(),
                 m.getName(),
                 m.getCode(),
-                m.getDiameter(),
-                m.getWeight(),
-                m.getLength(),
-                m.getWidth(),
+                m.getUnitOfMeasure() != null ? m.getUnitOfMeasure() : EUnitOfMeasure.PCS,
                 providers);
     }
 

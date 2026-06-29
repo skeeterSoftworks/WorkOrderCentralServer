@@ -134,10 +134,6 @@ public class MaterialOrderReceptionFacade {
             if (material != null) {
                 to.setMaterialCode(material.getCode());
                 to.setMaterialName(material.getName());
-                to.setMaterialDiameter(material.getDiameter());
-                to.setMaterialWeight(material.getWeight());
-                to.setMaterialLength(material.getLength());
-                to.setMaterialWidth(material.getWidth());
             }
         }
         to.setInternalControl(toInternalControlTO(r.getInternalControl()));

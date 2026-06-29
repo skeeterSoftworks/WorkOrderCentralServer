@@ -34,6 +34,7 @@ public class ProductMaterialSchemaPatch implements ApplicationRunner {
         }
         try {
             migrateProductMaterialTable();
+            migrateMaterialUnitOfMeasure();
         } catch (Exception e) {
             log.warn("Could not patch product_material schema: {}", e.getMessage());
         }
@@ -97,7 +98,6 @@ public class ProductMaterialSchemaPatch implements ApplicationRunner {
                     product_id BIGINT NOT NULL REFERENCES product(id) ON DELETE CASCADE,
                     material_id BIGINT NOT NULL REFERENCES material(id) ON DELETE CASCADE,
                     quantity_per_product_unit DOUBLE PRECISION NOT NULL DEFAULT 1,
-                    unit_of_measure VARCHAR(16) NOT NULL DEFAULT 'PCS',
                     UNIQUE (product_id, material_id)
                 )
                 """);
@@ -116,5 +116,20 @@ public class ProductMaterialSchemaPatch implements ApplicationRunner {
         jdbcTemplate.execute("DROP TABLE product_material");
         jdbcTemplate.execute("ALTER TABLE product_material_migrated RENAME TO product_material");
         log.info("Migrated product_material to per-batch quantity model");
+    }
+
+    private void migrateMaterialUnitOfMeasure() {
+        Integer tableCount = jdbcTemplate.queryForObject(
+                """
+                        SELECT COUNT(*) FROM information_schema.tables
+                        WHERE table_schema = current_schema() AND table_name = 'material'
+                        """,
+                Integer.class);
+        if (tableCount == null || tableCount == 0) {
+            return;
+        }
+        jdbcTemplate.execute("ALTER TABLE material ADD COLUMN IF NOT EXISTS unit_of_measure VARCHAR(16)");
+        jdbcTemplate.execute(
+                "UPDATE material SET unit_of_measure = 'PCS' WHERE unit_of_measure IS NULL OR TRIM(unit_of_measure) = ''");
     }
 }

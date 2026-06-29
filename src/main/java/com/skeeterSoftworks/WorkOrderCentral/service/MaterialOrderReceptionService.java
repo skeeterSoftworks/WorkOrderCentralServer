@@ -1,6 +1,5 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
@@ -22,13 +21,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Service
 public class MaterialOrderReceptionService {
-
-    private static final int REQUIRED_SAMPLES = 3;
 
     private final MaterialOrderReceptionRepository materialOrderReceptionRepository;
     private final MaterialOrderRepository materialOrderRepository;
@@ -88,8 +83,7 @@ public class MaterialOrderReceptionService {
         if (line == null) {
             throw new Exception("MATERIAL_ORDER_LINE_NOT_FOUND");
         }
-        Material material = line.getMaterial();
-        if (material == null) {
+        if (line.getMaterial() == null) {
             throw new Exception("MATERIAL_NOT_FOUND");
         }
 
@@ -97,16 +91,6 @@ public class MaterialOrderReceptionService {
         if (ic == null) {
             ic = new MaterialOrderReceptionInternalControl();
             reception.setInternalControl(ic);
-        }
-
-        if (isDimensionDefined(material.getDiameter())) {
-            applyOptionalSamples(ic::setDiameterSamples, body != null ? body.getDiameterSamples() : null);
-        }
-        if (isDimensionDefined(material.getLength())) {
-            applyOptionalSamples(ic::setLengthSamples, body != null ? body.getLengthSamples() : null);
-        }
-        if (isDimensionDefined(material.getWidth())) {
-            applyOptionalSamples(ic::setWidthSamples, body != null ? body.getWidthSamples() : null);
         }
 
         if (body == null || body.getOverallAcceptance() == null) {
@@ -149,28 +133,6 @@ public class MaterialOrderReceptionService {
         }
         order.setLastChanged(LocalDateTime.now());
         materialOrderRepository.save(order);
-    }
-
-    private static boolean isDimensionDefined(float value) {
-        return value != 0f;
-    }
-
-    private static void applyOptionalSamples(Consumer<List<Float>> setter, List<Float> samples) {
-        if (samples == null || samples.isEmpty()) {
-            return;
-        }
-        if (samples.size() < REQUIRED_SAMPLES) {
-            return;
-        }
-        List<Float> parsed = samples.stream()
-                .limit(REQUIRED_SAMPLES)
-                .collect(Collectors.toCollection(ArrayList::new));
-        for (Float sample : parsed) {
-            if (sample == null || !Float.isFinite(sample)) {
-                return;
-            }
-        }
-        setter.accept(parsed);
     }
 
     @Transactional

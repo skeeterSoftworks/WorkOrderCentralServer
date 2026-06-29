@@ -147,7 +147,6 @@ public class ProductFacade {
                             ProductMaterial copy = new ProductMaterial();
                             copy.setId(pm.getId());
                             copy.setQuantityPerProductUnit(pm.getQuantityPerProductUnit());
-                            copy.setUnitOfMeasure(pm.getUnitOfMeasure());
                             copy.setMaterial(pm.getMaterial());
                             copy.setProduct(entity);
                             rows.add(copy);

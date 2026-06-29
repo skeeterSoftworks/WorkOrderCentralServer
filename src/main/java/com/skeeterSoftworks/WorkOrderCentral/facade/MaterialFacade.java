@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.facade;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialService;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialProviderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialTO;
 import lombok.extern.slf4j.Slf4j;
@@ -68,10 +69,7 @@ public class MaterialFacade {
                 m.getId(),
                 m.getName(),
                 m.getCode(),
-                m.getDiameter(),
-                m.getWeight(),
-                m.getLength(),
-                m.getWidth(),
+                m.getUnitOfMeasure() != null ? m.getUnitOfMeasure() : EUnitOfMeasure.PCS,
                 (m.getProviders() == null ? List.<MaterialProviderTO>of() : m.getProviders().stream().map(this::toProviderTO).toList())
         );
     }
