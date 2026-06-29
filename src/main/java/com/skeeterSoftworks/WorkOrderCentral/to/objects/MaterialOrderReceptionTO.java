@@ -1,5 +1,6 @@
 package com.skeeterSoftworks.WorkOrderCentral.to.objects;
 
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public class MaterialOrderReceptionTO {
     /** True when the order line is fully received after this batch. */
     private Boolean lineFullyReceived;
     private MaterialOrderReceptionInternalControlTO internalControl;
+    private EUnitOfMeasure materialUnitOfMeasure;
     /** Nominal diameter from linked material (0 = not defined). */
     private Float materialDiameter;
     /** Nominal weight from linked material (0 = not defined). */

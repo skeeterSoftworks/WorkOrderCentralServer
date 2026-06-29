@@ -9,6 +9,7 @@ import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionRecor
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionInternalControlTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -134,6 +135,7 @@ public class MaterialOrderReceptionFacade {
             if (material != null) {
                 to.setMaterialCode(material.getCode());
                 to.setMaterialName(material.getName());
+                to.setMaterialUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
             }
         }
         to.setInternalControl(toInternalControlTO(r.getInternalControl()));

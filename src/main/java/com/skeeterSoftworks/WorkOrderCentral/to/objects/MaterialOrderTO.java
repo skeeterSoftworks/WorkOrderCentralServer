@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.to.objects;
 
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ public class MaterialOrderTO {
     /** Raw Base64 or data URL for upload; omitted in list payloads. */
     private String certificateBase64;
     private Boolean certificatePresent;
+    private EUnitOfMeasure materialUnitOfMeasure;
     /** Nominal diameter from first/only line material (0 = not defined). */
     private Float materialDiameter;
     /** Nominal weight from first/only line material (0 = not defined). */

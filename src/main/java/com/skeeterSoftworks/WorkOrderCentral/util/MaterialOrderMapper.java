@@ -4,6 +4,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.DeliveryNoteTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderTO;
@@ -100,6 +101,7 @@ public final class MaterialOrderMapper {
             to.setMaterialId(material.getId());
             to.setMaterialName(material.getName());
             to.setMaterialCode(material.getCode());
+            to.setMaterialUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
         }
         return to;
     }
@@ -112,6 +114,7 @@ public final class MaterialOrderMapper {
         to.setMaterialId(material.getId());
         to.setMaterialName(material.getName());
         to.setMaterialCode(material.getCode());
+        to.setMaterialUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
     }
 
     public static String materialLabel(Material material) {
