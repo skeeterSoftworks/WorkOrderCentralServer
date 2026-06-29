@@ -71,7 +71,7 @@ class ManualSampleDataGenerationTest {
                 materialProviderRepository.count(),
                 "Table-wide provider count should increase by SAMPLE_COUNT for this invocation");
         productRepository.findAll().forEach(product ->
-                assertTrue(product.getMaterials() != null && !product.getMaterials().isEmpty(),
+                assertTrue(product.getProductMaterials() != null && !product.getProductMaterials().isEmpty(),
                         "Each generated product should have at least one material"));
         log.info(
                 "Sample data inserted: {} machines, {} tools, {} products, {} customers, {} users, {} materials, {} material providers",

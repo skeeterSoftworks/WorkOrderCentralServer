@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.facade;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductMaterial;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.service.ProductDeleteBlockedException;
 import com.skeeterSoftworks.WorkOrderCentral.service.ProductService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 @Slf4j
 @RestController
@@ -133,6 +135,26 @@ public class ProductFacade {
             if (productTO.getTechnologyData() == null) {
                 productService.getProductById(productTO.getId())
                         .ifPresent(p -> entity.setTechnologyData(p.getTechnologyData()));
+            }
+            if (productTO.getProductMaterials() == null) {
+                productService.getProductById(productTO.getId()).ifPresent(existing -> {
+                    if (existing.getProductMaterials() != null) {
+                        existing.getProductMaterials().size();
+                    }
+                    List<ProductMaterial> rows = new ArrayList<>();
+                    if (existing.getProductMaterials() != null) {
+                        for (ProductMaterial pm : existing.getProductMaterials()) {
+                            ProductMaterial copy = new ProductMaterial();
+                            copy.setId(pm.getId());
+                            copy.setQuantityPerProductUnit(pm.getQuantityPerProductUnit());
+                            copy.setUnitOfMeasure(pm.getUnitOfMeasure());
+                            copy.setMaterial(pm.getMaterial());
+                            copy.setProduct(entity);
+                            rows.add(copy);
+                        }
+                    }
+                    entity.setProductMaterials(rows);
+                });
             }
             Product updated = productService.updateProduct(entity);
             return ResponseEntity.ok(productMapperService.mapToTO(updated));

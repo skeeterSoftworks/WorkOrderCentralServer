@@ -40,7 +40,6 @@ public class MaterialService {
         }
         entity.setName(to.getName());
         entity.setCode(to.getCode());
-        entity.setProductsPerUnit(to.getProductsPerUnit());
         entity.setDiameter(to.getDiameter() != null ? to.getDiameter() : 0f);
         entity.setWeight(to.getWeight() != null ? to.getWeight() : 0f);
         entity.setLength(to.getLength() != null ? to.getLength() : 0f);

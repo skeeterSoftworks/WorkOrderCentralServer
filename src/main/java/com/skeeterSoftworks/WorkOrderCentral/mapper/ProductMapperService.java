@@ -2,23 +2,22 @@ package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductMaterial;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.QualityInfoStep;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Technology;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
-import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.TechnologyRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MeasuringFeaturePrototypeTO;
-import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialTO;
-import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialProviderTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductMaterialTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.QualityInfoStepTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupDataPrototypeTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.TechnologyTO;
@@ -39,7 +38,6 @@ public class ProductMapperService {
     private final MachineRepository machineRepository;
     private final CustomerRepository customerRepository;
     private final MaterialRepository materialRepository;
-    private final MaterialProviderRepository materialProviderRepository;
     private final TechnologyRepository technologyRepository;
 
     @Autowired
@@ -47,12 +45,10 @@ public class ProductMapperService {
             MachineRepository machineRepository,
             CustomerRepository customerRepository,
             MaterialRepository materialRepository,
-            MaterialProviderRepository materialProviderRepository,
             TechnologyRepository technologyRepository) {
         this.machineRepository = machineRepository;
         this.customerRepository = customerRepository;
         this.materialRepository = materialRepository;
-        this.materialProviderRepository = materialProviderRepository;
         this.technologyRepository = technologyRepository;
     }
 
@@ -73,10 +69,10 @@ public class ProductMapperService {
         } else {
             to.setCustomerIds(Collections.emptyList());
         }
-        if (product.getMaterials() != null && !product.getMaterials().isEmpty()) {
-            to.setMaterials(product.getMaterials().stream().map(this::mapMaterialToTO).toList());
+        if (product.getProductMaterials() != null && !product.getProductMaterials().isEmpty()) {
+            to.setProductMaterials(product.getProductMaterials().stream().map(this::mapProductMaterialToTO).toList());
         } else {
-            to.setMaterials(Collections.emptyList());
+            to.setProductMaterials(Collections.emptyList());
         }
 
         to.setSetupDataPrototype(mapSetupPrototypeToTO(product.getSetupDataPrototype()));
@@ -137,13 +133,32 @@ public class ProductMapperService {
         } else {
             product.setCustomers(new ArrayList<>());
         }
-        if (to.getMaterials() != null && !to.getMaterials().isEmpty()) {
-            List<Material> materials = to.getMaterials().stream()
-                    .map(this::mapMaterialToEntity)
-                    .toList();
-            product.setMaterials(materials);
-        } else {
-            product.setMaterials(new ArrayList<>());
+        if (to.getProductMaterials() != null) {
+            List<ProductMaterial> productMaterials = new ArrayList<>();
+            for (ProductMaterialTO row : to.getProductMaterials()) {
+                if (row == null || row.getMaterialId() == null) {
+                    continue;
+                }
+                Material material = materialRepository.findById(row.getMaterialId()).orElse(null);
+                if (material == null) {
+                    continue;
+                }
+                double quantity = row.getQuantityPerProductUnit() != null && row.getQuantityPerProductUnit() > 0
+                        ? row.getQuantityPerProductUnit()
+                        : 1d;
+                ProductMaterial productMaterial = new ProductMaterial();
+                if (row.getId() != null) {
+                    productMaterial.setId(row.getId());
+                }
+                productMaterial.setProduct(product);
+                productMaterial.setMaterial(material);
+                productMaterial.setQuantityPerProductUnit(quantity);
+                productMaterial.setUnitOfMeasure(resolveUnitOfMeasure(row.getUnitOfMeasure()));
+                productMaterials.add(productMaterial);
+            }
+            product.setProductMaterials(productMaterials);
+        } else if (to.getId() == null) {
+            product.setProductMaterials(new ArrayList<>());
         }
 
         product.setSetupDataPrototype(mapSetupPrototypeTOToEntity(to.getSetupDataPrototype()));
@@ -348,84 +363,25 @@ public class ProductMapperService {
         );
     }
 
-    private MaterialTO mapMaterialToTO(Material material) {
-        if (material == null) {
+    private ProductMaterialTO mapProductMaterialToTO(ProductMaterial row) {
+        if (row == null) {
             return null;
         }
-        List<MaterialProviderTO> providers = material.getProviders() == null
-                ? Collections.emptyList()
-                : material.getProviders().stream().map(this::mapMaterialProviderToTO).toList();
-        return new MaterialTO(
-                material.getId(),
-                material.getName(),
-                material.getCode(),
-                material.getProductsPerUnit(),
-                material.getDiameter(),
-                material.getWeight(),
-                material.getLength(),
-                material.getWidth(),
-                providers
-        );
+        ProductMaterialTO to = new ProductMaterialTO();
+        to.setId(row.getId());
+        to.setQuantityPerProductUnit(row.getQuantityPerProductUnit());
+        to.setUnitOfMeasure(row.getUnitOfMeasure() != null ? row.getUnitOfMeasure() : EUnitOfMeasure.PCS);
+        Material material = row.getMaterial();
+        if (material != null) {
+            to.setMaterialId(material.getId());
+            to.setMaterialName(material.getName());
+            to.setMaterialCode(material.getCode());
+        }
+        return to;
     }
 
-    private MaterialProviderTO mapMaterialProviderToTO(MaterialProvider provider) {
-        if (provider == null) {
-            return null;
-        }
-        return new MaterialProviderTO(
-                provider.getId(),
-                provider.getName(),
-                provider.getContactPerson(),
-                provider.getEmailAddress(),
-                provider.getPhoneNumber(),
-                provider.getGrade()
-        );
-    }
-
-    private Material mapMaterialToEntity(MaterialTO to) {
-        if (to == null) {
-            return null;
-        }
-        Material material = null;
-        if (to.getId() != null) {
-            material = materialRepository.findById(to.getId()).orElse(null);
-        }
-        if (material == null) {
-            material = new Material();
-            material.setId(to.getId());
-        }
-        material.setName(to.getName());
-        material.setCode(to.getCode());
-        material.setProductsPerUnit(to.getProductsPerUnit());
-        material.setDiameter(to.getDiameter() == null ? 0f : to.getDiameter());
-        material.setWeight(to.getWeight() == null ? 0f : to.getWeight());
-        material.setLength(to.getLength() == null ? 0f : to.getLength());
-        material.setWidth(to.getWidth() == null ? 0f : to.getWidth());
-
-        List<MaterialProvider> providers = new ArrayList<>();
-        if (to.getProviders() != null) {
-            for (MaterialProviderTO providerTo : to.getProviders()) {
-                if (providerTo == null) {
-                    continue;
-                }
-                MaterialProvider provider = null;
-                if (providerTo.getId() != null) {
-                    provider = materialProviderRepository.findById(providerTo.getId()).orElse(null);
-                }
-                if (provider == null) {
-                    provider = new MaterialProvider();
-                    provider.setId(providerTo.getId());
-                }
-                provider.setName(providerTo.getName());
-                provider.setContactPerson(providerTo.getContactPerson());
-                provider.setEmailAddress(providerTo.getEmailAddress());
-                provider.setPhoneNumber(providerTo.getPhoneNumber());
-                provider.setGrade(providerTo.getGrade() == null ? 0 : providerTo.getGrade());
-                providers.add(provider);
-            }
-        }
-        material.setProviders(providers);
-        return material;
+    private EUnitOfMeasure resolveUnitOfMeasure(EUnitOfMeasure unit) {
+        return unit != null ? unit : EUnitOfMeasure.PCS;
     }
 
     private MeasuringFeaturePrototype mapPrototypeTOToEntity(MeasuringFeaturePrototypeTO to) {

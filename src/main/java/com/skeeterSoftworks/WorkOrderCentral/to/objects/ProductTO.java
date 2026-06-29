@@ -19,7 +19,7 @@ public class ProductTO {
     private String reference;
     private List<Long> machineIds;
     private List<Long> customerIds;
-    private List<MaterialTO> materials;
+    private List<ProductMaterialTO> productMaterials;
     private TechnologyTO technologyData;
     private SetupDataPrototypeTO setupDataPrototype;
     private List<MeasuringFeaturePrototypeTO> measuringFeaturePrototypes;

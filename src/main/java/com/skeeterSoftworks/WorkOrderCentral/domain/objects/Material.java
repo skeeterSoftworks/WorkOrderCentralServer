@@ -23,12 +23,6 @@ public class Material {
     @Column
     private String code;
 
-    /**
-     * How many products can be produced from one material unit.
-     */
-    @Column
-    private Integer productsPerUnit;
-
     @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
             name = "material_provider_link",

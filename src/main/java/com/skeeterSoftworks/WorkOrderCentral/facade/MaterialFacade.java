@@ -68,7 +68,6 @@ public class MaterialFacade {
                 m.getId(),
                 m.getName(),
                 m.getCode(),
-                m.getProductsPerUnit(),
                 m.getDiameter(),
                 m.getWeight(),
                 m.getLength(),

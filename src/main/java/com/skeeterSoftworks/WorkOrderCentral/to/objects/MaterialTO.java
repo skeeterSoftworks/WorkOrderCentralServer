@@ -13,7 +13,6 @@ public class MaterialTO {
     private Long id;
     private String name;
     private String code;
-    private Integer productsPerUnit;
     private Float diameter;
     private Float weight;
     private Float length;
