@@ -6,6 +6,7 @@ import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.service.ProductDeleteBlockedException;
 import com.skeeterSoftworks.WorkOrderCentral.service.ProductService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ApiErrorTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductCatalogEntryTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductQualityInfoUpdateTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductTO;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -40,6 +42,22 @@ public class ProductFacade {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.internalServerError().body("ERROR_FETCHING_PRODUCTS");
+        }
+    }
+
+    @GetMapping("/catalog")
+    public ResponseEntity<?> getCatalog() {
+        try {
+            List<ProductCatalogEntryTO> catalog = productService.getAllProducts().stream()
+                    .map(p -> new ProductCatalogEntryTO(p.getId(), p.getReference(), p.getName()))
+                    .sorted(Comparator.comparing(
+                            ProductCatalogEntryTO::getReference,
+                            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                    .toList();
+            return ResponseEntity.ok(catalog);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_PRODUCT_CATALOG");
         }
     }
 

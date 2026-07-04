@@ -101,28 +101,20 @@ public class StockProductInventoryService {
      */
     @Transactional(readOnly = true)
     public long computeUnassignedAvailableQuantity(long productId) {
-        long aggregateAvailable = stockService.getAvailableQuantityForProduct(productId);
-        long reserved = stockAssignmentOrderRepository.sumReservedQuantityByProductId(productId);
-        return Math.max(0, aggregateAvailable - reserved);
+        return stockService.getAvailableQuantityForProduct(productId);
     }
 
     @Transactional
     public void ensureStockedProductsSyncedForProduct(long productId) {
-        long aggregateAvailable = stockService.getAvailableQuantityForProduct(productId);
-        long assignedReserved = stockAssignmentOrderRepository.sumQuantityByProductIdAndStatus(
-                productId, EStockAssignmentOrderStatus.ASSIGNED);
-        long targetPhysical = Math.max(0, aggregateAvailable - assignedReserved);
-        long storedTotal = stockedProductRepository.sumQuantityByProductId(productId);
-        if (targetPhysical <= storedTotal) {
+        // Physical stock is maintained via product stock intake only.
+    }
+
+    @Transactional
+    public void creditProductStock(Product product, int quantity) {
+        if (product == null || quantity <= 0) {
             return;
         }
-        int delta = (int) Math.min(Integer.MAX_VALUE, targetPhysical - storedTotal);
-        if (delta <= 0) {
-            return;
-        }
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalStateException("PRODUCT_NOT_FOUND"));
-        creditProduct(product, delta);
+        creditProduct(product, quantity);
     }
 
     @Transactional

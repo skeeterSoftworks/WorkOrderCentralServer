@@ -1,121 +1,70 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
-import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
-import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockedProduct;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockedProductRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductAvailableStockTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class StockService {
 
-    private final WorkOrderRepository workOrderRepository;
+    private final StockedProductRepository stockedProductRepository;
+    private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
 
-    @Autowired
-    public StockService(WorkOrderRepository workOrderRepository) {
-        this.workOrderRepository = workOrderRepository;
+    public StockService(
+            StockedProductRepository stockedProductRepository,
+            StockAssignmentOrderRepository stockAssignmentOrderRepository) {
+        this.stockedProductRepository = stockedProductRepository;
+        this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
     }
 
     /**
-     * Per product: sum of (internal PO: all produced good) + (external PO: max(0, produced − line quantity)).
+     * Physical finished-goods stock minus unassigned assignment reservations.
      */
     public List<ProductAvailableStockTO> getAvailableFinishedGoodStockByProduct() {
-        Map<Long, Long> quantityByProductId = new HashMap<>();
-        Map<Long, String> referenceByProductId = new HashMap<>();
-        Map<Long, String> nameByProductId = new HashMap<>();
-
-        for (WorkOrder wo : workOrderRepository.findAll()) {
-            ProductOrder line = wo.getProductOrder();
-            if (line == null) {
-                continue;
-            }
-            Product product = line.getProduct();
+        List<ProductAvailableStockTO> rows = new ArrayList<>();
+        for (StockedProduct stocked : stockedProductRepository.findAll()) {
+            Product product = stocked.getProduct();
             if (product == null || product.getId() == null) {
                 continue;
             }
-            long productId = product.getId();
-            referenceByProductId.putIfAbsent(productId, product.getReference());
-            nameByProductId.putIfAbsent(productId, product.getName());
-
-            PurchaseOrder purchaseOrder = line.getPurchaseOrder();
-            boolean internalDemand = purchaseOrder != null && purchaseOrder.isInternalStockDemand();
-
-            long produced = wo.getProducedGoodQuantity();
-            int required = line.getQuantity();
-
-            long contribution;
-            if (internalDemand) {
-                contribution = produced;
-            } else if (required > 0) {
-                contribution = Math.max(0, produced - (long) required);
-            } else {
-                contribution = 0;
+            long available = computeUnassignedPhysicalQuantity(product.getId(), stocked.getQuantity());
+            if (available <= 0) {
+                continue;
             }
-
-            if (contribution > 0) {
-                quantityByProductId.merge(productId, contribution, Long::sum);
-            }
-        }
-
-        List<ProductAvailableStockTO> rows = new ArrayList<>();
-        for (Map.Entry<Long, Long> e : quantityByProductId.entrySet()) {
-            long pid = e.getKey();
             rows.add(new ProductAvailableStockTO(
-                    pid,
-                    referenceByProductId.get(pid),
-                    nameByProductId.get(pid),
-                    e.getValue()
-            ));
+                    product.getId(),
+                    product.getReference(),
+                    product.getName(),
+                    available));
         }
-
         rows.sort(Comparator.comparing(
                 ProductAvailableStockTO::getProductReference,
-                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
-        ));
+                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
         return rows;
     }
 
     /**
-     * Finished-good quantity available for assignment for a single product (same rules as aggregate availability).
+     * Finished-good quantity available for assignment for a single product (physical stock minus reservations).
      */
     public long getAvailableQuantityForProduct(long productId) {
         if (productId <= 0) {
             return 0;
         }
-        long total = 0;
-        for (WorkOrder wo : workOrderRepository.findAll()) {
-            ProductOrder line = wo.getProductOrder();
-            if (line == null || line.getProduct() == null || line.getProduct().getId() == null) {
-                continue;
-            }
-            if (line.getProduct().getId() != productId) {
-                continue;
-            }
-            PurchaseOrder purchaseOrder = line.getPurchaseOrder();
-            boolean internalDemand = purchaseOrder != null && purchaseOrder.isInternalStockDemand();
-            long produced = wo.getProducedGoodQuantity();
-            int required = line.getQuantity();
-            long contribution;
-            if (internalDemand) {
-                contribution = produced;
-            } else if (required > 0) {
-                contribution = Math.max(0, produced - (long) required);
-            } else {
-                contribution = 0;
-            }
-            if (contribution > 0) {
-                total += contribution;
-            }
-        }
-        return total;
+        int physical = stockedProductRepository.findByProduct_Id(productId)
+                .map(StockedProduct::getQuantity)
+                .orElse(0);
+        return computeUnassignedPhysicalQuantity(productId, physical);
+    }
+
+    private long computeUnassignedPhysicalQuantity(long productId, int physicalQuantity) {
+        long reserved = stockAssignmentOrderRepository.sumReservedQuantityByProductId(productId);
+        return Math.max(0, (long) physicalQuantity - reserved);
     }
 }
