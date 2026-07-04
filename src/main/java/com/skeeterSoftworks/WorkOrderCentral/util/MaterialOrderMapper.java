@@ -101,7 +101,7 @@ public final class MaterialOrderMapper {
             to.setMaterialId(material.getId());
             to.setMaterialName(material.getName());
             to.setMaterialCode(material.getCode());
-            to.setMaterialUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
+            to.setMaterialUnitOfMeasure(line.getUnitOfMeasure() != null ? line.getUnitOfMeasure() : EUnitOfMeasure.PCS);
         }
         return to;
     }
@@ -114,7 +114,7 @@ public final class MaterialOrderMapper {
         to.setMaterialId(material.getId());
         to.setMaterialName(material.getName());
         to.setMaterialCode(material.getCode());
-        to.setMaterialUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
+        to.setMaterialUnitOfMeasure(line.getUnitOfMeasure() != null ? line.getUnitOfMeasure() : EUnitOfMeasure.PCS);
     }
 
     public static String materialLabel(Material material) {

@@ -374,7 +374,6 @@ public class ProductMapperService {
             to.setMaterialId(material.getId());
             to.setMaterialName(material.getName());
             to.setMaterialCode(material.getCode());
-            to.setUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
         }
         return to;
     }

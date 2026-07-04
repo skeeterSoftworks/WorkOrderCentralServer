@@ -34,7 +34,7 @@ public class ProductMaterialSchemaPatch implements ApplicationRunner {
         }
         try {
             migrateProductMaterialTable();
-            migrateMaterialUnitOfMeasure();
+            migrateMaterialOrderLineUnitOfMeasure();
         } catch (Exception e) {
             log.warn("Could not patch product_material schema: {}", e.getMessage());
         }
@@ -118,18 +118,48 @@ public class ProductMaterialSchemaPatch implements ApplicationRunner {
         log.info("Migrated product_material to per-batch quantity model");
     }
 
-    private void migrateMaterialUnitOfMeasure() {
-        Integer tableCount = jdbcTemplate.queryForObject(
+    private void migrateMaterialOrderLineUnitOfMeasure() {
+        Integer lineTableCount = jdbcTemplate.queryForObject(
+                """
+                        SELECT COUNT(*) FROM information_schema.tables
+                        WHERE table_schema = current_schema() AND table_name = 'material_order_line'
+                        """,
+                Integer.class);
+        if (lineTableCount == null || lineTableCount == 0) {
+            return;
+        }
+        jdbcTemplate.execute(
+                "ALTER TABLE material_order_line ADD COLUMN IF NOT EXISTS unit_of_measure VARCHAR(16)");
+        jdbcTemplate.execute("""
+                UPDATE material_order_line mol
+                SET unit_of_measure = COALESCE(NULLIF(TRIM(m.unit_of_measure), ''), 'PCS')
+                FROM material m
+                WHERE mol.material_id = m.id
+                  AND (mol.unit_of_measure IS NULL OR TRIM(mol.unit_of_measure) = '')
+                """);
+        jdbcTemplate.execute(
+                "UPDATE material_order_line SET unit_of_measure = 'PCS' WHERE unit_of_measure IS NULL OR TRIM(unit_of_measure) = ''");
+
+        Integer materialTableCount = jdbcTemplate.queryForObject(
                 """
                         SELECT COUNT(*) FROM information_schema.tables
                         WHERE table_schema = current_schema() AND table_name = 'material'
                         """,
                 Integer.class);
-        if (tableCount == null || tableCount == 0) {
+        if (materialTableCount == null || materialTableCount == 0) {
             return;
         }
-        jdbcTemplate.execute("ALTER TABLE material ADD COLUMN IF NOT EXISTS unit_of_measure VARCHAR(16)");
-        jdbcTemplate.execute(
-                "UPDATE material SET unit_of_measure = 'PCS' WHERE unit_of_measure IS NULL OR TRIM(unit_of_measure) = ''");
+        Integer materialUomColumn = jdbcTemplate.queryForObject(
+                """
+                        SELECT COUNT(*) FROM information_schema.columns
+                        WHERE table_schema = current_schema()
+                          AND table_name = 'material'
+                          AND column_name = 'unit_of_measure'
+                        """,
+                Integer.class);
+        if (materialUomColumn != null && materialUomColumn > 0) {
+            jdbcTemplate.execute("ALTER TABLE material DROP COLUMN IF EXISTS unit_of_measure");
+            log.info("Dropped unit_of_measure from material; stored on material_order_line");
+        }
     }
 }

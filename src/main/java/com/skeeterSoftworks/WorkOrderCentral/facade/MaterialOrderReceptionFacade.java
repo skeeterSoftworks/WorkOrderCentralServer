@@ -5,6 +5,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReception;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderReceptionInternalControl;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionRecordResult;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderReceptionService;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionInternalControlTO;
@@ -131,12 +132,15 @@ public class MaterialOrderReceptionFacade {
         }
         if (r.getMaterialOrderLine() != null) {
             to.setMaterialOrderLineId(r.getMaterialOrderLine().getId());
-            Material material = r.getMaterialOrderLine().getMaterial();
+            MaterialOrderLine orderLine = r.getMaterialOrderLine();
+            Material material = orderLine.getMaterial();
             if (material != null) {
                 to.setMaterialCode(material.getCode());
                 to.setMaterialName(material.getName());
-                to.setMaterialUnitOfMeasure(material.getUnitOfMeasure() != null ? material.getUnitOfMeasure() : EUnitOfMeasure.PCS);
             }
+            to.setMaterialUnitOfMeasure(orderLine.getUnitOfMeasure() != null
+                    ? orderLine.getUnitOfMeasure()
+                    : EUnitOfMeasure.PCS);
         }
         to.setInternalControl(toInternalControlTO(r.getInternalControl()));
         return to;

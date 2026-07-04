@@ -4,7 +4,6 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
-import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialProviderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialTO;
 import org.springframework.stereotype.Service;
@@ -41,7 +40,6 @@ public class MaterialService {
         }
         entity.setName(to.getName());
         entity.setCode(to.getCode());
-        entity.setUnitOfMeasure(to.getUnitOfMeasure() != null ? to.getUnitOfMeasure() : EUnitOfMeasure.PCS);
         if (entity.getProviders() == null) {
             entity.setProviders(new ArrayList<>());
         }

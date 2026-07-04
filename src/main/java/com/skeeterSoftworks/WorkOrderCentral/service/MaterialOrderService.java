@@ -10,6 +10,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRe
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProviderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO;
 import com.skeeterSoftworks.WorkOrderCentral.util.BinaryMediaEncodingUtils;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderCodeGenerator;
@@ -260,6 +261,9 @@ public class MaterialOrderService {
             line.setMaterialOrder(order);
             line.setMaterial(material);
             line.setQuantity(input.getQuantity());
+            line.setUnitOfMeasure(input.getMaterialUnitOfMeasure() != null
+                    ? input.getMaterialUnitOfMeasure()
+                    : EUnitOfMeasure.PCS);
             order.getLines().add(line);
         }
     }

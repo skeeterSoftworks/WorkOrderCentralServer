@@ -8,7 +8,6 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Machine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeaturePrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductMaterial;
-import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupDataPrototype;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Technology;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Tool;
@@ -131,7 +130,6 @@ public class SampleDataGenerationService {
             material.setName(faker.commerce().material());
             material.setCode("MAT-" + faker.regexify("[A-Z0-9]{6}") + "-" + i);
             material.getProviders().add(savedProviders.get(i - 1));
-            material.setUnitOfMeasure(EUnitOfMeasure.PCS);
             savedMaterials.add(materialRepository.save(material));
         }
 
