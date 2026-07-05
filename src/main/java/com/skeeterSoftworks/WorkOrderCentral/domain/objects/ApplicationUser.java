@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -26,10 +28,11 @@ public class ApplicationUser {
 
 	private String qrCode;
 
-	@Column(name="role")
-	 @Enumerated(EnumType.STRING)
-	private ERole role;
-
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "application_user_roles", joinColumns = @JoinColumn(name = "user_id"))
+	@Column(name = "role")
+	@Enumerated(EnumType.STRING)
+	private Set<ERole> roles = new HashSet<>();
 
 	@Column
 	private LocalDateTime createdDate;

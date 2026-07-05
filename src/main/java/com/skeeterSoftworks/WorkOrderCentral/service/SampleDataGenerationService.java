@@ -164,7 +164,7 @@ public class SampleDataGenerationService {
             u.setName(faker.name().firstName());
             u.setSurname(faker.name().lastName());
             u.setQrCode("QR-" + faker.regexify("[A-Z0-9]{10}") + "-" + i);
-            u.setRole(i % 2 == 0 ? ERole.ADMIN : ERole.OPERATOR);
+            u.setRoles(new java.util.HashSet<>(java.util.Set.of(i % 2 == 0 ? ERole.ADMIN : ERole.OPERATOR)));
             u.setCreatedDate(LocalDateTime.now());
             userRepository.save(u);
         }

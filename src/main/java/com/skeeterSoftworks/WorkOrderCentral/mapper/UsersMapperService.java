@@ -2,10 +2,14 @@ package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ApplicationUser;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.ERole;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.UserTO;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class UsersMapperService {
@@ -22,7 +26,7 @@ public class UsersMapperService {
 		UserTO userTO = new UserTO();
 		userTO.setName(user.getName());
 		userTO.setSurname(user.getSurname());
-		userTO.setRole((user.getRole()));
+		userTO.setRoles(user.getRoles() != null ? new ArrayList<>(user.getRoles()) : new ArrayList<>());
 		userTO.setQrCode(user.getQrCode());
 		userTO.setCreatedDate(user.getCreatedDate());
 		userTO.setId(user.getId());
@@ -48,13 +52,29 @@ public class UsersMapperService {
 		user.setSurname(userTO.getSurname());
 		user.setQrCode(userTO.getQrCode());
 
-		if (userTO.getRole() != null) {
-			user.setRole(userTO.getRole());
+		if (userTO.getRoles() != null && !userTO.getRoles().isEmpty()) {
+			user.setRoles(new HashSet<>(userTO.getRoles()));
 		}
 
 		if (userTO.getCreatedDate() != null) {
 			user.setCreatedDate(userTO.getCreatedDate());
 		}
 
+	}
+
+	public static boolean hasAnyRole(ApplicationUser user, ERole... roles) {
+		if (user == null || user.getRoles() == null || user.getRoles().isEmpty()) {
+			return false;
+		}
+		Set<ERole> userRoles = user.getRoles();
+		if (userRoles.contains(ERole.ADMIN)) {
+			return true;
+		}
+		for (ERole role : roles) {
+			if (userRoles.contains(role)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

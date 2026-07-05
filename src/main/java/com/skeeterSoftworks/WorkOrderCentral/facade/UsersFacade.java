@@ -42,7 +42,7 @@ public class UsersFacade {
 		log.debug("Facade call: addUser()");
 
 		if (!StringUtils.hasText(userTO.getName()) || !StringUtils.hasText(userTO.getSurname()) ||
-				userTO.getRole() == null || !StringUtils.hasText(userTO.getQrCode())) {
+				userTO.getRoles() == null || userTO.getRoles().isEmpty() || !StringUtils.hasText(userTO.getQrCode())) {
 			log.error("Invalid input params!: {}", userTO);
 			return ResponseEntity.badRequest().build();
 		}
@@ -61,7 +61,8 @@ public class UsersFacade {
 
 		log.debug("Facade call: updateUser()");
 
-		if (!StringUtils.hasText(userTO.getName()) || !StringUtils.hasText(userTO.getSurname()) || userTO.getRole() == null ||
+		if (!StringUtils.hasText(userTO.getName()) || !StringUtils.hasText(userTO.getSurname()) ||
+				userTO.getRoles() == null || userTO.getRoles().isEmpty() ||
 				userTO.getId() < 1 || !StringUtils.hasText(userTO.getQrCode())) {
 			log.error("Invalid input params!: {}", userTO);
 			return ResponseEntity.badRequest().build();

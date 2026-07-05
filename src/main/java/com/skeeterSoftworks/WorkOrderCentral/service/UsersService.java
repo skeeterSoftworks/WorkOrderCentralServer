@@ -41,7 +41,7 @@ public class UsersService {
                 user.setQrCode("0000001");
                 user.setName("User");
                 user.setSurname("Test Admin");
-                user.setRole(ERole.ADMIN);
+                user.setRoles(new java.util.HashSet<>(java.util.Set.of(ERole.ADMIN)));
                 user.setCreatedDate(LocalDateTime.now());
 
                 usersRepository.save(user);
