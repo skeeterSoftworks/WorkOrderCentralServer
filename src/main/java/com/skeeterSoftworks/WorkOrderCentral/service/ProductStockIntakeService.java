@@ -95,6 +95,7 @@ public class ProductStockIntakeService {
         }
 
         int quantity = request.getQuantity();
+        validateQuantityAgainstProduction(workOrder, quantity);
         int surplusQuantity = computeSurplusQuantity(workOrder, quantity);
 
         ProductStockIntake intake = new ProductStockIntake();
@@ -111,16 +112,18 @@ public class ProductStockIntakeService {
         return toTO(saved);
     }
 
-    private int computeSurplusQuantity(WorkOrder workOrder, int quantity) {
-        PurchaseOrder purchaseOrder = workOrder.getProductOrder() != null
-                ? workOrder.getProductOrder().getPurchaseOrder()
-                : null;
-        if (purchaseOrder != null && purchaseOrder.isInternalStockDemand()) {
-            return quantity;
-        }
-        int required = workOrder.getProductOrder() != null ? workOrder.getProductOrder().getQuantity() : 0;
+    private void validateQuantityAgainstProduction(WorkOrder workOrder, int quantity) throws Exception {
+        long produced = Math.max(0, workOrder.getProducedGoodQuantity());
         long alreadyReceived = productStockIntakeRepository.sumQuantityByWorkOrderId(workOrder.getId());
-        int remainingOrderNeed = Math.max(0, required - (int) Math.min(Integer.MAX_VALUE, alreadyReceived));
+        if ((long) quantity + alreadyReceived > produced) {
+            throw new Exception("PRODUCT_STOCK_INTAKE_EXCEEDS_PRODUCED_QUANTITY");
+        }
+    }
+
+    private int computeSurplusQuantity(WorkOrder workOrder, int quantity) {
+        int required = workOrder.getProductOrder() != null ? workOrder.getProductOrder().getQuantity() : 0;
+        long alreadyOrderFilled = productStockIntakeRepository.sumOrderQuantityByWorkOrderId(workOrder.getId());
+        int remainingOrderNeed = Math.max(0, required - (int) Math.min(Integer.MAX_VALUE, alreadyOrderFilled));
         int orderPortion = Math.min(quantity, remainingOrderNeed);
         return quantity - orderPortion;
     }
@@ -144,7 +147,9 @@ public class ProductStockIntakeService {
         }
         if (workOrder.getId() != null) {
             long received = productStockIntakeRepository.sumQuantityByWorkOrderId(workOrder.getId());
+            long receivedForOrder = productStockIntakeRepository.sumOrderQuantityByWorkOrderId(workOrder.getId());
             option.setReceivedToStockQuantity((int) Math.min(Integer.MAX_VALUE, received));
+            option.setReceivedOrderQuantity((int) Math.min(Integer.MAX_VALUE, receivedForOrder));
         }
         return option;
     }

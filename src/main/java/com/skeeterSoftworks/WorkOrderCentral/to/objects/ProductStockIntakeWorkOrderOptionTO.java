@@ -16,6 +16,8 @@ public class ProductStockIntakeWorkOrderOptionTO {
     private Long producedGoodQuantity;
     /** Total quantity already received to stock for this work order. */
     private Integer receivedToStockQuantity;
+    /** Quantity already received that counts toward the work order requirement (excludes surplus). */
+    private Integer receivedOrderQuantity;
     private Boolean internalStockDemand;
     private EWorkOrderState state;
 }

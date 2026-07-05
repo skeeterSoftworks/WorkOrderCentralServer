@@ -22,4 +22,7 @@ public interface ProductStockIntakeRepository extends CrudRepository<ProductStoc
 
     @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM ProductStockIntake i WHERE i.workOrder.id = :workOrderId")
     long sumQuantityByWorkOrderId(@Param("workOrderId") Long workOrderId);
+
+    @Query("SELECT COALESCE(SUM(i.quantity - i.surplusQuantity), 0) FROM ProductStockIntake i WHERE i.workOrder.id = :workOrderId")
+    long sumOrderQuantityByWorkOrderId(@Param("workOrderId") Long workOrderId);
 }

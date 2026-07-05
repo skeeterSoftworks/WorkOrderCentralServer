@@ -58,7 +58,8 @@ public class ProductStockIntakeFacade {
             if ("PRODUCT_STOCK_INTAKE_PRODUCT_REQUIRED".equals(msg)
                     || "PRODUCT_STOCK_INTAKE_INVALID_QUANTITY".equals(msg)
                     || "PRODUCT_STOCK_INTAKE_WORK_ORDER_REQUIRED".equals(msg)
-                    || "PRODUCT_STOCK_INTAKE_PRODUCT_WORK_ORDER_MISMATCH".equals(msg)) {
+                    || "PRODUCT_STOCK_INTAKE_PRODUCT_WORK_ORDER_MISMATCH".equals(msg)
+                    || "PRODUCT_STOCK_INTAKE_EXCEEDS_PRODUCED_QUANTITY".equals(msg)) {
                 return ResponseEntity.badRequest().body(msg);
             }
             if ("PRODUCT_NOT_FOUND".equals(msg) || "PRODUCT_STOCK_INTAKE_WORK_ORDER_NOT_FOUND".equals(msg)) {
