@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
@@ -31,6 +32,7 @@ public class WorkOrderService {
     private final MachineBookingRepository machineBookingRepository;
     private final ProductMapperService productMapperService;
     private final StockProductInventoryService stockProductInventoryService;
+    private final MaterialAssignmentInventoryService materialAssignmentInventoryService;
     private final WorkOrderMapperService workOrderMapperService;
     private final UsersService usersService;
     private final WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService;
@@ -43,6 +45,7 @@ public class WorkOrderService {
             MachineBookingRepository machineBookingRepository,
             ProductMapperService productMapperService,
             StockProductInventoryService stockProductInventoryService,
+            MaterialAssignmentInventoryService materialAssignmentInventoryService,
             WorkOrderMapperService workOrderMapperService,
             UsersService usersService,
             WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService
@@ -53,6 +56,7 @@ public class WorkOrderService {
         this.machineBookingRepository = machineBookingRepository;
         this.productMapperService = productMapperService;
         this.stockProductInventoryService = stockProductInventoryService;
+        this.materialAssignmentInventoryService = materialAssignmentInventoryService;
         this.workOrderMapperService = workOrderMapperService;
         this.usersService = usersService;
         this.workOrderMaterialRequirementsService = workOrderMaterialRequirementsService;
@@ -106,8 +110,9 @@ public class WorkOrderService {
             String createdByUserQrCode) throws Exception {
         WorkOrder saved = addWorkOrder(workOrder);
         String createdByFullName = usersService.resolveFullNameByQrCode(createdByUserQrCode);
+        materialAssignmentInventoryService.createForWorkOrder(saved, createdByFullName);
         String materialRequirementsPdf = workOrderMaterialRequirementsService.generatePdfBase64ForWorkOrder(
-                saved.getId(), createdByFullName);
+                saved.getId(), createdByFullName, materialAssignmentCode(saved));
 
         if (stockAssignments == null || stockAssignments.isEmpty()) {
             return new WorkOrderCreateResultTO(
@@ -138,7 +143,26 @@ public class WorkOrderService {
         if (!workOrderRepository.existsById(workOrderId)) {
             throw new Exception("WORK_ORDER_NOT_FOUND");
         }
-        return workOrderMaterialRequirementsService.generatePdfBase64ForWorkOrder(workOrderId, null);
+        return workOrderMaterialRequirementsService.generatePdfBase64ForWorkOrder(
+                workOrderId, null, resolveMaterialAssignmentCode(workOrderId));
+    }
+
+    private String materialAssignmentCode(WorkOrder saved) {
+        if (saved == null || saved.getId() == null) {
+            return null;
+        }
+        return resolveMaterialAssignmentCode(saved.getId());
+    }
+
+    private String resolveMaterialAssignmentCode(Long workOrderId) {
+        if (workOrderId == null) {
+            return null;
+        }
+        try {
+            return materialAssignmentInventoryService.getAssignmentOrderCodeForWorkOrder(workOrderId);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)

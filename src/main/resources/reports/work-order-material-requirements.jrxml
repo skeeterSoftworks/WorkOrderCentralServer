@@ -30,6 +30,7 @@
     <parameter name="labelRequired" class="java.lang.String"/>
     <parameter name="labelAvailable" class="java.lang.String"/>
     <parameter name="labelMissing" class="java.lang.String"/>
+    <parameter name="labelAssignmentOrderCode" class="java.lang.String"/>
     <parameter name="noBillOfMaterials" class="java.lang.String"/>
     <parameter name="workOrderId" class="java.lang.String"/>
     <parameter name="purchaseOrderId" class="java.lang.String"/>
@@ -39,6 +40,7 @@
     <parameter name="productQuantity" class="java.lang.String"/>
     <parameter name="generatedAt" class="java.lang.String"/>
     <parameter name="createdBy" class="java.lang.String"/>
+    <parameter name="assignmentOrderCode" class="java.lang.String"/>
     <field name="materialCode" class="java.lang.String"/>
     <field name="materialName" class="java.lang.String"/>
     <field name="unitOfMeasure" class="java.lang.String"/>
@@ -55,7 +57,7 @@
         </band>
     </title>
     <pageHeader>
-        <band height="120">
+        <band height="140">
             <textField>
                 <reportElement x="0" y="0" width="140" height="18" style="BaseBold"/>
                 <textFieldExpression><![CDATA[$P{labelWorkOrder} + ":"]]></textFieldExpression>
@@ -98,18 +100,26 @@
             </textField>
             <textField>
                 <reportElement x="0" y="100" width="140" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{labelAssignmentOrderCode} + ":"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="100" width="415" height="18" style="BaseBold"/>
+                <textFieldExpression><![CDATA[$P{assignmentOrderCode}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="120" width="140" height="18" style="BaseBold"/>
                 <textFieldExpression><![CDATA[$P{labelGeneratedAt} + ":"]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="140" y="100" width="200" height="18"/>
+                <reportElement x="140" y="120" width="200" height="18"/>
                 <textFieldExpression><![CDATA[$P{generatedAt}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="340" y="100" width="100" height="18" style="BaseBold"/>
+                <reportElement x="340" y="120" width="100" height="18" style="BaseBold"/>
                 <textFieldExpression><![CDATA[$P{labelCreatedBy} + ":"]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="440" y="100" width="115" height="18"/>
+                <reportElement x="440" y="120" width="115" height="18"/>
                 <textFieldExpression><![CDATA[$P{createdBy}]]></textFieldExpression>
             </textField>
         </band>

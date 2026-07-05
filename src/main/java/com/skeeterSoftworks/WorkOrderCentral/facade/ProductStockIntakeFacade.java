@@ -34,6 +34,19 @@ public class ProductStockIntakeFacade {
         }
     }
 
+    @GetMapping("/work-orders")
+    public ResponseEntity<?> listWorkOrders(@RequestParam long productId) {
+        try {
+            if (productId <= 0) {
+                return ResponseEntity.badRequest().body("PRODUCT_STOCK_INTAKE_PRODUCT_REQUIRED");
+            }
+            return ResponseEntity.ok(productStockIntakeService.listWorkOrderOptions(productId));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_PRODUCT_STOCK_INTAKE_WORK_ORDERS");
+        }
+    }
+
     @PostMapping("/record")
     public ResponseEntity<?> record(@RequestBody ProductStockIntakeTO body) {
         try {
@@ -43,10 +56,12 @@ public class ProductStockIntakeFacade {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();
             if ("PRODUCT_STOCK_INTAKE_PRODUCT_REQUIRED".equals(msg)
-                    || "PRODUCT_STOCK_INTAKE_INVALID_QUANTITY".equals(msg)) {
+                    || "PRODUCT_STOCK_INTAKE_INVALID_QUANTITY".equals(msg)
+                    || "PRODUCT_STOCK_INTAKE_WORK_ORDER_REQUIRED".equals(msg)
+                    || "PRODUCT_STOCK_INTAKE_PRODUCT_WORK_ORDER_MISMATCH".equals(msg)) {
                 return ResponseEntity.badRequest().body(msg);
             }
-            if ("PRODUCT_NOT_FOUND".equals(msg)) {
+            if ("PRODUCT_NOT_FOUND".equals(msg) || "PRODUCT_STOCK_INTAKE_WORK_ORDER_NOT_FOUND".equals(msg)) {
                 return ResponseEntity.notFound().build();
             }
             return ResponseEntity.internalServerError().body("ERROR_RECORDING_PRODUCT_STOCK_INTAKE");

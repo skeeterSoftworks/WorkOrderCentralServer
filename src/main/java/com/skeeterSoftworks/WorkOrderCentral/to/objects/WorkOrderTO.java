@@ -20,6 +20,8 @@ public class WorkOrderTO {
     private Long productOrderId;
     /** Denormalized for UI: parent purchase order id. */
     private Long purchaseOrderId;
+    /** Denormalized: true when parent PO is internal stock demand. */
+    private Boolean internalStockDemand;
     /** Denormalized for UI. */
     private String productName;
     /** Product catalogue / reference id (denormalized). */

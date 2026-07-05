@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = {"product"})
+@ToString(exclude = {"product", "workOrder"})
 public class ProductStockIntake {
 
     @Id
@@ -33,6 +33,10 @@ public class ProductStockIntake {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_order_id", nullable = false)
+    private WorkOrder workOrder;
+
     @Column(length = 128)
     private String stickerNumber;
 
@@ -42,6 +46,10 @@ public class ProductStockIntake {
 
     @Column(nullable = false)
     private int quantity;
+
+    /** Portion of {@link #quantity} classified as surplus stock (internal PO or above order quantity). */
+    @Column(nullable = false)
+    private int surplusQuantity = 0;
 
     @Column(nullable = false)
     private LocalDateTime receivedAt;

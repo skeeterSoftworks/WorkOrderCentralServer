@@ -13,6 +13,8 @@ public class ProductStockIntakeTO {
     private Long productId;
     private String productReference;
     private String productName;
+    private Long workOrderId;
+    private Integer surplusQuantity;
     private String stickerNumber;
     private EProductStockIntakeUnitOfMeasure unitOfMeasure;
     private Integer quantity;

@@ -98,16 +98,24 @@ public class WorkOrderMaterialRequirementsService {
 
     @Transactional(readOnly = true)
     public String generatePdfBase64ForWorkOrder(long workOrderId, String createdByFullName) throws Exception {
+        return generatePdfBase64ForWorkOrder(workOrderId, createdByFullName, null);
+    }
+
+    @Transactional(readOnly = true)
+    public String generatePdfBase64ForWorkOrder(
+            long workOrderId,
+            String createdByFullName,
+            String assignmentOrderCode) throws Exception {
         WorkOrder workOrder = workOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new Exception("WORK_ORDER_NOT_FOUND"));
         WorkOrderMaterialRequirementsTO requirements = previewForWorkOrder(workOrderId);
-        return generatePdfBase64(workOrder, requirements, createdByFullName);
+        return generatePdfBase64(workOrder, requirements, createdByFullName, assignmentOrderCode);
     }
 
     public String generatePdfBase64ForPreview(
             WorkOrderMaterialRequirementsTO requirements,
             String createdByFullName) throws Exception {
-        return generatePdfBase64(null, requirements, createdByFullName);
+        return generatePdfBase64(null, requirements, createdByFullName, null);
     }
 
     private WorkOrderMaterialRequirementsTO buildRequirements(Product product, int productQuantity) {
@@ -157,7 +165,8 @@ public class WorkOrderMaterialRequirementsService {
     private String generatePdfBase64(
             WorkOrder workOrder,
             WorkOrderMaterialRequirementsTO requirements,
-            String createdByFullName) throws Exception {
+            String createdByFullName,
+            String assignmentOrderCode) throws Exception {
         ProductOrder line = workOrder != null ? workOrder.getProductOrder() : null;
         PurchaseOrder purchaseOrder = resolvePurchaseOrder(line);
         String customerName = purchaseOrder != null && purchaseOrder.getCustomer() != null
@@ -183,6 +192,7 @@ public class WorkOrderMaterialRequirementsService {
         params.put("labelRequired", reportLocale.get("required"));
         params.put("labelAvailable", reportLocale.get("available"));
         params.put("labelMissing", reportLocale.get("missing"));
+        params.put("labelAssignmentOrderCode", reportLocale.get("assignmentOrderCode"));
         params.put("noBillOfMaterials", reportLocale.get("noBillOfMaterials"));
         params.put("workOrderId", workOrder != null && workOrder.getId() != null ? "#" + workOrder.getId() : "—");
         params.put("purchaseOrderId", purchaseOrder != null && purchaseOrder.getId() > 0
@@ -194,6 +204,7 @@ public class WorkOrderMaterialRequirementsService {
         params.put("productQuantity", String.valueOf(requirements.getProductQuantity()));
         params.put("generatedAt", LocalDateTime.now().format(reportLocale.generatedAtFormatter()));
         params.put("createdBy", formatReportValue(createdByFullName));
+        params.put("assignmentOrderCode", StringUtils.hasText(assignmentOrderCode) ? assignmentOrderCode.trim() : "—");
 
         JasperPrint print = JasperFillManager.fillReport(
                 getCompiledReport(),

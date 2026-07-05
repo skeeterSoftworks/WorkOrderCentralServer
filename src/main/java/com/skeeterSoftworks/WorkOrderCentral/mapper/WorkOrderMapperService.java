@@ -36,6 +36,7 @@ public class WorkOrderMapperService {
             to.setRequiredQuantity(line.getQuantity());
             if (line.getPurchaseOrder() != null) {
                 to.setPurchaseOrderId(line.getPurchaseOrder().getId());
+                to.setInternalStockDemand(line.getPurchaseOrder().isInternalStockDemand());
             }
             if (line.getProduct() != null) {
                 to.setProductName(line.getProduct().getName());

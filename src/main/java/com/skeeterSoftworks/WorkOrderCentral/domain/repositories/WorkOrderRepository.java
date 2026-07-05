@@ -39,4 +39,11 @@ public interface WorkOrderRepository extends CrudRepository<WorkOrder, Long> {
             "productOrder.purchaseOrder.customer"
     })
     List<WorkOrder> findAllByIdIn(Collection<Long> ids);
+
+    @EntityGraph(attributePaths = {
+            "productOrder",
+            "productOrder.product",
+            "productOrder.purchaseOrder"
+    })
+    List<WorkOrder> findByProductOrder_Product_IdOrderByIdDesc(Long productId);
 }
