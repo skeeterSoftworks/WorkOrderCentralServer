@@ -1,9 +1,12 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.PurchaseOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EPurchaseOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +20,16 @@ public class PurchaseOrderService {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final WorkOrderRepository workOrderRepository;
+    private final ProductOrderRepository productOrderRepository;
 
     @Autowired
-    public PurchaseOrderService(PurchaseOrderRepository purchaseOrderRepository, WorkOrderRepository workOrderRepository) {
+    public PurchaseOrderService(
+            PurchaseOrderRepository purchaseOrderRepository,
+            WorkOrderRepository workOrderRepository,
+            ProductOrderRepository productOrderRepository) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.workOrderRepository = workOrderRepository;
+        this.productOrderRepository = productOrderRepository;
     }
 
     public List<PurchaseOrder> getAllPurchaseOrders() {
@@ -111,6 +119,7 @@ public class PurchaseOrderService {
         purchaseOrderRepository.deleteById(id);
     }
 
+    @Transactional
     public void markConfirmed(Long purchaseOrderId) {
         purchaseOrderRepository.findById(purchaseOrderId).ifPresent(po -> {
             if (po.getConfirmedAt() == null) {
@@ -120,5 +129,67 @@ public class PurchaseOrderService {
             }
         });
     }
-}
 
+    @Transactional
+    public void onProductionStartedForWorkOrder(Long workOrderId) {
+        resolvePurchaseOrderId(workOrderId).ifPresent(this::markInProduction);
+    }
+
+    @Transactional
+    public void onWorkOrderCompleted(Long workOrderId) {
+        resolvePurchaseOrderId(workOrderId).ifPresent(this::tryMarkCompleted);
+    }
+
+    private Optional<Long> resolvePurchaseOrderId(Long workOrderId) {
+        if (workOrderId == null || workOrderId <= 0) {
+            return Optional.empty();
+        }
+        return workOrderRepository.findById(workOrderId)
+                .map(WorkOrder::getProductOrder)
+                .map(line -> line != null ? line.getId() : 0L)
+                .filter(lineId -> lineId > 0)
+                .flatMap(productOrderRepository::findPurchaseOrderIdByProductOrderLineId);
+    }
+
+    private void markInProduction(Long purchaseOrderId) {
+        purchaseOrderRepository.findById(purchaseOrderId).ifPresent(po -> {
+            if (po.getInProductionAt() != null || !canAdvanceLifecycle(po)) {
+                return;
+            }
+            po.setInProductionAt(LocalDateTime.now());
+            po.setOrderStatus(EPurchaseOrderStatus.IN_PRODUCTION);
+            purchaseOrderRepository.save(po);
+        });
+    }
+
+    private void tryMarkCompleted(Long purchaseOrderId) {
+        purchaseOrderRepository.findById(purchaseOrderId).ifPresent(po -> {
+            if (po.getCompletedAt() != null || !canAdvanceLifecycle(po)) {
+                return;
+            }
+            long lineCount = productOrderRepository.countByPurchaseOrder_Id(purchaseOrderId);
+            if (lineCount <= 0) {
+                return;
+            }
+            long workOrderCount = workOrderRepository.countByProductOrder_PurchaseOrder_Id(purchaseOrderId);
+            if (workOrderCount < lineCount) {
+                return;
+            }
+            long completeCount = workOrderRepository.countByProductOrder_PurchaseOrder_IdAndState(
+                    purchaseOrderId, EWorkOrderState.COMPLETE);
+            if (completeCount < lineCount) {
+                return;
+            }
+            po.setCompletedAt(LocalDateTime.now());
+            po.setOrderStatus(EPurchaseOrderStatus.COMPLETED);
+            purchaseOrderRepository.save(po);
+        });
+    }
+
+    private static boolean canAdvanceLifecycle(PurchaseOrder po) {
+        EPurchaseOrderStatus status = po.getOrderStatus();
+        return status != EPurchaseOrderStatus.REJECTED
+                && status != EPurchaseOrderStatus.CANCELLED
+                && status != EPurchaseOrderStatus.DELIVERED;
+    }
+}

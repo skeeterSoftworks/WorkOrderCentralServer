@@ -1,6 +1,7 @@
 package com.skeeterSoftworks.WorkOrderCentral.domain.repositories;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.CrudRepository;
 
@@ -46,4 +47,8 @@ public interface WorkOrderRepository extends CrudRepository<WorkOrder, Long> {
             "productOrder.purchaseOrder"
     })
     List<WorkOrder> findByProductOrder_Product_IdOrderByIdDesc(Long productId);
+
+    long countByProductOrder_PurchaseOrder_Id(Long purchaseOrderId);
+
+    long countByProductOrder_PurchaseOrder_IdAndState(Long purchaseOrderId, EWorkOrderState state);
 }

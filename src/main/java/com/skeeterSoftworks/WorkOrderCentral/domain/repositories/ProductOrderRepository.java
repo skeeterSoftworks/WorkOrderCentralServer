@@ -11,6 +11,8 @@ public interface ProductOrderRepository extends CrudRepository<ProductOrder, Lon
 
     long countByProduct_Id(Long productId);
 
+    long countByPurchaseOrder_Id(Long purchaseOrderId);
+
     @Query("SELECT pol.purchaseOrder.id FROM ProductOrder pol WHERE pol.id = :productOrderLineId")
     Optional<Long> findPurchaseOrderIdByProductOrderLineId(@Param("productOrderLineId") Long productOrderLineId);
 }

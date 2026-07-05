@@ -19,16 +19,19 @@ public class WorkSessionService {
     private final WorkSessionRepository workSessionRepository;
     private final WorkOrderRepository workOrderRepository;
     private final MachineBookingService machineBookingService;
+    private final PurchaseOrderService purchaseOrderService;
 
     @Autowired
     public WorkSessionService(
             WorkSessionRepository workSessionRepository,
             WorkOrderRepository workOrderRepository,
-            MachineBookingService machineBookingService
+            MachineBookingService machineBookingService,
+            PurchaseOrderService purchaseOrderService
     ) {
         this.workSessionRepository = workSessionRepository;
         this.workOrderRepository = workOrderRepository;
         this.machineBookingService = machineBookingService;
+        this.purchaseOrderService = purchaseOrderService;
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +82,7 @@ public class WorkSessionService {
 
         preloadMeasuringFeaturePrototypes(workOrder);
         WorkSession saved = workSessionRepository.save(session);
+        purchaseOrderService.onProductionStartedForWorkOrder(workOrder.getId());
         preloadProductRecords(saved);
         return saved;
     }
@@ -355,6 +359,7 @@ public class WorkSessionService {
         workOrder.setState(EWorkOrderState.COMPLETE);
         workOrderRepository.save(workOrder);
         machineBookingService.completeNonCancelledBookingsForWorkOrder(workOrder);
+        purchaseOrderService.onWorkOrderCompleted(workOrderId);
 
         return true;
     }
