@@ -33,5 +33,7 @@ public class PurchaseOrderTO {
     private LocalDateTime completedAt;
     private LocalDateTime deliveredAt;
     private LocalDateTime rejectedAt;
+    /** True when at least one work order exists for a line on this purchase order. */
+    private Boolean hasWorkOrder;
 }
 

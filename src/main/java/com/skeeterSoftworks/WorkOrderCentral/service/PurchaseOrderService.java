@@ -56,6 +56,7 @@ public class PurchaseOrderService {
         if (existingOpt.isEmpty()) {
             throw new Exception("PURCHASE_ORDER_NOT_FOUND");
         }
+        assertNoWorkOrder(purchaseOrder.getId());
         PurchaseOrder existing = existingOpt.get();
         preserveLifecycleFields(existing, purchaseOrder);
         return purchaseOrderRepository.save(purchaseOrder);
@@ -67,9 +68,7 @@ public class PurchaseOrderService {
         if (existingOpt.isEmpty()) {
             throw new Exception("PURCHASE_ORDER_NOT_FOUND");
         }
-        if (workOrderRepository.existsByProductOrder_PurchaseOrder_Id(id)) {
-            throw new Exception("PURCHASE_ORDER_HAS_WORK_ORDER");
-        }
+        assertNoWorkOrder(id);
         PurchaseOrder po = existingOpt.get();
         EPurchaseOrderStatus status = po.getOrderStatus();
         if (status == EPurchaseOrderStatus.REJECTED
@@ -113,10 +112,14 @@ public class PurchaseOrderService {
         if (existing.isEmpty()) {
             throw new Exception("PURCHASE_ORDER_NOT_FOUND");
         }
-        if (workOrderRepository.existsByProductOrder_PurchaseOrder_Id(id)) {
+        assertNoWorkOrder(id);
+        purchaseOrderRepository.deleteById(id);
+    }
+
+    private void assertNoWorkOrder(long purchaseOrderId) throws Exception {
+        if (workOrderRepository.existsByProductOrder_PurchaseOrder_Id(purchaseOrderId)) {
             throw new Exception("PURCHASE_ORDER_HAS_WORK_ORDER");
         }
-        purchaseOrderRepository.deleteById(id);
     }
 
     @Transactional

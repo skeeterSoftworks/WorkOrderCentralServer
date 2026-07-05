@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.mapper;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.*;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.CustomerRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EPurchaseOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +19,17 @@ public class PurchaseOrderMapperService {
     private final ProductMapperService productMapperService;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final WorkOrderRepository workOrderRepository;
 
     @Autowired
     public PurchaseOrderMapperService(ProductMapperService productMapperService,
                                       CustomerRepository customerRepository,
-                                      ProductRepository productRepository) {
+                                      ProductRepository productRepository,
+                                      WorkOrderRepository workOrderRepository) {
         this.productMapperService = productMapperService;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
+        this.workOrderRepository = workOrderRepository;
     }
 
     public PurchaseOrderTO mapToTO(PurchaseOrder po) {
@@ -48,6 +52,9 @@ public class PurchaseOrderMapperService {
         to.setCompletedAt(po.getCompletedAt());
         to.setDeliveredAt(po.getDeliveredAt());
         to.setRejectedAt(po.getRejectedAt());
+        if (po.getId() > 0) {
+            to.setHasWorkOrder(workOrderRepository.existsByProductOrder_PurchaseOrder_Id(po.getId()));
+        }
         return to;
     }
 

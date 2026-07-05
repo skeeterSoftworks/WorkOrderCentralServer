@@ -81,7 +81,11 @@ public class PurchaseOrderFacade {
             return ResponseEntity.ok(purchaseOrderMapperService.mapToTO(loaded));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(e.getMessage());
+            String msg = e.getMessage();
+            if ("PURCHASE_ORDER_HAS_WORK_ORDER".equals(msg) || "PURCHASE_ORDER_NOT_FOUND".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            return ResponseEntity.internalServerError().body(msg);
         }
     }
 
@@ -92,7 +96,11 @@ public class PurchaseOrderFacade {
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(e.getMessage());
+            String msg = e.getMessage();
+            if ("PURCHASE_ORDER_HAS_WORK_ORDER".equals(msg) || "PURCHASE_ORDER_NOT_FOUND".equals(msg)) {
+                return ResponseEntity.badRequest().body(msg);
+            }
+            return ResponseEntity.internalServerError().body(msg);
         }
     }
 
