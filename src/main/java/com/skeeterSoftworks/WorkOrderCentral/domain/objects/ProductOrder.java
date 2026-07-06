@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+
 /**
  * ProductOrder is a line item on a purchase order, representing a specific product and quantity.
  */
@@ -33,8 +35,8 @@ public class ProductOrder {
     @Column
     private int quantity;
 
-    @Column
-    private long pricePerUnit;
+    @Column(precision = 19, scale = 4)
+    private BigDecimal pricePerUnit;
 
 
 }

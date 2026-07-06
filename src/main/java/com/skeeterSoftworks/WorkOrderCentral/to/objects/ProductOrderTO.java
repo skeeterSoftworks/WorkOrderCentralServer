@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,6 +15,6 @@ public class ProductOrderTO {
     private Long id;
     private ProductTO product;
     private int quantity;
-    private long pricePerUnit;
+    private BigDecimal pricePerUnit;
 }
 
