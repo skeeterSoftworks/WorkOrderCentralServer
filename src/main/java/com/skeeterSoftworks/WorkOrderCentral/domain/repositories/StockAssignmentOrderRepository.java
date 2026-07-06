@@ -29,4 +29,10 @@ public interface StockAssignmentOrderRepository extends CrudRepository<StockAssi
     long sumQuantityByProductIdAndStatus(
             @Param("productId") Long productId,
             @Param("status") EStockAssignmentOrderStatus status);
+
+    @Query("SELECT COALESCE(SUM(o.quantity), 0) FROM StockAssignmentOrder o "
+            + "WHERE o.workOrder.id = :workOrderId AND o.status = :status")
+    long sumQuantityByWorkOrderIdAndStatus(
+            @Param("workOrderId") Long workOrderId,
+            @Param("status") EStockAssignmentOrderStatus status);
 }

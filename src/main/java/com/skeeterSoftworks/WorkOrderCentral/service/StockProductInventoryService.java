@@ -49,6 +49,7 @@ public class StockProductInventoryService {
     private final StockAssignmentReportLocale stockAssignmentReportLocale;
     private final StockAssignmentOrderMapperService stockAssignmentOrderMapperService;
     private final UsersService usersService;
+    private final PurchaseOrderService purchaseOrderService;
     private volatile JasperReport compiledReport;
 
     public StockProductInventoryService(
@@ -60,7 +61,8 @@ public class StockProductInventoryService {
             PurchaseOrderRepository purchaseOrderRepository,
             StockAssignmentReportLocale stockAssignmentReportLocale,
             StockAssignmentOrderMapperService stockAssignmentOrderMapperService,
-            UsersService usersService) {
+            UsersService usersService,
+            PurchaseOrderService purchaseOrderService) {
         this.stockedProductRepository = stockedProductRepository;
         this.productRepository = productRepository;
         this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
@@ -70,6 +72,7 @@ public class StockProductInventoryService {
         this.stockAssignmentReportLocale = stockAssignmentReportLocale;
         this.stockAssignmentOrderMapperService = stockAssignmentOrderMapperService;
         this.usersService = usersService;
+        this.purchaseOrderService = purchaseOrderService;
     }
 
     @Transactional(readOnly = true)
@@ -185,7 +188,12 @@ public class StockProductInventoryService {
                 order.setAssignedByFullName(fullName);
             }
         }
-        return stockAssignmentOrderMapperService.mapToTO(stockAssignmentOrderRepository.save(order));
+        StockAssignmentOrder saved = stockAssignmentOrderRepository.save(order);
+        WorkOrder workOrder = saved.getWorkOrder();
+        if (workOrder != null && workOrder.getId() != null) {
+            purchaseOrderService.onProductStockAssigned(workOrder.getId());
+        }
+        return stockAssignmentOrderMapperService.mapToTO(saved);
     }
 
     @Transactional(readOnly = true)

@@ -31,6 +31,8 @@ public interface WorkOrderRepository extends CrudRepository<WorkOrder, Long> {
 
     boolean existsByProductOrder_Id(Long productOrderId);
 
+    Optional<WorkOrder> findByProductOrder_Id(Long productOrderId);
+
     boolean existsByProductOrder_PurchaseOrder_Id(Long purchaseOrderId);
 
     @EntityGraph(attributePaths = {
@@ -51,4 +53,12 @@ public interface WorkOrderRepository extends CrudRepository<WorkOrder, Long> {
     long countByProductOrder_PurchaseOrder_Id(Long purchaseOrderId);
 
     long countByProductOrder_PurchaseOrder_IdAndState(Long purchaseOrderId, EWorkOrderState state);
+
+    @EntityGraph(attributePaths = {
+            "productOrder",
+            "productOrder.product",
+            "productOrder.purchaseOrder",
+            "productOrder.purchaseOrder.customer"
+    })
+    List<WorkOrder> findByStateOrderByIdDesc(EWorkOrderState state);
 }

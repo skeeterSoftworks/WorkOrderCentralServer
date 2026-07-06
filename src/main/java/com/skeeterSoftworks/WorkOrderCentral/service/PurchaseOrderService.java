@@ -1,11 +1,15 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.PurchaseOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductStockIssueRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EPurchaseOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EStockAssignmentOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,15 +25,21 @@ public class PurchaseOrderService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final WorkOrderRepository workOrderRepository;
     private final ProductOrderRepository productOrderRepository;
+    private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
+    private final ProductStockIssueRepository productStockIssueRepository;
 
     @Autowired
     public PurchaseOrderService(
             PurchaseOrderRepository purchaseOrderRepository,
             WorkOrderRepository workOrderRepository,
-            ProductOrderRepository productOrderRepository) {
+            ProductOrderRepository productOrderRepository,
+            StockAssignmentOrderRepository stockAssignmentOrderRepository,
+            ProductStockIssueRepository productStockIssueRepository) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.workOrderRepository = workOrderRepository;
         this.productOrderRepository = productOrderRepository;
+        this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
+        this.productStockIssueRepository = productStockIssueRepository;
     }
 
     public List<PurchaseOrder> getAllPurchaseOrders() {
@@ -143,6 +153,11 @@ public class PurchaseOrderService {
         resolvePurchaseOrderId(workOrderId).ifPresent(this::tryMarkCompleted);
     }
 
+    @Transactional
+    public void onProductStockAssigned(Long workOrderId) {
+        resolvePurchaseOrderId(workOrderId).ifPresent(this::tryMarkDelivered);
+    }
+
     private Optional<Long> resolvePurchaseOrderId(Long workOrderId) {
         if (workOrderId == null || workOrderId <= 0) {
             return Optional.empty();
@@ -187,6 +202,46 @@ public class PurchaseOrderService {
             po.setOrderStatus(EPurchaseOrderStatus.COMPLETED);
             purchaseOrderRepository.save(po);
         });
+    }
+
+    private void tryMarkDelivered(Long purchaseOrderId) {
+        purchaseOrderRepository.findById(purchaseOrderId).ifPresent(po -> {
+            if (po.getDeliveredAt() != null || !canAdvanceLifecycle(po)) {
+                return;
+            }
+            if (!isFullyDeliveredFromProductStock(po)) {
+                return;
+            }
+            po.setDeliveredAt(LocalDateTime.now());
+            po.setOrderStatus(EPurchaseOrderStatus.DELIVERED);
+            purchaseOrderRepository.save(po);
+        });
+    }
+
+    private boolean isFullyDeliveredFromProductStock(PurchaseOrder po) {
+        if (po.getProductOrderList() == null || po.getProductOrderList().isEmpty()) {
+            return false;
+        }
+        for (ProductOrder line : po.getProductOrderList()) {
+            if (line == null || line.getId() <= 0) {
+                return false;
+            }
+            WorkOrder workOrder = workOrderRepository.findByProductOrder_Id(line.getId()).orElse(null);
+            if (workOrder == null || workOrder.getId() == null) {
+                return false;
+            }
+            int required = line.getQuantity();
+            if (required <= 0) {
+                continue;
+            }
+            long assignedFromStock = stockAssignmentOrderRepository.sumQuantityByWorkOrderIdAndStatus(
+                    workOrder.getId(), EStockAssignmentOrderStatus.ASSIGNED);
+            long issuedFromStock = productStockIssueRepository.sumQuantityByWorkOrderId(workOrder.getId());
+            if (assignedFromStock + issuedFromStock < required) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean canAdvanceLifecycle(PurchaseOrder po) {
