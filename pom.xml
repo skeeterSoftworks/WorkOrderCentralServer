@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.skeeterSoftworks</groupId>
 	<artifactId>WorkOrderCentral</artifactId>
-	<version>0.2.5</version>
+	<version>0.2.6</version>
 	<name>WorkOrderCentral</name>
 	<description>Work Order Central Server</description>
 	<url/>
@@ -94,21 +94,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>com.fazecast</groupId>
-			<artifactId>jSerialComm</artifactId>
-			<version>2.9.3</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.zxing</groupId>
-			<artifactId>core</artifactId>
-			<version>3.3.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.zxing</groupId>
-			<artifactId>javase</artifactId>
-			<version>3.3.0</version>
-		</dependency>
 		<dependency>
 			<groupId>com.github.ulisesbocchio</groupId>
 			<artifactId>jasypt-spring-boot-starter</artifactId>
