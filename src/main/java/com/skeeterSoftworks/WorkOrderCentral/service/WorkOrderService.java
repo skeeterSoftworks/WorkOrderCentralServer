@@ -36,6 +36,7 @@ public class WorkOrderService {
     private final WorkOrderMapperService workOrderMapperService;
     private final UsersService usersService;
     private final WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService;
+    private final WorkOrderReportService workOrderReportService;
 
     @Autowired
     public WorkOrderService(
@@ -48,7 +49,8 @@ public class WorkOrderService {
             MaterialAssignmentInventoryService materialAssignmentInventoryService,
             WorkOrderMapperService workOrderMapperService,
             UsersService usersService,
-            WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService
+            WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService,
+            WorkOrderReportService workOrderReportService
     ) {
         this.workOrderRepository = workOrderRepository;
         this.purchaseOrderService = purchaseOrderService;
@@ -60,6 +62,7 @@ public class WorkOrderService {
         this.workOrderMapperService = workOrderMapperService;
         this.usersService = usersService;
         this.workOrderMaterialRequirementsService = workOrderMaterialRequirementsService;
+        this.workOrderReportService = workOrderReportService;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
@@ -113,10 +116,11 @@ public class WorkOrderService {
         materialAssignmentInventoryService.createForWorkOrder(saved, createdByFullName);
         String materialRequirementsPdf = workOrderMaterialRequirementsService.generatePdfBase64ForWorkOrder(
                 saved.getId(), createdByFullName, materialAssignmentCode(saved));
+        String workOrderPdf = workOrderReportService.generatePdfBase64ForWorkOrder(saved.getId());
 
         if (stockAssignments == null || stockAssignments.isEmpty()) {
             return new WorkOrderCreateResultTO(
-                    workOrderMapperService.mapToTO(saved), null, materialRequirementsPdf);
+                    workOrderMapperService.mapToTO(saved), null, materialRequirementsPdf, workOrderPdf);
         }
         long lineId = saved.getProductOrder().getId();
         ProductOrder line = productOrderRepository.findById(lineId)
@@ -126,13 +130,20 @@ public class WorkOrderService {
                 stockProductInventoryService.createStockAssignmentOrdersForWorkOrder(
                         saved, stockAssignments, createdByFullName);
         String stockAssignmentPdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(orders.get(0));
+        // Regenerate after stock assignment so assigned quantity is included.
+        workOrderPdf = workOrderReportService.generatePdfBase64ForWorkOrder(saved.getId());
         return new WorkOrderCreateResultTO(
-                workOrderMapperService.mapToTO(saved), stockAssignmentPdf, materialRequirementsPdf);
+                workOrderMapperService.mapToTO(saved), stockAssignmentPdf, materialRequirementsPdf, workOrderPdf);
     }
 
     @Transactional(readOnly = true)
     public WorkOrderMaterialRequirementsTO previewMaterialRequirements(long productId, int quantity) throws Exception {
         return workOrderMaterialRequirementsService.previewForProduct(productId, quantity);
+    }
+
+    @Transactional(readOnly = true)
+    public String getWorkOrderPdfBase64(long workOrderId) throws Exception {
+        return workOrderReportService.generatePdfBase64ForWorkOrder(workOrderId);
     }
 
     @Transactional(readOnly = true)

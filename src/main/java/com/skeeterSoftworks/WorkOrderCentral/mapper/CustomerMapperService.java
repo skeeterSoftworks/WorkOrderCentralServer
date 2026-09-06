@@ -12,6 +12,7 @@ public class CustomerMapperService {
         CustomerTO to = new CustomerTO();
         to.setId(customer.getId());
         to.setCompanyName(customer.getCompanyName());
+        to.setBuyerId(customer.getBuyerId());
         to.setAddressData(customer.getAddressData());
         to.setDescription(customer.getDescription());
         return to;
@@ -24,8 +25,17 @@ public class CustomerMapperService {
             customer.setId(to.getId());
         }
         customer.setCompanyName(to.getCompanyName());
+        customer.setBuyerId(blankToNull(to.getBuyerId()));
         customer.setAddressData(to.getAddressData());
         customer.setDescription(to.getDescription());
         return customer;
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

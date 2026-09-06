@@ -30,6 +30,10 @@ public class Customer {
     @Column
     private String companyName;
 
+    /** Unique orderer/buyer identifier shown on work order PDFs. */
+    @Column(unique = true)
+    private String buyerId;
+
     @Column(length = 2000)
     private String addressData;
 

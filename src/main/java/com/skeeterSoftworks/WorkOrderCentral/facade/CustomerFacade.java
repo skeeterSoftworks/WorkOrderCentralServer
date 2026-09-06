@@ -60,6 +60,9 @@ public class CustomerFacade {
             return ResponseEntity.ok(customerMapperService.mapToTO(saved));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            if ("CUSTOMER_BUYER_ID_ALREADY_EXISTS".equals(e.getMessage())) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
             return ResponseEntity.internalServerError().body("ERROR_SAVING_CUSTOMER");
         }
     }
@@ -79,6 +82,10 @@ public class CustomerFacade {
             return ResponseEntity.ok(customerMapperService.mapToTO(updated));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            if ("CUSTOMER_BUYER_ID_ALREADY_EXISTS".equals(e.getMessage())
+                    || "CUSTOMER_NOT_FOUND".equals(e.getMessage())) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }

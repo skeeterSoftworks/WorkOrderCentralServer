@@ -149,7 +149,7 @@ public class WorkOrderFacade {
                 return ResponseEntity.badRequest().body("INVALID_WORK_ORDER_ID");
             }
             String pdf = workOrderService.getMaterialRequirementsPdfBase64ForWorkOrder(id);
-            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, null, pdf));
+            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, null, pdf, null));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();
@@ -157,6 +157,25 @@ public class WorkOrderFacade {
                 return ResponseEntity.notFound().build();
             }
             return ResponseEntity.internalServerError().body("ERROR_GENERATING_MATERIAL_REQUIREMENTS_PDF");
+        }
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<?> getWorkOrderPdf(@PathVariable Long id) {
+        log.debug("Facade call: getWorkOrderPdf({})", id);
+        try {
+            if (id == null || id <= 0) {
+                return ResponseEntity.badRequest().body("INVALID_WORK_ORDER_ID");
+            }
+            String pdf = workOrderService.getWorkOrderPdfBase64(id);
+            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, null, null, pdf));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            String msg = e.getMessage();
+            if ("WORK_ORDER_NOT_FOUND".equals(msg) || "INVALID_WORK_ORDER_ID".equals(msg)) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.internalServerError().body("ERROR_GENERATING_WORK_ORDER_PDF");
         }
     }
 
@@ -168,7 +187,7 @@ public class WorkOrderFacade {
                 return ResponseEntity.badRequest().body("INVALID_WORK_ORDER_ID");
             }
             String pdf = workOrderService.getStockAssignmentOrderPdfBase64ForWorkOrder(id);
-            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, pdf, null));
+            return ResponseEntity.ok(new WorkOrderCreateResultTO(null, pdf, null, null));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             String msg = e.getMessage();

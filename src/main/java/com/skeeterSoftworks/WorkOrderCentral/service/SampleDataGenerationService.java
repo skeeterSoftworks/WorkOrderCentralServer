@@ -103,11 +103,16 @@ public class SampleDataGenerationService {
         byte[] sampleTechnicalDrawing = loadSampleTechnicalDrawing();
 
         Customer internalStockOrderer = customerService.ensureInternalStockOrdererCustomerExists();
+        if (internalStockOrderer.getBuyerId() == null || internalStockOrderer.getBuyerId().isBlank()) {
+            internalStockOrderer.setBuyerId("BUYER-INTERNAL");
+            internalStockOrderer = customerRepository.save(internalStockOrderer);
+        }
 
         List<Customer> savedCustomers = new ArrayList<>();
         for (int i = 1; i <= SAMPLE_COUNT; i++) {
             Customer c = new Customer();
             c.setCompanyName(faker.company().name() + " " + faker.company().suffix());
+            c.setBuyerId("BUYER-" + faker.regexify("[A-Z0-9]{6}") + "-" + i);
             c.setAddressData(faker.address().fullAddress());
             c.setDescription(faker.company().catchPhrase() + " — " + faker.lorem().sentence(4));
             savedCustomers.add(customerRepository.save(c));
@@ -164,6 +169,7 @@ public class SampleDataGenerationService {
             u.setName(faker.name().firstName());
             u.setSurname(faker.name().lastName());
             u.setQrCode("QR-" + faker.regexify("[A-Z0-9]{10}") + "-" + i);
+            u.setEmail("user" + i + "." + faker.regexify("[a-z0-9]{6}") + "@example.com");
             u.setRoles(new java.util.HashSet<>(java.util.Set.of(i % 2 == 0 ? ERole.ADMIN : ERole.OPERATOR)));
             u.setCreatedDate(LocalDateTime.now());
             userRepository.save(u);

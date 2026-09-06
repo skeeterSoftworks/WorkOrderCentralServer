@@ -28,8 +28,10 @@ public class CustomerService {
         return customerRepository.findById(id);
     }
 
-    public Customer addCustomer(Customer customer) {
+    public Customer addCustomer(Customer customer) throws Exception {
         customer.setId(null);
+        normalizeBuyerId(customer);
+        ensureBuyerIdUnique(customer);
         return customerRepository.save(customer);
     }
 
@@ -37,7 +39,27 @@ public class CustomerService {
         if (customer.getId() == null || customer.getId() <= 0 || !customerRepository.existsById(customer.getId())) {
             throw new Exception("CUSTOMER_NOT_FOUND");
         }
+        normalizeBuyerId(customer);
+        ensureBuyerIdUnique(customer);
         return customerRepository.save(customer);
+    }
+
+    private void normalizeBuyerId(Customer customer) {
+        if (customer.getBuyerId() == null) {
+            return;
+        }
+        String trimmed = customer.getBuyerId().trim();
+        customer.setBuyerId(trimmed.isEmpty() ? null : trimmed);
+    }
+
+    private void ensureBuyerIdUnique(Customer customer) throws Exception {
+        if (customer.getBuyerId() == null) {
+            return;
+        }
+        Optional<Customer> existing = customerRepository.findFirstByBuyerIdIgnoreCase(customer.getBuyerId());
+        if (existing.isPresent() && !existing.get().getId().equals(customer.getId())) {
+            throw new Exception("CUSTOMER_BUYER_ID_ALREADY_EXISTS");
+        }
     }
 
     public void deleteCustomer(Long id) throws Exception {

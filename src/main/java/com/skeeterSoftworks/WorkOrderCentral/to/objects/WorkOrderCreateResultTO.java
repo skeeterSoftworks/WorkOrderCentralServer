@@ -13,4 +13,6 @@ public class WorkOrderCreateResultTO {
     private String stockAssignmentOrderPdfBase64;
     /** Base64-encoded material requirements PDF generated on work order create. */
     private String materialRequirementsPdfBase64;
+    /** Base64-encoded work order document PDF. */
+    private String workOrderPdfBase64;
 }

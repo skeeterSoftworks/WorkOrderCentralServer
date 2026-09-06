@@ -12,6 +12,7 @@ import lombok.ToString;
 public class CustomerTO {
     private Long id;
     private String companyName;
+    private String buyerId;
     private String addressData;
     private String description;
 }

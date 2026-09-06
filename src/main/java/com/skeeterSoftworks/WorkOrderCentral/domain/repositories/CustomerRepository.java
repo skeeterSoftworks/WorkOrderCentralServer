@@ -11,4 +11,8 @@ public interface CustomerRepository extends CrudRepository<Customer, Long> {
     List<Customer> findAll();
 
     Optional<Customer> findFirstByCompanyName(String companyName);
+
+    Optional<Customer> findFirstByBuyerIdIgnoreCase(String buyerId);
+
+    boolean existsByBuyerIdIgnoreCase(String buyerId);
 }
