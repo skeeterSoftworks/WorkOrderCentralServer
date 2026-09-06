@@ -28,6 +28,8 @@ public class ApplicationUser {
 
 	private String qrCode;
 
+	private String email;
+
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "application_user_roles", joinColumns = @JoinColumn(name = "user_id"))
 	@Column(name = "role")

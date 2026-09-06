@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.skeeterSoftworks</groupId>
 	<artifactId>WorkOrderCentral</artifactId>
-	<version>0.2.6</version>
+	<version>0.3.0</version>
 	<name>WorkOrderCentral</name>
 	<description>Work Order Central Server</description>
 	<url/>

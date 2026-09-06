@@ -28,6 +28,7 @@ public class UsersMapperService {
 		userTO.setSurname(user.getSurname());
 		userTO.setRoles(user.getRoles() != null ? new ArrayList<>(user.getRoles()) : new ArrayList<>());
 		userTO.setQrCode(user.getQrCode());
+		userTO.setEmail(user.getEmail());
 		userTO.setCreatedDate(user.getCreatedDate());
 		userTO.setId(user.getId());
 
@@ -51,6 +52,7 @@ public class UsersMapperService {
 		user.setName(userTO.getName());
 		user.setSurname(userTO.getSurname());
 		user.setQrCode(userTO.getQrCode());
+		user.setEmail(userTO.getEmail());
 
 		if (userTO.getRoles() != null && !userTO.getRoles().isEmpty()) {
 			user.setRoles(new HashSet<>(userTO.getRoles()));

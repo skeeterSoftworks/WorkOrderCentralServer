@@ -18,6 +18,7 @@ public class UserTO {
 	private String surname;
 	private List<ERole> roles = new ArrayList<>();
 	private String qrCode;
+	private String email;
 	private Long id;
 
 	private LocalDateTime createdDate;
