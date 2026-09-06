@@ -55,5 +55,12 @@ public interface MachineBookingRepository extends CrudRepository<MachineBooking,
               AND b.status <> com.skeeterSoftworks.WorkOrderCentral.to.enums.EMachineBookingStatus.CANCELLED
             """)
     List<Long> findWorkOrderIdsScheduledOnMachine(@Param("machineId") Long machineId);
+
+    @Query("""
+            SELECT COUNT(b) > 0 FROM MachineBooking b
+            WHERE b.workOrder.id = :workOrderId
+              AND b.status <> com.skeeterSoftworks.WorkOrderCentral.to.enums.EMachineBookingStatus.CANCELLED
+            """)
+    boolean existsActiveByWorkOrderId(@Param("workOrderId") Long workOrderId);
 }
 

@@ -116,11 +116,10 @@ public class WorkOrderService {
         materialAssignmentInventoryService.createForWorkOrder(saved, createdByFullName);
         String materialRequirementsPdf = workOrderMaterialRequirementsService.generatePdfBase64ForWorkOrder(
                 saved.getId(), createdByFullName, materialAssignmentCode(saved));
-        String workOrderPdf = workOrderReportService.generatePdfBase64ForWorkOrder(saved.getId());
 
         if (stockAssignments == null || stockAssignments.isEmpty()) {
             return new WorkOrderCreateResultTO(
-                    workOrderMapperService.mapToTO(saved), null, materialRequirementsPdf, workOrderPdf);
+                    workOrderMapperService.mapToTO(saved), null, materialRequirementsPdf, null);
         }
         long lineId = saved.getProductOrder().getId();
         ProductOrder line = productOrderRepository.findById(lineId)
@@ -130,10 +129,8 @@ public class WorkOrderService {
                 stockProductInventoryService.createStockAssignmentOrdersForWorkOrder(
                         saved, stockAssignments, createdByFullName);
         String stockAssignmentPdf = stockProductInventoryService.generateStockAssignmentOrderPdfBase64(orders.get(0));
-        // Regenerate after stock assignment so assigned quantity is included.
-        workOrderPdf = workOrderReportService.generatePdfBase64ForWorkOrder(saved.getId());
         return new WorkOrderCreateResultTO(
-                workOrderMapperService.mapToTO(saved), stockAssignmentPdf, materialRequirementsPdf, workOrderPdf);
+                workOrderMapperService.mapToTO(saved), stockAssignmentPdf, materialRequirementsPdf, null);
     }
 
     @Transactional(readOnly = true)

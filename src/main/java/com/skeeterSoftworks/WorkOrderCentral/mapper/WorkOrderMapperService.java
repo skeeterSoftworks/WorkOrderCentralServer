@@ -3,6 +3,7 @@ package com.skeeterSoftworks.WorkOrderCentral.mapper;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
@@ -15,13 +16,16 @@ public class WorkOrderMapperService {
 
     private final ProductOrderRepository productOrderRepository;
     private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
+    private final MachineBookingRepository machineBookingRepository;
 
     @Autowired
     public WorkOrderMapperService(
             ProductOrderRepository productOrderRepository,
-            StockAssignmentOrderRepository stockAssignmentOrderRepository) {
+            StockAssignmentOrderRepository stockAssignmentOrderRepository,
+            MachineBookingRepository machineBookingRepository) {
         this.productOrderRepository = productOrderRepository;
         this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
+        this.machineBookingRepository = machineBookingRepository;
     }
 
     public WorkOrderTO mapToTO(WorkOrder workOrder) {
@@ -52,6 +56,9 @@ public class WorkOrderMapperService {
         if (workOrder.getId() != null) {
             stockAssignmentOrderRepository.findFirstByWorkOrder_IdOrderByIdDesc(workOrder.getId())
                     .ifPresent(order -> enrichStockAssignmentOrder(to, order));
+            to.setMachineAssigned(machineBookingRepository.existsActiveByWorkOrderId(workOrder.getId()));
+        } else {
+            to.setMachineAssigned(false);
         }
         return to;
     }
