@@ -16,10 +16,14 @@ import java.time.LocalDate;
 @ToString
 public class WorkOrderTO {
     private Long id;
+    /** Server-generated order number (RN + ddMMyyyyHHmm). */
+    private String code;
     /** Purchase order line this work order belongs to (required for create/update). */
     private Long productOrderId;
     /** Denormalized for UI: parent purchase order id. */
     private Long purchaseOrderId;
+    /** Denormalized for UI: parent purchase order code. */
+    private String purchaseOrderCode;
     /** Denormalized: true when parent PO is internal stock demand. */
     private Boolean internalStockDemand;
     /** Denormalized for UI. */

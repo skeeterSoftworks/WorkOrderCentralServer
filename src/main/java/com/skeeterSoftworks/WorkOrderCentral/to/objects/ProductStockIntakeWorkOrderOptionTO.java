@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProductStockIntakeWorkOrderOptionTO {
     private Long id;
+    private String code;
     private String productReference;
     private String productName;
     private Integer requiredQuantity;

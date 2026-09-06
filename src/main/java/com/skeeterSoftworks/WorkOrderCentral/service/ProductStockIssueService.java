@@ -19,6 +19,7 @@ import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductStockIssueRequestTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductStockIssueResultTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductStockIssueWorkOrderOptionTO;
+import com.skeeterSoftworks.WorkOrderCentral.util.OrderCodeDisplay;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -152,6 +153,7 @@ public class ProductStockIssueService {
     private ProductStockIssueWorkOrderOptionTO toWorkOrderOption(WorkOrder workOrder) {
         ProductStockIssueWorkOrderOptionTO option = new ProductStockIssueWorkOrderOptionTO();
         option.setId(workOrder.getId());
+        option.setCode(workOrder.getCode());
         ProductOrder line = workOrder.getProductOrder();
         if (line != null) {
             option.setRequiredQuantity(line.getQuantity());
@@ -212,8 +214,10 @@ public class ProductStockIssueService {
         PurchaseOrder purchaseOrder = resolvePurchaseOrder(line);
         Product product = issue.getProduct();
         ProductStockIssueReportLine reportLine = new ProductStockIssueReportLine(
-                workOrder.getId() != null ? "#" + workOrder.getId() : "—",
-                purchaseOrder != null && purchaseOrder.getId() > 0 ? "#" + purchaseOrder.getId() : "—",
+                OrderCodeDisplay.of(workOrder.getCode(), workOrder.getId()),
+                purchaseOrder != null
+                        ? OrderCodeDisplay.of(purchaseOrder.getCode(), purchaseOrder.getId())
+                        : "—",
                 purchaseOrder != null && purchaseOrder.getCustomer() != null
                         ? formatReportValue(purchaseOrder.getCustomer().getCompanyName())
                         : "—",

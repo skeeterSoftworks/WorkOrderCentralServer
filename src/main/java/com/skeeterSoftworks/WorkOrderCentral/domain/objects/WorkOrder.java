@@ -28,6 +28,10 @@ public class WorkOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Server-generated order number, e.g. RN310520261101 (RN + ddMMyyyyHHmm). */
+    @Column(unique = true, length = 24)
+    private String code;
+
     /** One work order per purchase-order line (product line item). */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_order_id", referencedColumnName = "id", unique = true)

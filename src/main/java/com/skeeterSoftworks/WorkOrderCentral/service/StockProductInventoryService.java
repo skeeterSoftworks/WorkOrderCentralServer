@@ -18,6 +18,7 @@ import com.skeeterSoftworks.WorkOrderCentral.to.enums.EStockAssignmentOrderStatu
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductStockAvailabilityTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.StockAssignmentOrderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderStockAllocationTO;
+import com.skeeterSoftworks.WorkOrderCentral.util.OrderCodeDisplay;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -233,9 +234,11 @@ public class StockProductInventoryService {
         params.put("labelStockLocation", stockAssignmentReportLocale.get("stockLocation"));
         params.put("labelQuantity", stockAssignmentReportLocale.get("quantity"));
         params.put("assignmentOrderCode", order.getCode());
-        params.put("workOrderId", workOrder != null && workOrder.getId() != null ? "#" + workOrder.getId() : "—");
-        params.put("purchaseOrderId", purchaseOrder != null && purchaseOrder.getId() > 0
-                ? "#" + purchaseOrder.getId()
+        params.put("workOrderId", OrderCodeDisplay.of(
+                workOrder != null ? workOrder.getCode() : null,
+                workOrder != null ? workOrder.getId() : null));
+        params.put("purchaseOrderId", purchaseOrder != null
+                ? OrderCodeDisplay.of(purchaseOrder.getCode(), purchaseOrder.getId())
                 : "—");
         params.put("customerName", customerName != null ? customerName : "");
         params.put("productReference", product != null && product.getReference() != null ? product.getReference() : "");

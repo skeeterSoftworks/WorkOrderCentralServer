@@ -16,6 +16,7 @@ import com.skeeterSoftworks.WorkOrderCentral.report.WorkOrderMaterialRequirement
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderMaterialRequirementLineTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkOrderMaterialRequirementsTO;
+import com.skeeterSoftworks.WorkOrderCentral.util.OrderCodeDisplay;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -194,9 +195,11 @@ public class WorkOrderMaterialRequirementsService {
         params.put("labelMissing", reportLocale.get("missing"));
         params.put("labelAssignmentOrderCode", reportLocale.get("assignmentOrderCode"));
         params.put("noBillOfMaterials", reportLocale.get("noBillOfMaterials"));
-        params.put("workOrderId", workOrder != null && workOrder.getId() != null ? "#" + workOrder.getId() : "—");
-        params.put("purchaseOrderId", purchaseOrder != null && purchaseOrder.getId() > 0
-                ? "#" + purchaseOrder.getId()
+        params.put("workOrderId", OrderCodeDisplay.of(
+                workOrder != null ? workOrder.getCode() : null,
+                workOrder != null ? workOrder.getId() : null));
+        params.put("purchaseOrderId", purchaseOrder != null
+                ? OrderCodeDisplay.of(purchaseOrder.getCode(), purchaseOrder.getId())
                 : "—");
         params.put("customerName", customerName != null ? customerName : "");
         params.put("productReference", requirements.getProductReference() != null ? requirements.getProductReference() : "");

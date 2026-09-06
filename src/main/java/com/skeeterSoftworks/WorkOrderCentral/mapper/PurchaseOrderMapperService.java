@@ -37,6 +37,7 @@ public class PurchaseOrderMapperService {
 
         PurchaseOrderTO to = new PurchaseOrderTO();
         to.setId(po.getId());
+        to.setCode(po.getCode());
         to.setCustomer(mapCustomerToTO(po.getCustomer()));
         to.setProductOrderList(mapProductOrderListToTO(po.getProductOrderList()));
         to.setOrderStatus(po.getOrderStatus());

@@ -18,13 +18,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.skeeterSoftworks.WorkOrderCentral.util.TimestampedOrderCodeGenerator;
+
 @Service
 public class WorkOrderService {
+
+    public static final String ORDER_CODE_PREFIX = "RN";
 
     private final WorkOrderRepository workOrderRepository;
     private final PurchaseOrderService purchaseOrderService;
@@ -196,6 +201,10 @@ public class WorkOrderService {
             throw new Exception("WORK_ORDER_ALREADY_EXISTS_FOR_PRODUCT_ORDER");
         }
         workOrder.setId(null);
+        if (workOrder.getCode() == null || workOrder.getCode().isBlank()) {
+            workOrder.setCode(TimestampedOrderCodeGenerator.resolveUnique(
+                    ORDER_CODE_PREFIX, LocalDateTime.now(), workOrderRepository::existsByCode));
+        }
         WorkOrder saved = workOrderRepository.save(workOrder);
         productOrderRepository.findPurchaseOrderIdByProductOrderLineId(lineId)
                 .ifPresent(purchaseOrderService::markConfirmed);

@@ -61,4 +61,6 @@ public interface WorkOrderRepository extends CrudRepository<WorkOrder, Long> {
             "productOrder.purchaseOrder.customer"
     })
     List<WorkOrder> findByStateOrderByIdDesc(EWorkOrderState state);
+
+    boolean existsByCode(String code);
 }

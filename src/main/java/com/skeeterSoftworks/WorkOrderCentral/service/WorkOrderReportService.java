@@ -18,6 +18,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderReposi
 import com.skeeterSoftworks.WorkOrderCentral.report.WorkOrderReportLocale;
 import com.skeeterSoftworks.WorkOrderCentral.report.WorkOrderReportMaterialLine;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMachineBookingStatus;
+import com.skeeterSoftworks.WorkOrderCentral.util.OrderCodeDisplay;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -125,9 +126,9 @@ public class WorkOrderReportService {
         params.put("noMaterials", reportLocale.get("noMaterials"));
         params.put("labelTechnologyTitle", reportLocale.get("technologyTitle"));
         params.put("labelMachineTitle", reportLocale.get("machineTitle"));
-        params.put("workOrderId", workOrder.getId() != null ? "#" + workOrder.getId() : "—");
-        params.put("purchaseOrderNumber", purchaseOrder != null && purchaseOrder.getId() > 0
-                ? "#" + purchaseOrder.getId()
+        params.put("workOrderId", OrderCodeDisplay.of(workOrder.getCode(), workOrder.getId()));
+        params.put("purchaseOrderNumber", purchaseOrder != null
+                ? OrderCodeDisplay.of(purchaseOrder.getCode(), purchaseOrder.getId())
                 : "—");
         params.put("buyerId", formatValue(customer != null ? customer.getBuyerId() : null));
         params.put("productLine", formatProductLine(product));

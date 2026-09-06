@@ -34,12 +34,14 @@ public class WorkOrderMapperService {
         }
         WorkOrderTO to = new WorkOrderTO();
         to.setId(workOrder.getId());
+        to.setCode(workOrder.getCode());
         ProductOrder line = workOrder.getProductOrder();
         if (line != null) {
             to.setProductOrderId(line.getId());
             to.setRequiredQuantity(line.getQuantity());
             if (line.getPurchaseOrder() != null) {
                 to.setPurchaseOrderId(line.getPurchaseOrder().getId());
+                to.setPurchaseOrderCode(line.getPurchaseOrder().getCode());
                 to.setInternalStockDemand(line.getPurchaseOrder().isInternalStockDemand());
             }
             if (line.getProduct() != null) {

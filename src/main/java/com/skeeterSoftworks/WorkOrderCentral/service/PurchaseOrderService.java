@@ -19,8 +19,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.skeeterSoftworks.WorkOrderCentral.util.TimestampedOrderCodeGenerator;
+
 @Service
 public class PurchaseOrderService {
+
+    public static final String ORDER_CODE_PREFIX = "NK";
 
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final WorkOrderRepository workOrderRepository;
@@ -52,7 +56,12 @@ public class PurchaseOrderService {
 
     public PurchaseOrder savePurchaseOrder(PurchaseOrder purchaseOrder) {
         if (purchaseOrder.getId() == 0 && purchaseOrder.getCreatedAt() == null) {
-            purchaseOrder.setCreatedAt(LocalDateTime.now());
+            LocalDateTime now = LocalDateTime.now();
+            purchaseOrder.setCreatedAt(now);
+            if (purchaseOrder.getCode() == null || purchaseOrder.getCode().isBlank()) {
+                purchaseOrder.setCode(TimestampedOrderCodeGenerator.resolveUnique(
+                        ORDER_CODE_PREFIX, now, purchaseOrderRepository::existsByCode));
+            }
         }
         return purchaseOrderRepository.save(purchaseOrder);
     }
@@ -94,6 +103,7 @@ public class PurchaseOrderService {
     }
 
     private static void preserveLifecycleFields(PurchaseOrder existing, PurchaseOrder incoming) {
+        incoming.setCode(existing.getCode());
         if (incoming.getOrderStatus() == null) {
             incoming.setOrderStatus(existing.getOrderStatus());
         }

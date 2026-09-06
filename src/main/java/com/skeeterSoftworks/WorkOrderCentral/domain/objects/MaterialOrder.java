@@ -37,7 +37,7 @@ public class MaterialOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    /** Server-generated order number, e.g. NM053120261101 (NM + MMddyyyyHHmm). */
+    /** Server-generated order number, e.g. NM310520261101 (NM + ddMMyyyyHHmm). */
     @Column(unique = true, length = 24)
     private String code;
 

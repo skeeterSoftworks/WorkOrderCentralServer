@@ -131,6 +131,7 @@ public class ProductStockIntakeService {
     private ProductStockIntakeWorkOrderOptionTO toWorkOrderOption(WorkOrder workOrder) {
         ProductStockIntakeWorkOrderOptionTO option = new ProductStockIntakeWorkOrderOptionTO();
         option.setId(workOrder.getId());
+        option.setCode(workOrder.getCode());
         option.setProducedGoodQuantity(workOrder.getProducedGoodQuantity());
         option.setState(workOrder.getState());
         ProductOrder line = workOrder.getProductOrder();

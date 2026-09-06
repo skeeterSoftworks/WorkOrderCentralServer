@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProductStockIssueWorkOrderOptionTO {
     private Long id;
+    private String code;
     private String productReference;
     private String productName;
     private Long purchaseOrderId;

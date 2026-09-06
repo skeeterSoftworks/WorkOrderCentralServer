@@ -16,6 +16,8 @@ import java.util.List;
 @ToString
 public class PurchaseOrderTO {
     private Long id;
+    /** Server-generated order number (NK + ddMMyyyyHHmm). */
+    private String code;
     private Long customerId;
     private CustomerTO customer;
     private List<ProductOrderTO> productOrderList;

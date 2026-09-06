@@ -33,5 +33,7 @@ public interface PurchaseOrderRepository extends CrudRepository<PurchaseOrder, L
     Optional<PurchaseOrder> findById(Long id);
 
     boolean existsByCreatedAtBefore(LocalDateTime cutoff);
+
+    boolean existsByCode(String code);
 }
 
