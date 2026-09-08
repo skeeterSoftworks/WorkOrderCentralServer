@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @Slf4j
 @RestController
 @RequestMapping("/work-sessions")
@@ -23,6 +25,22 @@ public class WorkSessionFacade {
     public WorkSessionFacade(WorkSessionService workSessionService, WorkSessionMapperService workSessionMapperService) {
         this.workSessionService = workSessionService;
         this.workSessionMapperService = workSessionMapperService;
+    }
+
+    @GetMapping
+    public ResponseEntity<?> list(
+            @RequestParam(required = false) LocalDate date,
+            @RequestParam(required = false) Long machineId,
+            @RequestParam(required = false) Long userId) {
+        try {
+            return ResponseEntity.ok(
+                    workSessionService.listOverview(date, machineId, userId).stream()
+                            .map(workSessionMapperService::mapToOverviewTO)
+                            .toList());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_WORK_SESSIONS");
+        }
     }
 
     @PostMapping("/open")

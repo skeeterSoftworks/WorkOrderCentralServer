@@ -1,6 +1,8 @@
 package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.*;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.UserRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkSessionRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
@@ -10,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -20,18 +25,24 @@ public class WorkSessionService {
     private final WorkOrderRepository workOrderRepository;
     private final MachineBookingService machineBookingService;
     private final PurchaseOrderService purchaseOrderService;
+    private final MachineRepository machineRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public WorkSessionService(
             WorkSessionRepository workSessionRepository,
             WorkOrderRepository workOrderRepository,
             MachineBookingService machineBookingService,
-            PurchaseOrderService purchaseOrderService
+            PurchaseOrderService purchaseOrderService,
+            MachineRepository machineRepository,
+            UserRepository userRepository
     ) {
         this.workSessionRepository = workSessionRepository;
         this.workOrderRepository = workOrderRepository;
         this.machineBookingService = machineBookingService;
         this.purchaseOrderService = purchaseOrderService;
+        this.machineRepository = machineRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -40,7 +51,48 @@ public class WorkSessionService {
         preloadMeasuringFeaturePrototypes(session);
         preloadSetupProducts(session);
         preloadProductRecords(session);
+        preloadControlProducts(session);
+        preloadFaultyProducts(session);
         return session;
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkSession> listOverview(LocalDate date, Long machineId, Long userId) {
+        LocalDate day = date != null ? date : LocalDate.now();
+        LocalDateTime fromInclusive = day.atStartOfDay();
+        LocalDateTime toExclusive = day.plusDays(1).atStartOfDay();
+        String stationId = null;
+        if (machineId != null && machineId > 0) {
+            stationId = machineRepository.findById(machineId)
+                    .map(Machine::getMachineName)
+                    .orElse(null);
+            if (stationId == null || stationId.isBlank()) {
+                return Collections.emptyList();
+            }
+        }
+        String operatorQrCode = null;
+        if (userId != null && userId > 0) {
+            operatorQrCode = userRepository.findById(userId)
+                    .map(ApplicationUser::getQrCode)
+                    .orElse(null);
+            if (operatorQrCode == null || operatorQrCode.isBlank()) {
+                return Collections.emptyList();
+            }
+        }
+        List<WorkSession> sessions = workSessionRepository.findOverview(
+                fromInclusive, toExclusive, stationId, operatorQrCode);
+        for (WorkSession session : sessions) {
+            if (session.getWorkOrder() != null) {
+                session.getWorkOrder().getCode();
+            }
+            if (session.getControlProducts() != null) {
+                session.getControlProducts().size();
+            }
+            if (session.getFaultyProducts() != null) {
+                session.getFaultyProducts().size();
+            }
+        }
+        return sessions;
     }
 
     @Transactional
@@ -236,6 +288,24 @@ public class WorkSessionService {
             return;
         }
         session.getProductRecords().size();
+    }
+
+    private void preloadControlProducts(WorkSession session) {
+        if (session == null || session.getControlProducts() == null) {
+            return;
+        }
+        for (ControlProduct cp : session.getControlProducts()) {
+            if (cp.getMeasuringFeatures() != null) {
+                cp.getMeasuringFeatures().size();
+            }
+        }
+    }
+
+    private void preloadFaultyProducts(WorkSession session) {
+        if (session == null || session.getFaultyProducts() == null) {
+            return;
+        }
+        session.getFaultyProducts().size();
     }
 
     @Transactional

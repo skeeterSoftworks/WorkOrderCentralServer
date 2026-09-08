@@ -14,6 +14,8 @@ public class WorkSessionTO {
 
     private Long id;
     private Long workOrderId;
+    /** Denormalized work order code (RN…). */
+    private String workOrderCode;
     private LocalDateTime sessionStart;
     private LocalDateTime sessionEnd;
     private long productCount;
@@ -27,6 +29,10 @@ public class WorkSessionTO {
     private List<SetupProductTO> setupProducts;
     /** Recorded good-product events with quantity and timestamp. */
     private List<ProductsRecordTO> productRecords;
+    /** Control products recorded in this session (detail views). */
+    private List<ControlProductTO> controlProducts;
+    /** Faulty products recorded in this session (detail views). */
+    private List<FaultyProductTO> faultyProducts;
     private String productReferenceID;
     private String operatorQrCode;
     private String operatorName;

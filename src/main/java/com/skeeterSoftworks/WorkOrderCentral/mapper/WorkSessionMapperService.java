@@ -1,8 +1,14 @@
 package com.skeeterSoftworks.WorkOrderCentral.mapper;
 
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ControlProduct;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.FaultyProduct;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MeasuringFeature;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.SetupProduct;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductsRecord;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSession;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ControlMeasuringFeatureTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.ControlProductTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.FaultyProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductsRecordTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.SetupProductTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.WorkSessionTO;
@@ -31,6 +37,7 @@ public class WorkSessionMapperService {
         to.setId(session.getId());
         if (session.getWorkOrder() != null) {
             to.setWorkOrderId(session.getWorkOrder().getId());
+            to.setWorkOrderCode(session.getWorkOrder().getCode());
         }
         to.setSessionStart(session.getSessionStart());
         to.setSessionEnd(session.getSessionEnd());
@@ -65,6 +72,8 @@ public class WorkSessionMapperService {
         } else {
             to.setProductRecords(List.of());
         }
+        to.setControlProducts(mapControlProducts(session));
+        to.setFaultyProducts(mapFaultyProducts(session));
         to.setProductReferenceID(session.getProductReferenceID());
         if (session.getOperator() != null) {
             to.setOperatorQrCode(session.getOperator().getOperatorQrCode());
@@ -102,6 +111,94 @@ public class WorkSessionMapperService {
         }
         to.setWorkOrderCompletedByTarget(false);
         return to;
+    }
+
+    /** List/overview mapping: counts and identity fields only, no nested collections or drawings. */
+    public WorkSessionTO mapToOverviewTO(WorkSession session) {
+        if (session == null) {
+            return null;
+        }
+        WorkSessionTO to = new WorkSessionTO();
+        to.setId(session.getId());
+        if (session.getWorkOrder() != null) {
+            to.setWorkOrderId(session.getWorkOrder().getId());
+            to.setWorkOrderCode(session.getWorkOrder().getCode());
+        }
+        to.setSessionStart(session.getSessionStart());
+        to.setSessionEnd(session.getSessionEnd());
+        to.setProductCount(session.getProductCount());
+        to.setControlProductCount(session.getControlProducts() != null ? session.getControlProducts().size() : 0L);
+        to.setFaultyProductCount(session.getFaultyProducts() != null ? session.getFaultyProducts().size() : 0L);
+        to.setSetupProductCount(session.getSetupProductCount() == null ? 0L : session.getSetupProductCount());
+        to.setProductReferenceID(session.getProductReferenceID());
+        if (session.getOperator() != null) {
+            to.setOperatorQrCode(session.getOperator().getOperatorQrCode());
+            to.setOperatorName(session.getOperator().getName());
+            to.setOperatorSurname(session.getOperator().getSurname());
+        }
+        if (session.getStationInfo() != null) {
+            to.setStationId(session.getStationInfo().getStationID());
+        }
+        return to;
+    }
+
+    private List<ControlProductTO> mapControlProducts(WorkSession session) {
+        if (session.getControlProducts() == null || session.getControlProducts().isEmpty()) {
+            return List.of();
+        }
+        return session.getControlProducts().stream()
+                .sorted(Comparator.comparing(ControlProduct::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(cp -> cp.getId() != null ? cp.getId() : 0L))
+                .map(this::mapControlProduct)
+                .toList();
+    }
+
+    private ControlProductTO mapControlProduct(ControlProduct cp) {
+        ControlProductTO to = new ControlProductTO();
+        to.setId(cp.getId());
+        to.setCreatedAt(cp.getCreatedAt());
+        if (cp.getMeasuringFeatures() == null || cp.getMeasuringFeatures().isEmpty()) {
+            to.setMeasuringFeatures(List.of());
+        } else {
+            to.setMeasuringFeatures(cp.getMeasuringFeatures().stream()
+                    .sorted(Comparator.comparing(mf -> mf.getId() != null ? mf.getId() : 0L))
+                    .map(this::mapControlMeasuringFeature)
+                    .toList());
+        }
+        return to;
+    }
+
+    private ControlMeasuringFeatureTO mapControlMeasuringFeature(MeasuringFeature mf) {
+        ControlMeasuringFeatureTO to = new ControlMeasuringFeatureTO();
+        to.setId(mf.getId());
+        to.setCatalogueId(mf.getCatalogueId());
+        to.setDescription(mf.getDescription());
+        to.setRefValue(mf.getRefValue());
+        to.setMinTolerance(mf.getMinTolerance());
+        to.setMaxTolerance(mf.getMaxTolerance());
+        to.setClassType(mf.getClassType());
+        to.setFrequency(mf.getFrequency());
+        to.setCheckType(mf.getCheckType());
+        to.setMeasuringTool(mf.getMeasuringTool());
+        to.setAssessedValue(mf.getAssessedValue());
+        to.setAssessedValueGood(mf.isAssessedValueGood());
+        return to;
+    }
+
+    private List<FaultyProductTO> mapFaultyProducts(WorkSession session) {
+        if (session.getFaultyProducts() == null || session.getFaultyProducts().isEmpty()) {
+            return List.of();
+        }
+        return session.getFaultyProducts().stream()
+                .sorted(Comparator.comparing(FaultyProduct::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(fp -> fp.getId() != null ? fp.getId() : 0L))
+                .map(fp -> new FaultyProductTO(
+                        fp.getId(),
+                        fp.getRejectReason(),
+                        fp.getRejectCause(),
+                        fp.getRejectComment(),
+                        fp.getCreatedAt()))
+                .toList();
     }
 
     private SetupProductTO mapSetupProduct(SetupProduct sp) {
