@@ -8,6 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface ProductStockIntakeRepository extends CrudRepository<ProductStockIntake, Long> {
@@ -19,6 +20,13 @@ public interface ProductStockIntakeRepository extends CrudRepository<ProductStoc
             LocalDateTime receivedAtStartInclusive,
             LocalDateTime receivedAtEndExclusive,
             Pageable pageable);
+
+    @EntityGraph(attributePaths = {"product", "workOrder", "workOrder.productOrder", "workOrder.productOrder.purchaseOrder", "workOrder.productOrder.purchaseOrder.customer"})
+    @Query("""
+            SELECT i FROM ProductStockIntake i
+            WHERE i.workOrder.productOrder.id IN :productOrderIds
+            """)
+    List<ProductStockIntake> findByProductOrderIds(@Param("productOrderIds") Collection<Long> productOrderIds);
 
     @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM ProductStockIntake i WHERE i.workOrder.id = :workOrderId")
     long sumQuantityByWorkOrderId(@Param("workOrderId") Long workOrderId);

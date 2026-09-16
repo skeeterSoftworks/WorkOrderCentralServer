@@ -1,10 +1,12 @@
 package com.skeeterSoftworks.WorkOrderCentral.domain.repositories;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.DeliveryNote;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -15,6 +17,14 @@ public interface DeliveryNoteRepository extends CrudRepository<DeliveryNote, Lon
     List<DeliveryNote> findByMaterialOrder_IdOrderByReceivedAtDescIdDesc(Long materialOrderId);
 
     boolean existsByMaterialOrder_Id(Long materialOrderId);
+
+    @EntityGraph(attributePaths = {
+            "materialOrder",
+            "materialOrder.materialProvider",
+            "materialOrderLine",
+            "materialOrderLine.material"
+    })
+    List<DeliveryNote> findByMaterialOrderLine_IdIn(Collection<Long> materialOrderLineIds);
 
     @Query("""
             SELECT COALESCE(SUM(d.quantity), 0) FROM DeliveryNote d
