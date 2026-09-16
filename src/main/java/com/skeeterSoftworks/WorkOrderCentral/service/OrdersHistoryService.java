@@ -99,6 +99,7 @@ public class OrdersHistoryService {
         MaterialOrderHistoryRowTO to = new MaterialOrderHistoryRowTO();
         to.setId(line.getId());
         to.setQuantity(line.getQuantity());
+        to.setPricePerUnit(line.getPricePerUnit());
         to.setUnitOfMeasure(line.getUnitOfMeasure());
         MaterialOrder order = line.getMaterialOrder();
         if (order != null) {

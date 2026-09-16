@@ -81,6 +81,7 @@ public final class MaterialOrderMapper {
         MaterialOrderLineTO to = new MaterialOrderLineTO();
         to.setId(line.getId());
         to.setQuantity(line.getQuantity());
+        to.setPricePerUnit(line.getPricePerUnit());
         to.setReceived(received);
         if (deliverySummary != null) {
             to.setReceivedQuantityTotal(deliverySummary.receivedTotal());

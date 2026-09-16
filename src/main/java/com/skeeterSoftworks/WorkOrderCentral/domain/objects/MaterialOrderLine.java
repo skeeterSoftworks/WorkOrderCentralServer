@@ -16,6 +16,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -37,6 +39,10 @@ public class MaterialOrderLine {
 
     @Column(nullable = false)
     private int quantity;
+
+    /** Optional unit price when the order was placed. */
+    @Column(precision = 19, scale = 4)
+    private BigDecimal pricePerUnit;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

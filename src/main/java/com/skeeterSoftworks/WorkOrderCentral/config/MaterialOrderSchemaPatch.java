@@ -38,6 +38,7 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
             patchStatusCheckConstraint();
             ensureTimestampColumns();
             migrateMaterialOrderLines();
+            ensureMaterialOrderLinePricePerUnit();
             ensureDeliveryNoteTable();
             ensureReceptionPerDeliveryNote();
         } catch (Exception e) {
@@ -131,6 +132,21 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
                   )
                 """);
         log.info("Ensured material_order_line table and migrated legacy material_order rows");
+    }
+
+    private void ensureMaterialOrderLinePricePerUnit() {
+        Integer lineTableCount = jdbcTemplate.queryForObject(
+                """
+                        SELECT COUNT(*) FROM information_schema.tables
+                        WHERE table_schema = current_schema() AND table_name = 'material_order_line'
+                        """,
+                Integer.class);
+        if (lineTableCount == null || lineTableCount == 0) {
+            return;
+        }
+        jdbcTemplate.execute(
+                "ALTER TABLE material_order_line ADD COLUMN IF NOT EXISTS price_per_unit NUMERIC(19, 4)");
+        log.info("Ensured material_order_line.price_per_unit column");
     }
 
     private void ensureDeliveryNoteTable() {

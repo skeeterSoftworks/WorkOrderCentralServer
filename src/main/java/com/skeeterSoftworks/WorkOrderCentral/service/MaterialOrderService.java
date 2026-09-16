@@ -244,6 +244,10 @@ public class MaterialOrderService {
             if (input.getQuantity() == null || input.getQuantity() <= 0) {
                 throw new Exception("MATERIAL_ORDER_INVALID_QUANTITY");
             }
+            if (input.getPricePerUnit() != null
+                    && input.getPricePerUnit().compareTo(java.math.BigDecimal.ZERO) < 0) {
+                throw new Exception("MATERIAL_ORDER_INVALID_PRICE");
+            }
             if (!usedMaterialIds.add(input.getMaterialId())) {
                 throw new Exception("MATERIAL_ORDER_DUPLICATE_MATERIAL");
             }
@@ -261,6 +265,7 @@ public class MaterialOrderService {
             line.setMaterialOrder(order);
             line.setMaterial(material);
             line.setQuantity(input.getQuantity());
+            line.setPricePerUnit(input.getPricePerUnit());
             line.setUnitOfMeasure(input.getMaterialUnitOfMeasure() != null
                     ? input.getMaterialUnitOfMeasure()
                     : EUnitOfMeasure.PCS);

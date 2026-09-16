@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,6 +16,8 @@ public class MaterialOrderLineTO {
     private String materialName;
     private String materialCode;
     private Integer quantity;
+    /** Optional unit price when the order was placed. */
+    private BigDecimal pricePerUnit;
     /** Whether this line has been fully received in stock. */
     private Boolean received;
     /** Sum of quantities on all delivery notes for this line. */
