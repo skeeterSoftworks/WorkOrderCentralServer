@@ -45,6 +45,8 @@ public class WorkOrderTO {
     private String stockAssignmentOrderCode;
     /** Denormalized: stock assignment order fulfillment status. */
     private EStockAssignmentOrderStatus stockAssignmentOrderStatus;
+    /** Denormalized: 8-digit material assignment order code when present. */
+    private String materialAssignmentOrderCode;
     /** Denormalized: true when at least one non-cancelled machine booking exists. */
     private Boolean machineAssigned;
 }

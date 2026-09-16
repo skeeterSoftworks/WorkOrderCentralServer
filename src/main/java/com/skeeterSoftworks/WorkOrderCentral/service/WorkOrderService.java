@@ -6,7 +6,11 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductStockIntakeRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductStockIssueRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.ProductMapperService;
 import com.skeeterSoftworks.WorkOrderCentral.mapper.WorkOrderMapperService;
@@ -42,6 +46,10 @@ public class WorkOrderService {
     private final UsersService usersService;
     private final WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService;
     private final WorkOrderReportService workOrderReportService;
+    private final MaterialAssignmentOrderRepository materialAssignmentOrderRepository;
+    private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
+    private final ProductStockIntakeRepository productStockIntakeRepository;
+    private final ProductStockIssueRepository productStockIssueRepository;
 
     @Autowired
     public WorkOrderService(
@@ -55,7 +63,11 @@ public class WorkOrderService {
             WorkOrderMapperService workOrderMapperService,
             UsersService usersService,
             WorkOrderMaterialRequirementsService workOrderMaterialRequirementsService,
-            WorkOrderReportService workOrderReportService
+            WorkOrderReportService workOrderReportService,
+            MaterialAssignmentOrderRepository materialAssignmentOrderRepository,
+            StockAssignmentOrderRepository stockAssignmentOrderRepository,
+            ProductStockIntakeRepository productStockIntakeRepository,
+            ProductStockIssueRepository productStockIssueRepository
     ) {
         this.workOrderRepository = workOrderRepository;
         this.purchaseOrderService = purchaseOrderService;
@@ -68,6 +80,10 @@ public class WorkOrderService {
         this.usersService = usersService;
         this.workOrderMaterialRequirementsService = workOrderMaterialRequirementsService;
         this.workOrderReportService = workOrderReportService;
+        this.materialAssignmentOrderRepository = materialAssignmentOrderRepository;
+        this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
+        this.productStockIntakeRepository = productStockIntakeRepository;
+        this.productStockIssueRepository = productStockIssueRepository;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
@@ -236,10 +252,19 @@ public class WorkOrderService {
         return workOrderRepository.save(existing);
     }
 
+    @Transactional
     public void deleteWorkOrder(Long id) throws Exception {
         if (!workOrderRepository.existsById(id)) {
             throw new Exception("WORK_ORDER_NOT_FOUND");
         }
+        List<MaterialAssignmentOrder> materialAssignments =
+                materialAssignmentOrderRepository.findByWorkOrder_Id(id);
+        if (!materialAssignments.isEmpty()) {
+            materialAssignmentOrderRepository.deleteAll(materialAssignments);
+        }
+        stockAssignmentOrderRepository.deleteByWorkOrder_Id(id);
+        productStockIntakeRepository.deleteByWorkOrder_Id(id);
+        productStockIssueRepository.deleteByWorkOrder_Id(id);
         workOrderRepository.deleteById(id);
     }
 }

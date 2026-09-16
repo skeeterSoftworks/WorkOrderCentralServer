@@ -20,4 +20,6 @@ public interface ProductStockIssueRepository extends CrudRepository<ProductStock
 
     @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM ProductStockIssue i WHERE i.workOrder.id = :workOrderId")
     long sumQuantityByWorkOrderId(@Param("workOrderId") Long workOrderId);
+
+    void deleteByWorkOrder_Id(Long workOrderId);
 }

@@ -4,6 +4,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EWorkOrderState;
@@ -16,15 +17,18 @@ public class WorkOrderMapperService {
 
     private final ProductOrderRepository productOrderRepository;
     private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
+    private final MaterialAssignmentOrderRepository materialAssignmentOrderRepository;
     private final MachineBookingRepository machineBookingRepository;
 
     @Autowired
     public WorkOrderMapperService(
             ProductOrderRepository productOrderRepository,
             StockAssignmentOrderRepository stockAssignmentOrderRepository,
+            MaterialAssignmentOrderRepository materialAssignmentOrderRepository,
             MachineBookingRepository machineBookingRepository) {
         this.productOrderRepository = productOrderRepository;
         this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
+        this.materialAssignmentOrderRepository = materialAssignmentOrderRepository;
         this.machineBookingRepository = machineBookingRepository;
     }
 
@@ -58,6 +62,8 @@ public class WorkOrderMapperService {
         if (workOrder.getId() != null) {
             stockAssignmentOrderRepository.findFirstByWorkOrder_IdOrderByIdDesc(workOrder.getId())
                     .ifPresent(order -> enrichStockAssignmentOrder(to, order));
+            materialAssignmentOrderRepository.findFirstByWorkOrder_IdOrderByIdDesc(workOrder.getId())
+                    .ifPresent(order -> to.setMaterialAssignmentOrderCode(order.getCode()));
             to.setMachineAssigned(machineBookingRepository.existsActiveByWorkOrderId(workOrder.getId()));
         } else {
             to.setMachineAssigned(false);

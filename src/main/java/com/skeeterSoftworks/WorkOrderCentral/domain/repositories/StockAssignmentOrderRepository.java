@@ -23,6 +23,8 @@ public interface StockAssignmentOrderRepository extends CrudRepository<StockAssi
 
     Optional<StockAssignmentOrder> findFirstByWorkOrder_IdOrderByIdDesc(Long workOrderId);
 
+    void deleteByWorkOrder_Id(Long workOrderId);
+
     @EntityGraph(attributePaths = {"product", "workOrder", "workOrder.productOrder", "workOrder.productOrder.purchaseOrder", "workOrder.productOrder.purchaseOrder.customer"})
     @Query("""
             SELECT o FROM StockAssignmentOrder o

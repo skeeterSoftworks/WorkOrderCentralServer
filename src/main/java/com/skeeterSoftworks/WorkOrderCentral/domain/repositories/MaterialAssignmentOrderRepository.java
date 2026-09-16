@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MaterialAssignmentOrderRepository extends
@@ -12,6 +13,9 @@ public interface MaterialAssignmentOrderRepository extends
         JpaSpecificationExecutor<MaterialAssignmentOrder> {
 
     boolean existsByCode(String code);
+
+    @EntityGraph(attributePaths = {"lines", "lines.material"})
+    List<MaterialAssignmentOrder> findByWorkOrder_Id(Long workOrderId);
 
     @EntityGraph(attributePaths = {
             "workOrder",
