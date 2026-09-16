@@ -13,6 +13,9 @@ public class CustomerMapperService {
         to.setId(customer.getId());
         to.setCompanyName(customer.getCompanyName());
         to.setBuyerId(customer.getBuyerId());
+        to.setContactPerson(customer.getContactPerson());
+        to.setEmailAddress(customer.getEmailAddress());
+        to.setPhoneNumber(customer.getPhoneNumber());
         to.setAddressData(customer.getAddressData());
         to.setDescription(customer.getDescription());
         return to;
@@ -26,6 +29,9 @@ public class CustomerMapperService {
         }
         customer.setCompanyName(to.getCompanyName());
         customer.setBuyerId(blankToNull(to.getBuyerId()));
+        customer.setContactPerson(blankToNull(to.getContactPerson()));
+        customer.setEmailAddress(blankToNull(to.getEmailAddress()));
+        customer.setPhoneNumber(blankToNull(to.getPhoneNumber()));
         customer.setAddressData(to.getAddressData());
         customer.setDescription(to.getDescription());
         return customer;

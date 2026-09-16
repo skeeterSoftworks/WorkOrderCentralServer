@@ -13,6 +13,9 @@ public class CustomerTO {
     private Long id;
     private String companyName;
     private String buyerId;
+    private String contactPerson;
+    private String emailAddress;
+    private String phoneNumber;
     private String addressData;
     private String description;
 }

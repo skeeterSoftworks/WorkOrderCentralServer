@@ -113,6 +113,9 @@ public class SampleDataGenerationService {
             Customer c = new Customer();
             c.setCompanyName(faker.company().name() + " " + faker.company().suffix());
             c.setBuyerId("BUYER-" + faker.regexify("[A-Z0-9]{6}") + "-" + i);
+            c.setContactPerson(faker.name().fullName());
+            c.setEmailAddress("buyer" + i + "@example.com");
+            c.setPhoneNumber("+3816" + faker.number().digits(7));
             c.setAddressData(faker.address().fullAddress());
             c.setDescription(faker.company().catchPhrase() + " — " + faker.lorem().sentence(4));
             savedCustomers.add(customerRepository.save(c));

@@ -32,6 +32,7 @@ public class CustomerService {
         customer.setId(null);
         normalizeBuyerId(customer);
         ensureBuyerIdUnique(customer);
+        validateRequiredContactFields(customer);
         return customerRepository.save(customer);
     }
 
@@ -41,6 +42,7 @@ public class CustomerService {
         }
         normalizeBuyerId(customer);
         ensureBuyerIdUnique(customer);
+        validateRequiredContactFields(customer);
         return customerRepository.save(customer);
     }
 
@@ -50,6 +52,21 @@ public class CustomerService {
         }
         String trimmed = customer.getBuyerId().trim();
         customer.setBuyerId(trimmed.isEmpty() ? null : trimmed);
+    }
+
+    private void validateRequiredContactFields(Customer customer) throws Exception {
+        if (isBlank(customer.getContactPerson())
+                || isBlank(customer.getEmailAddress())
+                || isBlank(customer.getPhoneNumber())) {
+            throw new Exception("CUSTOMER_CONTACT_FIELDS_REQUIRED");
+        }
+        customer.setContactPerson(customer.getContactPerson().trim());
+        customer.setEmailAddress(customer.getEmailAddress().trim());
+        customer.setPhoneNumber(customer.getPhoneNumber().trim());
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     private void ensureBuyerIdUnique(Customer customer) throws Exception {
@@ -96,6 +113,9 @@ public class CustomerService {
         }
         Customer c = new Customer();
         c.setCompanyName(InternalStockOrdererConstants.COMPANY_NAME);
+        c.setContactPerson("—");
+        c.setEmailAddress("—");
+        c.setPhoneNumber("—");
         c.setAddressData("—");
         c.setDescription("Sistemski kupac za interne narudžbenice (magacin / internalStockDemand).");
         return customerRepository.save(c);

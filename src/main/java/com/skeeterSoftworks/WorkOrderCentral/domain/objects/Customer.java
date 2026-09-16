@@ -34,6 +34,15 @@ public class Customer {
     @Column(unique = true)
     private String buyerId;
 
+    @Column
+    private String contactPerson;
+
+    @Column
+    private String emailAddress;
+
+    @Column
+    private String phoneNumber;
+
     @Column(length = 2000)
     private String addressData;
 

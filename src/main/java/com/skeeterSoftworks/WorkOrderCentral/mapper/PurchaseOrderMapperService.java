@@ -93,6 +93,9 @@ public class PurchaseOrderMapperService {
         to.setId(c.getId());
         to.setCompanyName(c.getCompanyName());
         to.setBuyerId(c.getBuyerId());
+        to.setContactPerson(c.getContactPerson());
+        to.setEmailAddress(c.getEmailAddress());
+        to.setPhoneNumber(c.getPhoneNumber());
         to.setAddressData(c.getAddressData());
         to.setDescription(c.getDescription());
         return to;
@@ -119,6 +122,9 @@ public class PurchaseOrderMapperService {
         Customer c = new Customer();
         c.setCompanyName(to.getCompanyName());
         c.setBuyerId(to.getBuyerId() != null && !to.getBuyerId().isBlank() ? to.getBuyerId().trim() : null);
+        c.setContactPerson(to.getContactPerson());
+        c.setEmailAddress(to.getEmailAddress());
+        c.setPhoneNumber(to.getPhoneNumber());
         c.setAddressData(to.getAddressData());
         c.setDescription(to.getDescription());
         return c;
