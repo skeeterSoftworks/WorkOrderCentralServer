@@ -2,6 +2,7 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Customer;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MachineBooking;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductMaterial;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
@@ -14,10 +15,12 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MachineBookingR
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.PurchaseOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockedMaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.report.WorkOrderReportLocale;
 import com.skeeterSoftworks.WorkOrderCentral.report.WorkOrderReportMaterialLine;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMachineBookingStatus;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.util.OrderCodeDisplay;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -47,6 +50,7 @@ public class WorkOrderReportService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
     private final MachineBookingRepository machineBookingRepository;
+    private final StockedMaterialRepository stockedMaterialRepository;
     private final WorkOrderReportLocale reportLocale;
     private volatile JasperReport compiledReport;
 
@@ -56,12 +60,14 @@ public class WorkOrderReportService {
             PurchaseOrderRepository purchaseOrderRepository,
             StockAssignmentOrderRepository stockAssignmentOrderRepository,
             MachineBookingRepository machineBookingRepository,
+            StockedMaterialRepository stockedMaterialRepository,
             WorkOrderReportLocale reportLocale) {
         this.workOrderRepository = workOrderRepository;
         this.productOrderRepository = productOrderRepository;
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
         this.machineBookingRepository = machineBookingRepository;
+        this.stockedMaterialRepository = stockedMaterialRepository;
         this.reportLocale = reportLocale;
     }
 
@@ -122,7 +128,9 @@ public class WorkOrderReportService {
         params.put("labelMaterialsTitle", reportLocale.get("materialsTitle"));
         params.put("labelMaterialCode", reportLocale.get("materialCode"));
         params.put("labelMaterialName", reportLocale.get("materialName"));
+        params.put("labelUnit", reportLocale.get("unit"));
         params.put("labelQuantity", reportLocale.get("quantity"));
+        params.put("labelAvailable", reportLocale.get("available"));
         params.put("noMaterials", reportLocale.get("noMaterials"));
         params.put("labelTechnologyTitle", reportLocale.get("technologyTitle"));
         params.put("labelMachineTitle", reportLocale.get("machineTitle"));
@@ -157,15 +165,22 @@ public class WorkOrderReportService {
         }
         List<WorkOrderReportMaterialLine> lines = new ArrayList<>();
         for (ProductMaterial row : product.getProductMaterials()) {
-            if (row.getMaterial() == null) {
+            Material material = row.getMaterial();
+            if (material == null) {
                 continue;
             }
             double perUnit = row.getQuantityPerProductUnit() > 0 ? row.getQuantityPerProductUnit() : 1d;
             double required = perUnit * orderedQuantity;
+            long available = material.getId() != null
+                    ? stockedMaterialRepository.sumQuantityByMaterialId(material.getId())
+                    : 0L;
+            EUnitOfMeasure unit = row.getUnitOfMeasure() != null ? row.getUnitOfMeasure() : EUnitOfMeasure.PCS;
             lines.add(new WorkOrderReportMaterialLine(
-                    formatValue(row.getMaterial().getCode()),
-                    formatValue(row.getMaterial().getName()),
-                    formatQuantity(required)));
+                    formatValue(material.getCode()),
+                    formatValue(material.getName()),
+                    unit.name(),
+                    formatQuantity(required),
+                    String.valueOf(available)));
         }
         return lines;
     }

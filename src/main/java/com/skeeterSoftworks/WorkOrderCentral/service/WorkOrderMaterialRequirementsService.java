@@ -145,7 +145,7 @@ public class WorkOrderMaterialRequirementsService {
             if (missing > 0.000_001d) {
                 fullyAvailable = false;
             }
-            EUnitOfMeasure unit = EUnitOfMeasure.PCS;
+            EUnitOfMeasure unit = row.getUnitOfMeasure() != null ? row.getUnitOfMeasure() : EUnitOfMeasure.PCS;
             lines.add(new WorkOrderMaterialRequirementLineTO(
                     material.getId(),
                     material.getCode(),

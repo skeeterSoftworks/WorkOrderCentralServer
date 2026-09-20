@@ -11,5 +11,7 @@ public class WorkOrderReportMaterialLine {
 
     private String materialCode;
     private String materialName;
+    private String unitOfMeasure;
     private String requiredQuantity;
+    private String availableQuantity;
 }

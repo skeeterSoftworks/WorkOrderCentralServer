@@ -1,7 +1,10 @@
 package com.skeeterSoftworks.WorkOrderCentral.domain.objects;
 
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -43,4 +46,8 @@ public class ProductMaterial {
      */
     @Column(nullable = false)
     private double quantityPerProductUnit = 1d;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unit_of_measure", length = 16)
+    private EUnitOfMeasure unitOfMeasure = EUnitOfMeasure.PCS;
 }

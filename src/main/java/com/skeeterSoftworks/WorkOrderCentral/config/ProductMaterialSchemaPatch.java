@@ -86,7 +86,7 @@ public class ProductMaterialSchemaPatch implements ApplicationRunner {
             jdbcTemplate.execute(
                     "UPDATE product_material SET quantity_per_product_unit = 1.0 WHERE quantity_per_product_unit IS NULL OR quantity_per_product_unit <= 0");
             jdbcTemplate.execute(
-                    "ALTER TABLE product_material ADD COLUMN IF NOT EXISTS unit_of_measure VARCHAR(16)");
+                    "ALTER TABLE product_material ADD COLUMN IF NOT EXISTS unit_of_measure VARCHAR(16) DEFAULT 'PCS'");
             jdbcTemplate.execute(
                     "UPDATE product_material SET unit_of_measure = 'PCS' WHERE unit_of_measure IS NULL OR TRIM(unit_of_measure) = ''");
             return;

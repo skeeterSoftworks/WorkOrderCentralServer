@@ -32,7 +32,9 @@
     <parameter name="labelMaterialsTitle" class="java.lang.String"/>
     <parameter name="labelMaterialCode" class="java.lang.String"/>
     <parameter name="labelMaterialName" class="java.lang.String"/>
+    <parameter name="labelUnit" class="java.lang.String"/>
     <parameter name="labelQuantity" class="java.lang.String"/>
+    <parameter name="labelAvailable" class="java.lang.String"/>
     <parameter name="noMaterials" class="java.lang.String"/>
     <parameter name="labelTechnologyTitle" class="java.lang.String"/>
     <parameter name="technologyText" class="java.lang.String"/>
@@ -52,7 +54,9 @@
     <parameter name="hasMaterials" class="java.lang.Boolean"/>
     <field name="materialCode" class="java.lang.String"/>
     <field name="materialName" class="java.lang.String"/>
+    <field name="unitOfMeasure" class="java.lang.String"/>
     <field name="requiredQuantity" class="java.lang.String"/>
+    <field name="availableQuantity" class="java.lang.String"/>
     <title>
         <band height="50">
             <textField>
@@ -153,23 +157,36 @@
                 <textFieldExpression><![CDATA[$P{labelMaterialsTitle}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="24" width="140" height="16" style="BaseBold">
+                <reportElement x="0" y="24" width="90" height="16" style="BaseBold">
                     <printWhenExpression><![CDATA[Boolean.TRUE.equals($P{hasMaterials})]]></printWhenExpression>
                 </reportElement>
                 <textFieldExpression><![CDATA[$P{labelMaterialCode}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="140" y="24" width="280" height="16" style="BaseBold">
+                <reportElement x="90" y="24" width="185" height="16" style="BaseBold">
                     <printWhenExpression><![CDATA[Boolean.TRUE.equals($P{hasMaterials})]]></printWhenExpression>
                 </reportElement>
                 <textFieldExpression><![CDATA[$P{labelMaterialName}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="420" y="24" width="135" height="16" style="BaseBold">
+                <reportElement x="275" y="24" width="55" height="16" style="BaseBold">
+                    <printWhenExpression><![CDATA[Boolean.TRUE.equals($P{hasMaterials})]]></printWhenExpression>
+                </reportElement>
+                <textFieldExpression><![CDATA[$P{labelUnit}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="330" y="24" width="110" height="16" style="BaseBold">
                     <printWhenExpression><![CDATA[Boolean.TRUE.equals($P{hasMaterials})]]></printWhenExpression>
                 </reportElement>
                 <textElement textAlignment="Right"/>
                 <textFieldExpression><![CDATA[$P{labelQuantity}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="440" y="24" width="115" height="16" style="BaseBold">
+                    <printWhenExpression><![CDATA[Boolean.TRUE.equals($P{hasMaterials})]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{labelAvailable}]]></textFieldExpression>
             </textField>
             <textField>
                 <reportElement x="0" y="24" width="555" height="16">
@@ -183,17 +200,26 @@
         <band height="20">
             <printWhenExpression><![CDATA[Boolean.TRUE.equals($P{hasMaterials})]]></printWhenExpression>
             <textField>
-                <reportElement x="0" y="2" width="140" height="16"/>
+                <reportElement x="0" y="2" width="90" height="16"/>
                 <textFieldExpression><![CDATA[$F{materialCode}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="140" y="2" width="280" height="16"/>
+                <reportElement x="90" y="2" width="185" height="16"/>
                 <textFieldExpression><![CDATA[$F{materialName}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="420" y="2" width="135" height="16"/>
+                <reportElement x="275" y="2" width="55" height="16"/>
+                <textFieldExpression><![CDATA[$F{unitOfMeasure}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="330" y="2" width="110" height="16"/>
                 <textElement textAlignment="Right"/>
                 <textFieldExpression><![CDATA[$F{requiredQuantity}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="440" y="2" width="115" height="16"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{availableQuantity}]]></textFieldExpression>
             </textField>
         </band>
     </detail>
