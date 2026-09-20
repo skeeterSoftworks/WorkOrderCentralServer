@@ -179,11 +179,17 @@ public class MaterialOrderService {
             }
         }
         for (MaterialOrderLine line : lines) {
+            BigDecimal offered;
             if (offeredByLineId.containsKey(line.getId())) {
-                line.setOfferedPricePerUnit(offeredByLineId.get(line.getId()));
-            } else if (line.getOfferedPricePerUnit() == null) {
-                line.setOfferedPricePerUnit(line.getPricePerUnit());
+                offered = offeredByLineId.get(line.getId());
+            } else if (line.getOfferedPricePerUnit() != null) {
+                offered = line.getOfferedPricePerUnit();
+            } else {
+                offered = line.getPricePerUnit();
             }
+            line.setOfferedPricePerUnit(offered);
+            // Accepted offer becomes the order line unit price used downstream.
+            line.setPricePerUnit(offered);
         }
         order.setStatus(EMaterialOrderStatus.ORDER_ACCEPTED);
         order.setLastChanged(LocalDateTime.now());
