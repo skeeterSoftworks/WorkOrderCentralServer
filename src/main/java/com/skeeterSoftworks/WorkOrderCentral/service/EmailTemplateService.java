@@ -3,9 +3,11 @@ package com.skeeterSoftworks.WorkOrderCentral.service;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.EmailTemplate;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.EmailTemplateRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EEmailTemplateCode;
+import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.EmailTemplateTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.RenderedEmailTO;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderMapper;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class EmailTemplateService {
@@ -110,10 +114,45 @@ public class EmailTemplateService {
         String materialOrderCode = order.getCode() != null ? order.getCode() : "";
         m.put("materialOrderCode", materialOrderCode);
         int totalQuantity = order.getLines() != null
-                ? order.getLines().stream().mapToInt(line -> line.getQuantity()).sum()
+                ? order.getLines().stream().mapToInt(MaterialOrderLine::getQuantity).sum()
                 : 0;
         m.put("quantity", String.valueOf(totalQuantity));
+        String unitOfMeasure = "";
+        if (order.getLines() != null && !order.getLines().isEmpty()) {
+            List<EUnitOfMeasure> units = order.getLines().stream()
+                    .map(line -> line.getUnitOfMeasure() != null ? line.getUnitOfMeasure() : EUnitOfMeasure.PCS)
+                    .distinct()
+                    .toList();
+            if (units.size() == 1) {
+                unitOfMeasure = units.get(0).name();
+            } else {
+                unitOfMeasure = units.stream().map(Enum::name).collect(Collectors.joining(", "));
+            }
+        }
+        m.put("unitOfMeasure", unitOfMeasure);
+        String quantityWithUnit = unitOfMeasure.isBlank()
+                ? String.valueOf(totalQuantity)
+                : (unitsAreHomogeneous(order)
+                ? totalQuantity + " " + unitOfMeasure
+                : linesSummary);
+        m.put("quantityWithUnit", quantityWithUnit);
         return m;
+    }
+
+    private static boolean unitsAreHomogeneous(MaterialOrder order) {
+        if (order.getLines() == null || order.getLines().isEmpty()) {
+            return true;
+        }
+        EUnitOfMeasure first = null;
+        for (MaterialOrderLine line : order.getLines()) {
+            EUnitOfMeasure unit = line.getUnitOfMeasure() != null ? line.getUnitOfMeasure() : EUnitOfMeasure.PCS;
+            if (first == null) {
+                first = unit;
+            } else if (!Objects.equals(first, unit)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     static String applyPlaceholders(String template, Map<String, String> vars) {
@@ -146,18 +185,18 @@ public class EmailTemplateService {
                     "Dear {{providerName}},\n\n"
                             + "Order number: {{materialOrderCode}}\n"
                             + "Material: {{materialLabel}}\n"
-                            + "Quantity: {{quantity}}\n\n"
+                            + "Quantity: {{quantityWithUnit}}\n\n"
                             + "Please confirm this material order.";
             case MATERIAL_ORDER_REMINDER ->
                     "Dear {{providerName}},\n\n"
                             + "This is a friendly reminder regarding material order {{materialOrderCode}} for "
-                            + "{{materialLabel}} (quantity {{quantity}}).\n\n"
+                            + "{{materialLabel}} (quantity {{quantityWithUnit}}).\n\n"
                             + "Please confirm status at your earliest convenience.\n\n"
                             + "Thank you.";
             case MATERIAL_DELIVERY_LATE ->
                     "Dear {{providerName}},\n\n"
                             + "We are writing regarding material order {{materialOrderCode}} for {{materialLabel}} "
-                            + "(quantity {{quantity}}). The delivery is currently delayed beyond our agreed timeline.\n\n"
+                            + "(quantity {{quantityWithUnit}}). The delivery is currently delayed beyond our agreed timeline.\n\n"
                             + "Please advise on the revised delivery schedule.\n\n"
                             + "Thank you.";
         };

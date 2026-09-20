@@ -141,7 +141,10 @@ public final class MaterialOrderMapper {
                     if (label.isBlank()) {
                         label = "material";
                     }
-                    return label + " (" + line.getQuantity() + ")";
+                    EUnitOfMeasure unit = line.getUnitOfMeasure() != null
+                            ? line.getUnitOfMeasure()
+                            : EUnitOfMeasure.PCS;
+                    return label + " (" + line.getQuantity() + " " + unit.name() + ")";
                 })
                 .collect(Collectors.joining(", "));
     }
