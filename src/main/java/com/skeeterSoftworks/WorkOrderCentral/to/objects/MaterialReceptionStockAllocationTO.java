@@ -10,4 +10,6 @@ import lombok.NoArgsConstructor;
 public class MaterialReceptionStockAllocationTO {
     private Long stockLocationId;
     private Integer quantity;
+    /** Optional visual marker for this allocation row (e.g. RED, BLUE). */
+    private String colorMarker;
 }

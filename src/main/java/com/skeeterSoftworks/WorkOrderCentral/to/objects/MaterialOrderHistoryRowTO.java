@@ -34,4 +34,6 @@ public class MaterialOrderHistoryRowTO {
     private BigDecimal pricePerUnit;
     private EUnitOfMeasure unitOfMeasure;
     private String deliveryNoteNumber;
+    /** Optional visual marker from the delivery note (STOCK_IN events). */
+    private String colorMarker;
 }

@@ -16,4 +16,6 @@ public class DeliveryNoteTO {
     private String deliveryNoteNumber;
     private LocalDateTime receivedAt;
     private Integer quantity;
+    /** Optional visual marker (e.g. RED, BLUE). */
+    private String colorMarker;
 }

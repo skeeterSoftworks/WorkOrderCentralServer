@@ -42,4 +42,8 @@ public class DeliveryNote {
 
     @Column(nullable = false)
     private int quantity;
+
+    /** Optional visual marker (e.g. RED, BLUE) to distinguish same material from different providers. */
+    @Column(length = 32)
+    private String colorMarker;
 }

@@ -20,6 +20,7 @@ public final class DeliveryNoteMapper {
         to.setDeliveryNoteNumber(note.getDeliveryNoteNumber());
         to.setReceivedAt(note.getReceivedAt());
         to.setQuantity(note.getQuantity());
+        to.setColorMarker(note.getColorMarker());
         return to;
     }
 }

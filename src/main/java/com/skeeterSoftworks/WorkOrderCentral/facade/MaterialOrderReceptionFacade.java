@@ -105,6 +105,7 @@ public class MaterialOrderReceptionFacade {
         to.setDeliveryNoteNumber(note.getDeliveryNoteNumber());
         to.setReceivedAt(note.getReceivedAt());
         to.setReceivedQuantity(note.getQuantity());
+        to.setColorMarker(note.getColorMarker());
         to.setLineFullyReceived(result.lineFullyReceived());
         return to;
     }
@@ -120,6 +121,7 @@ public class MaterialOrderReceptionFacade {
             to.setDeliveryNoteNumber(deliveryNote.getDeliveryNoteNumber());
             to.setReceivedAt(deliveryNote.getReceivedAt());
             to.setReceivedQuantity(deliveryNote.getQuantity());
+            to.setColorMarker(deliveryNote.getColorMarker());
         }
         MaterialOrder order = r.getMaterialOrder();
         if (order != null) {

@@ -41,6 +41,7 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
             ensureMaterialOrderLinePricePerUnit();
             ensureDeliveryNoteTable();
             ensureReceptionPerDeliveryNote();
+            ensureDeliveryNoteColorMarker();
         } catch (Exception e) {
             log.warn("Could not patch material_order schema: {}", e.getMessage());
         }
@@ -157,7 +158,8 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
                     material_order_line_id BIGINT NOT NULL REFERENCES material_order_line(id),
                     delivery_note_number VARCHAR(255) NOT NULL,
                     received_at TIMESTAMP(6) NOT NULL,
-                    quantity INT NOT NULL
+                    quantity INT NOT NULL,
+                    color_marker VARCHAR(32)
                 )
                 """);
         jdbcTemplate.execute("""
@@ -228,5 +230,11 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
                 WHERE delivery_note_id IS NOT NULL
                 """);
         log.info("Linked material_order_reception rows to delivery_note batches");
+    }
+
+    private void ensureDeliveryNoteColorMarker() {
+        jdbcTemplate.execute(
+                "ALTER TABLE delivery_note ADD COLUMN IF NOT EXISTS color_marker VARCHAR(32)");
+        log.info("Ensured delivery_note.color_marker column");
     }
 }

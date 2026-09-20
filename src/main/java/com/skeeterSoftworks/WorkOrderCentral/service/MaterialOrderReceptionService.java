@@ -11,6 +11,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderRe
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionInternalControlTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderReceptionTO;
+import com.skeeterSoftworks.WorkOrderCentral.util.ColorMarkerUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -180,6 +181,7 @@ public class MaterialOrderReceptionService {
         deliveryNote.setDeliveryNoteNumber(to.getDeliveryNoteNumber().trim());
         deliveryNote.setReceivedAt(to.getReceivedAt());
         deliveryNote.setQuantity(to.getReceivedQuantity());
+        deliveryNote.setColorMarker(ColorMarkerUtil.resolveFromReception(to));
         DeliveryNote savedNote = deliveryNoteRepository.save(deliveryNote);
 
         stockInventoryService.applyReceptionStockAllocations(

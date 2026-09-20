@@ -366,6 +366,7 @@ public class OrdersHistoryService {
         to.setOrderedAt(note.getReceivedAt());
         to.setQuantity(note.getQuantity());
         to.setDeliveryNoteNumber(note.getDeliveryNoteNumber());
+        to.setColorMarker(note.getColorMarker());
         MaterialOrder order = note.getMaterialOrder();
         if (order != null) {
             to.setMaterialOrderId(order.getId());

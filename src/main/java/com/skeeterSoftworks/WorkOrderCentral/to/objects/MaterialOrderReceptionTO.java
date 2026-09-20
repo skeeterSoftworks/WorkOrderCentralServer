@@ -41,4 +41,6 @@ public class MaterialOrderReceptionTO {
     private java.util.List<MaterialReceptionStockAllocationTO> stockAllocations;
     /** Whether the linked material order has an uploaded certificate. */
     private Boolean certificatePresent;
+    /** Optional visual marker for this reception batch (e.g. RED, BLUE). */
+    private String colorMarker;
 }
