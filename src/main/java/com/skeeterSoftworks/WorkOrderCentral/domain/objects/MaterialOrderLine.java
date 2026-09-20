@@ -40,9 +40,13 @@ public class MaterialOrderLine {
     @Column(nullable = false)
     private int quantity;
 
-    /** Optional unit price when the order was placed. */
+    /** Optional unit price when the order was placed (requested). */
     @Column(precision = 19, scale = 4)
     private BigDecimal pricePerUnit;
+
+    /** Optional unit price offered/accepted by the provider. */
+    @Column(precision = 19, scale = 4)
+    private BigDecimal offeredPricePerUnit;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -42,6 +42,8 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
             ensureDeliveryNoteTable();
             ensureReceptionPerDeliveryNote();
             ensureDeliveryNoteColorMarker();
+            ensureOfferedPricePerUnit();
+            removeAcknowledgedStatus();
         } catch (Exception e) {
             log.warn("Could not patch material_order schema: {}", e.getMessage());
         }
@@ -67,7 +69,6 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
                     status IN (
                         'ORDER_CREATED',
                         'ORDER_SENT',
-                        'ORDER_ACKNOWLEDGED',
                         'ORDER_ACCEPTED',
                         'IN_TRANSPORT',
                         'RECEIVED_IN_STOCK',
@@ -236,5 +237,31 @@ public class MaterialOrderSchemaPatch implements ApplicationRunner {
         jdbcTemplate.execute(
                 "ALTER TABLE delivery_note ADD COLUMN IF NOT EXISTS color_marker VARCHAR(32)");
         log.info("Ensured delivery_note.color_marker column");
+    }
+
+    private void ensureOfferedPricePerUnit() {
+        jdbcTemplate.execute(
+                "ALTER TABLE material_order_line ADD COLUMN IF NOT EXISTS offered_price_per_unit NUMERIC(19, 4)");
+        log.info("Ensured material_order_line.offered_price_per_unit column");
+    }
+
+    private void removeAcknowledgedStatus() {
+        jdbcTemplate.execute(
+                "UPDATE material_order SET status = 'ORDER_SENT' WHERE status = 'ORDER_ACKNOWLEDGED'");
+        jdbcTemplate.execute("ALTER TABLE material_order DROP CONSTRAINT IF EXISTS " + STATUS_CHECK);
+        jdbcTemplate.execute("""
+                ALTER TABLE material_order ADD CONSTRAINT material_order_status_check CHECK (
+                    status IN (
+                        'ORDER_CREATED',
+                        'ORDER_SENT',
+                        'ORDER_ACCEPTED',
+                        'IN_TRANSPORT',
+                        'RECEIVED_IN_STOCK',
+                        'VALIDATED',
+                        'REJECTED'
+                    )
+                )
+                """);
+        log.info("Removed ORDER_ACKNOWLEDGED from material_order status constraint");
     }
 }

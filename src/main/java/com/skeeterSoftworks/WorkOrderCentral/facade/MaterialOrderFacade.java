@@ -5,6 +5,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderSearchCriteria;
 import com.skeeterSoftworks.WorkOrderCentral.service.MaterialOrderService;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderAcceptTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderStatusTransitionTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderCertificateTO;
@@ -149,6 +150,19 @@ public class MaterialOrderFacade {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<?> accept(
+            @PathVariable Long id,
+            @RequestBody(required = false) MaterialOrderAcceptTO body) {
+        try {
+            MaterialOrder saved = materialOrderService.acceptMaterialOrder(id, body);
+            return ResponseEntity.ok(toTO(saved));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

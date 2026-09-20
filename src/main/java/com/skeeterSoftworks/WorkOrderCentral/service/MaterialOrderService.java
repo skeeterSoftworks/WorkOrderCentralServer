@@ -11,6 +11,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialProvide
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EMaterialOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EUnitOfMeasure;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderAcceptTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderLineTO;
 import com.skeeterSoftworks.WorkOrderCentral.util.BinaryMediaEncodingUtils;
 import com.skeeterSoftworks.WorkOrderCentral.util.MaterialOrderCodeGenerator;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -50,12 +52,6 @@ public class MaterialOrderService {
             EMaterialOrderStatus.RECEIVED_IN_STOCK,
             EMaterialOrderStatus.VALIDATED,
             EMaterialOrderStatus.REJECTED);
-
-    private static final Set<EMaterialOrderStatus> MANUAL_TRANSITION_TARGETS = EnumSet.of(
-            EMaterialOrderStatus.ORDER_SENT,
-            EMaterialOrderStatus.ORDER_ACKNOWLEDGED,
-            EMaterialOrderStatus.ORDER_ACCEPTED,
-            EMaterialOrderStatus.IN_TRANSPORT);
 
     private final MaterialOrderRepository materialOrderRepository;
     private final MaterialRepository materialRepository;
@@ -138,16 +134,58 @@ public class MaterialOrderService {
 
     @Transactional
     public MaterialOrder transitionStatus(Long id, EMaterialOrderStatus newStatus) throws Exception {
-        if (newStatus == null || !MANUAL_TRANSITION_TARGETS.contains(newStatus)) {
+        if (newStatus == null) {
             throw new Exception("MATERIAL_ORDER_STATUS_TRANSITION_NOT_ALLOWED");
         }
         MaterialOrder order = materialOrderRepository.findById(id).orElseThrow(() -> new Exception("MATERIAL_ORDER_NOT_FOUND"));
-        if (order.getStatus() == EMaterialOrderStatus.RECEIVED_IN_STOCK
-                || order.getStatus() == EMaterialOrderStatus.VALIDATED
-                || order.getStatus() == EMaterialOrderStatus.REJECTED) {
+        EMaterialOrderStatus current = order.getStatus();
+        if (current == EMaterialOrderStatus.RECEIVED_IN_STOCK
+                || current == EMaterialOrderStatus.VALIDATED
+                || current == EMaterialOrderStatus.REJECTED) {
             throw new Exception("MATERIAL_ORDER_STATUS_LOCKED");
         }
+        boolean allowed =
+                (current == EMaterialOrderStatus.ORDER_CREATED && newStatus == EMaterialOrderStatus.ORDER_SENT)
+                        || (current == EMaterialOrderStatus.ORDER_ACCEPTED && newStatus == EMaterialOrderStatus.IN_TRANSPORT);
+        if (!allowed) {
+            throw new Exception("MATERIAL_ORDER_STATUS_TRANSITION_NOT_ALLOWED");
+        }
         order.setStatus(newStatus);
+        order.setLastChanged(LocalDateTime.now());
+        return materialOrderRepository.save(order);
+    }
+
+    @Transactional
+    public MaterialOrder acceptMaterialOrder(Long id, MaterialOrderAcceptTO body) throws Exception {
+        MaterialOrder order = materialOrderRepository.findById(id).orElseThrow(() -> new Exception("MATERIAL_ORDER_NOT_FOUND"));
+        if (order.getStatus() != EMaterialOrderStatus.ORDER_SENT) {
+            throw new Exception("MATERIAL_ORDER_ACCEPT_NOT_ALLOWED");
+        }
+        List<MaterialOrderLine> lines = order.getLines() != null ? order.getLines() : List.of();
+        if (lines.isEmpty()) {
+            throw new Exception("MATERIAL_ORDER_LINES_REQUIRED");
+        }
+        Map<Long, BigDecimal> offeredByLineId = new HashMap<>();
+        if (body != null && body.getLines() != null) {
+            for (MaterialOrderAcceptTO.MaterialOrderAcceptLineTO input : body.getLines()) {
+                if (input == null || input.getLineId() == null || input.getLineId() <= 0) {
+                    continue;
+                }
+                BigDecimal offered = input.getOfferedPricePerUnit();
+                if (offered != null && offered.compareTo(BigDecimal.ZERO) < 0) {
+                    throw new Exception("MATERIAL_ORDER_OFFERED_PRICE_INVALID");
+                }
+                offeredByLineId.put(input.getLineId(), offered);
+            }
+        }
+        for (MaterialOrderLine line : lines) {
+            if (offeredByLineId.containsKey(line.getId())) {
+                line.setOfferedPricePerUnit(offeredByLineId.get(line.getId()));
+            } else if (line.getOfferedPricePerUnit() == null) {
+                line.setOfferedPricePerUnit(line.getPricePerUnit());
+            }
+        }
+        order.setStatus(EMaterialOrderStatus.ORDER_ACCEPTED);
         order.setLastChanged(LocalDateTime.now());
         return materialOrderRepository.save(order);
     }

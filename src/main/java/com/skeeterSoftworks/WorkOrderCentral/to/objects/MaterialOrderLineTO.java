@@ -16,8 +16,10 @@ public class MaterialOrderLineTO {
     private String materialName;
     private String materialCode;
     private Integer quantity;
-    /** Optional unit price when the order was placed. */
+    /** Optional unit price when the order was placed (requested). */
     private BigDecimal pricePerUnit;
+    /** Optional unit price offered/accepted by the provider. */
+    private BigDecimal offeredPricePerUnit;
     /** Whether this line has been fully received in stock. */
     private Boolean received;
     /** Sum of quantities on all delivery notes for this line. */
