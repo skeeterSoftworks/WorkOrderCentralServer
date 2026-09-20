@@ -50,4 +50,21 @@ public class OrdersHistoryFacade {
             return ResponseEntity.internalServerError().body("ERROR_FETCHING_MATERIAL_ORDER_HISTORY");
         }
     }
+
+    @GetMapping("/technology-tools")
+    public ResponseEntity<?> searchTechnologyTools(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size,
+            @RequestParam(required = false) String productReference,
+            @RequestParam(required = false) String toolName,
+            @RequestParam(required = false) String workOrderCode) {
+        try {
+            return ResponseEntity.ok(
+                    ordersHistoryService.searchTechnologyTools(
+                            productReference, toolName, workOrderCode, page, size));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("ERROR_FETCHING_TECHNOLOGY_TOOL_HISTORY");
+        }
+    }
 }

@@ -6,6 +6,7 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Material;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialOrderLine;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.MaterialProvider;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Operator;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.Product;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductStockIntake;
@@ -13,18 +14,27 @@ import com.skeeterSoftworks.WorkOrderCentral.domain.objects.ProductStockIssue;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.PurchaseOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.StockAssignmentOrder;
 import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkOrder;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSession;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSessionTechnologySnapshot;
+import com.skeeterSoftworks.WorkOrderCentral.domain.objects.WorkSessionToolUsage;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.DeliveryNoteRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.MaterialOrderLineRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductOrderRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductStockIntakeRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.ProductStockIssueRepository;
 import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.StockAssignmentOrderRepository;
+import com.skeeterSoftworks.WorkOrderCentral.domain.repositories.WorkSessionToolUsageRepository;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EOrdersHistoryEventType;
 import com.skeeterSoftworks.WorkOrderCentral.to.enums.EStockAssignmentOrderStatus;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderHistoryPageTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.MaterialOrderHistoryRowTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductOrderHistoryPageTO;
 import com.skeeterSoftworks.WorkOrderCentral.to.objects.ProductOrderHistoryRowTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.TechnologyToolHistoryPageTO;
+import com.skeeterSoftworks.WorkOrderCentral.to.objects.TechnologyToolHistoryRowTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +56,7 @@ public class OrdersHistoryService {
     private final ProductStockIssueRepository productStockIssueRepository;
     private final StockAssignmentOrderRepository stockAssignmentOrderRepository;
     private final DeliveryNoteRepository deliveryNoteRepository;
+    private final WorkSessionToolUsageRepository workSessionToolUsageRepository;
 
     public OrdersHistoryService(
             ProductOrderRepository productOrderRepository,
@@ -53,13 +64,15 @@ public class OrdersHistoryService {
             ProductStockIntakeRepository productStockIntakeRepository,
             ProductStockIssueRepository productStockIssueRepository,
             StockAssignmentOrderRepository stockAssignmentOrderRepository,
-            DeliveryNoteRepository deliveryNoteRepository) {
+            DeliveryNoteRepository deliveryNoteRepository,
+            WorkSessionToolUsageRepository workSessionToolUsageRepository) {
         this.productOrderRepository = productOrderRepository;
         this.materialOrderLineRepository = materialOrderLineRepository;
         this.productStockIntakeRepository = productStockIntakeRepository;
         this.productStockIssueRepository = productStockIssueRepository;
         this.stockAssignmentOrderRepository = stockAssignmentOrderRepository;
         this.deliveryNoteRepository = deliveryNoteRepository;
+        this.workSessionToolUsageRepository = workSessionToolUsageRepository;
     }
 
     @Transactional(readOnly = true)
@@ -121,6 +134,76 @@ public class OrdersHistoryService {
         }
 
         return pageMaterialEvents(events, safePage, safeSize);
+    }
+
+    @Transactional(readOnly = true)
+    public TechnologyToolHistoryPageTO searchTechnologyTools(
+            String productReference,
+            String toolName,
+            String workOrderCode,
+            int page,
+            int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
+        PageRequest pageable = PageRequest.of(
+                safePage,
+                safeSize,
+                Sort.by(
+                        Sort.Order.desc("technologySnapshot.workSession.sessionStart"),
+                        Sort.Order.asc("orderNumber").nullsLast(),
+                        Sort.Order.asc("id")));
+        Page<WorkSessionToolUsage> result = workSessionToolUsageRepository.findAll(
+                TechnologyToolHistorySpecifications.from(productReference, toolName, workOrderCode),
+                pageable);
+        List<TechnologyToolHistoryRowTO> content = result.getContent().stream()
+                .map(this::mapTechnologyToolUsage)
+                .toList();
+        return new TechnologyToolHistoryPageTO(content, result.getTotalElements(), safePage, safeSize);
+    }
+
+    private TechnologyToolHistoryRowTO mapTechnologyToolUsage(WorkSessionToolUsage usage) {
+        TechnologyToolHistoryRowTO to = new TechnologyToolHistoryRowTO();
+        to.setToolUsageId(usage.getId());
+        to.setRowKey(usage.getId() != null ? "TOOL-" + usage.getId() : null);
+        to.setSourceToolId(usage.getSourceToolId());
+        to.setToolName(usage.getToolName());
+        to.setToolDescription(usage.getToolDescription());
+        to.setOrderNumber(usage.getOrderNumber());
+        to.setWorkingTime(usage.getWorkingTime());
+
+        WorkSessionTechnologySnapshot snapshot = usage.getTechnologySnapshot();
+        if (snapshot != null) {
+            to.setCycleTime(snapshot.getCycleTime());
+            to.setNorm100(snapshot.getNorm100());
+            to.setPiecesPerMaterial(snapshot.getPiecesPerMaterial());
+            WorkSession session = snapshot.getWorkSession();
+            if (session != null) {
+                to.setWorkSessionId(session.getId());
+                to.setSessionStartedAt(session.getSessionStart());
+                to.setSessionEndedAt(session.getSessionEnd());
+                to.setSessionProductCount(session.getProductCount());
+                if (session.getStationInfo() != null) {
+                    to.setStationId(session.getStationInfo().getStationID());
+                }
+                Operator operator = session.getOperator();
+                if (operator != null) {
+                    to.setOperatorName(operator.getName());
+                    to.setOperatorSurname(operator.getSurname());
+                }
+                WorkOrder workOrder = session.getWorkOrder();
+                if (workOrder != null) {
+                    to.setWorkOrderId(workOrder.getId());
+                    to.setWorkOrderCode(workOrder.getCode());
+                    ProductOrder productOrder = workOrder.getProductOrder();
+                    if (productOrder != null && productOrder.getProduct() != null) {
+                        Product product = productOrder.getProduct();
+                        to.setProductReference(product.getReference());
+                        to.setProductName(product.getName());
+                    }
+                }
+            }
+        }
+        return to;
     }
 
     private ProductOrderHistoryPageTO pageProductEvents(

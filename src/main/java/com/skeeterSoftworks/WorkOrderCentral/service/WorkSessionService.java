@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -132,11 +134,49 @@ public class WorkSessionService {
         station.setStationID(req.getStationId() != null ? req.getStationId() : "");
         session.setStationInfo(station);
 
+        attachTechnologySnapshot(session, product);
+
         preloadMeasuringFeaturePrototypes(workOrder);
         WorkSession saved = workSessionRepository.save(session);
         purchaseOrderService.onProductionStartedForWorkOrder(workOrder.getId());
         preloadProductRecords(saved);
         return saved;
+    }
+
+    private void attachTechnologySnapshot(WorkSession session, Product product) {
+        Technology technology = product.getTechnologyData();
+        if (technology == null) {
+            return;
+        }
+        if (technology.getTools() != null) {
+            technology.getTools().size();
+        }
+
+        WorkSessionTechnologySnapshot snapshot = new WorkSessionTechnologySnapshot();
+        snapshot.setWorkSession(session);
+        snapshot.setSourceTechnologyId(technology.getId());
+        snapshot.setCycleTime(technology.getCycleTime());
+        snapshot.setNorm100(technology.getNorm100());
+        snapshot.setPiecesPerMaterial(technology.getPiecesPerMaterial());
+
+        List<Tool> catalogueTools = technology.getTools() != null ? technology.getTools() : List.of();
+        List<WorkSessionToolUsage> usages = new ArrayList<>();
+        catalogueTools.stream()
+                .sorted(Comparator.comparing(
+                        Tool::getOrderNumber,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .forEach(tool -> {
+                    WorkSessionToolUsage usage = new WorkSessionToolUsage();
+                    usage.setTechnologySnapshot(snapshot);
+                    usage.setSourceToolId(tool.getId());
+                    usage.setToolName(tool.getToolName());
+                    usage.setToolDescription(tool.getToolDescription());
+                    usage.setOrderNumber(tool.getOrderNumber());
+                    usage.setWorkingTime(tool.getWorkingTime());
+                    usages.add(usage);
+                });
+        snapshot.setTools(usages);
+        session.setTechnologySnapshot(snapshot);
     }
 
     private void throwIfWorkOrderNotOpenForProduction(WorkOrder workOrder) throws Exception {

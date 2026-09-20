@@ -56,6 +56,10 @@ public class WorkSession {
     @OneToMany(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ProductsRecord> productRecords = new ArrayList<>();
 
+    /** Technology/tools copied from the product catalogue when this session opened. */
+    @OneToOne(mappedBy = "workSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private WorkSessionTechnologySnapshot technologySnapshot;
+
     public WorkSession(long id, Operator operator, LocalDateTime sessionStart, LocalDateTime sessionEnd) {
         super();
         this.id = id;
