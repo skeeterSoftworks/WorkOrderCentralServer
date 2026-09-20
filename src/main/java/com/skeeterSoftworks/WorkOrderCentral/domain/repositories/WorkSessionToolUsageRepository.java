@@ -16,6 +16,7 @@ public interface WorkSessionToolUsageRepository extends
     @EntityGraph(attributePaths = {
             "technologySnapshot",
             "technologySnapshot.workSession",
+            "technologySnapshot.workSession.faultyProducts",
             "technologySnapshot.workSession.workOrder",
             "technologySnapshot.workSession.workOrder.productOrder",
             "technologySnapshot.workSession.workOrder.productOrder.product"

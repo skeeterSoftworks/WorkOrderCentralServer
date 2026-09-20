@@ -182,6 +182,8 @@ public class OrdersHistoryService {
                 to.setSessionStartedAt(session.getSessionStart());
                 to.setSessionEndedAt(session.getSessionEnd());
                 to.setSessionProductCount(session.getProductCount());
+                to.setSessionFaultyProductCount(
+                        session.getFaultyProducts() != null ? (long) session.getFaultyProducts().size() : 0L);
                 if (session.getStationInfo() != null) {
                     to.setStationId(session.getStationInfo().getStationID());
                 }

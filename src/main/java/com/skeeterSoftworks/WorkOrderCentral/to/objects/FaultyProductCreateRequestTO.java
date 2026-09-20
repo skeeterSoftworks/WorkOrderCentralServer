@@ -12,4 +12,6 @@ public class FaultyProductCreateRequestTO {
     private String rejectReason;
     private String rejectCause;
     private String rejectComment;
+    /** Number of faulty products to record with the same reason/cause/comment. Defaults to 1. */
+    private Integer quantity;
 }

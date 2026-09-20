@@ -16,6 +16,7 @@ public class TechnologyToolHistoryRowTO {
     private LocalDateTime sessionStartedAt;
     private LocalDateTime sessionEndedAt;
     private Long sessionProductCount;
+    private Long sessionFaultyProductCount;
     private Long workOrderId;
     private String workOrderCode;
     private String productReference;

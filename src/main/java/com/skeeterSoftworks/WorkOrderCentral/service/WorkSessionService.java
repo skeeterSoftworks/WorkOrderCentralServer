@@ -355,14 +355,24 @@ public class WorkSessionService {
             throw new Exception("WORK_SESSION_ALREADY_ENDED");
         }
 
-        FaultyProduct fp = new FaultyProduct();
-        fp.setWorkSession(session);
-        fp.setRejectReason(req != null ? req.getRejectReason() : null);
-        fp.setRejectCause(req != null ? req.getRejectCause() : null);
-        fp.setRejectComment(req != null ? req.getRejectComment() : null);
-        fp.setCreatedAt(LocalDateTime.now());
+        int quantity = req != null && req.getQuantity() != null ? req.getQuantity() : 1;
+        if (quantity < 1) {
+            throw new Exception("INVALID_FAULTY_QUANTITY");
+        }
 
-        session.getFaultyProducts().add(fp);
+        LocalDateTime createdAt = LocalDateTime.now();
+        String rejectReason = req != null ? req.getRejectReason() : null;
+        String rejectCause = req != null ? req.getRejectCause() : null;
+        String rejectComment = req != null ? req.getRejectComment() : null;
+        for (int i = 0; i < quantity; i++) {
+            FaultyProduct fp = new FaultyProduct();
+            fp.setWorkSession(session);
+            fp.setRejectReason(rejectReason);
+            fp.setRejectCause(rejectCause);
+            fp.setRejectComment(rejectComment);
+            fp.setCreatedAt(createdAt);
+            session.getFaultyProducts().add(fp);
+        }
         preloadMeasuringFeaturePrototypes(session);
         WorkSession saved = workSessionRepository.save(session);
         preloadProductRecords(saved);
